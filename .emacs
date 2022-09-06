@@ -18,7 +18,7 @@
 (use-package evil :ensure t)
 (evil-mode 1)
 
-
+(use-package vterm)
 
 ;; Try to move direction, which is supplied as arg
 ;; If cannot move that direction, send a tmux command to do appropriate move
