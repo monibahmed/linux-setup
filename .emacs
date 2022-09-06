@@ -26,5 +26,6 @@
 (use-package dracula-theme :ensure t)
 (use-package zeno-theme :ensure t)
 
-(load-theme 'zeno t)
-
+(if (display-graphic-p)
+    (load-theme 'zeno t)
+  nil)
