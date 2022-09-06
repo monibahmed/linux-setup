@@ -1,7 +1,7 @@
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
-(menu-bar-mode -1)
-(toggle-scroll-bar -1)
+(menu-bar-mode nil)
+(toggle-scroll-bar nil)
 
 ;; Set up package.el to work with MELPA
 (require 'package)
@@ -14,30 +14,17 @@
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-;; Enable Evil
-(use-package evil :ensure t)
-(evil-mode 1)
+(use-package evil
+  :ensure t
+  :config (evil-mode 1))
 
-(use-package vterm)
+(use-package vterm
+  :ensure t)
 
-;; Try to move direction, which is supplied as arg
-;; If cannot move that direction, send a tmux command to do appropriate move
-(defun windmove-emacs-or-tmux(dir tmux-cmd)
-  (interactive)
-  (if (ignore-errors (funcall (intern (concat "windmove-" dir))))
-      nil                       ;; Moving within emacs
-    (shell-command tmux-cmd)) ;; At edges, send command to tmux
-  )
-
-;;Move between windows with custom keybindings
-(global-set-key (kbd "C-k")
-   '(lambda () (interactive) (windmove-emacs-or-tmux "up"  "tmux select-pane -U")))
-(global-set-key (kbd "C-j")
-   '(lambda () (interactive) (windmove-emacs-or-tmux "down"  "tmux select-pane -D")))
-(global-set-key (kbd "C-l")
-   '(lambda () (interactive) (windmove-emacs-or-tmux "right" "tmux select-pane -R")))
-(global-set-key (kbd "C-h")
-   '(lambda () (interactive) (windmove-emacs-or-tmux "left"  "tmux select-pane -L")))
+(use-package
+  zenburn-theme
+  :ensure t
+  :config (load-theme 'zenburn t))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
