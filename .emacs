@@ -5,6 +5,7 @@
 (tool-bar-mode -1)
 
 (require 'package)
+
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
 ;; (package-initialize)
@@ -206,53 +207,110 @@
   :after (treemacs)
   :config (treemacs-set-scope-type 'Tabs))
 
-
-
-(use-package flycheck
-  :ensure t
-  :init (global-flycheck-mode))
-
-
-(use-package company
-  :config
-  (global-company-mode))
-
-
-(use-package lsp-mode
-  :init
-  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  (setq lsp-keymap-prefix "C-c l")
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (XXX-mode . lsp)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
-
-;; optionally
-(use-package lsp-ui :commands lsp-ui-mode)
-;; if you are helm user
-(use-package helm-lsp :commands helm-lsp-workspace-symbol)
-;; if you are ivy user
-;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-
-;; optionally if you want to use debugger
-;; (use-package dap-mode)
-;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-
 ;; optional if you want which-key integration
 (use-package which-key
     :config
     (which-key-mode))
 
+;; THIS IS FOR CODE COMPLETION/CHECKING
+;; ;; (use-package flycheck
+;; ;;   :init (global-flycheck-mode))
+;; ;; 
+;; ;; (use-package lsp-mode
+;; ;;   :hook ((python-mode c++-mode) . lsp-deferred) ; XYZ are to be replaced by python, c++, etc.
+;; ;;   :commands lsp)
+;; ;; 
+;; ;; (use-package lsp-ui
+;; ;;   :commands lsp-ui-mode
+;; ;;   :config
+;; ;;   (setq lsp-ui-doc-enable nil)
+;; ;;   (setq lsp-ui-doc-header t)
+;; ;;   (setq lsp-ui-doc-include-signature t)
+;; ;;   (setq lsp-ui-doc-border (face-foreground 'default))
+;; ;;   (setq lsp-ui-sideline-show-code-actions t)
+;; ;;   (setq lsp-ui-sideline-delay 0.05))
+;; ;; 
+;; ;; (use-package lsp-pyright
+;; ;;   :hook (python-mode . (lambda () (require 'lsp-pyright)))
+;; ;;   :init (when (executable-find "python3")
+;; ;;           (setq lsp-pyright-python-executable-cmd "python3")))
+;; ;; 
+;; ;; 
+;; ;; (use-package lsp-mode
+;; ;;   :hook ((c-mode          ; clangd
+;; ;;           c++-mode        ; clangd
+;; ;;           c-or-c++-mode   ; clangd
+;; ;;           ;;java-mode       ; eclipse-jdtls
+;; ;;           ;;js-mode         ; ts-ls (tsserver wrapper)
+;; ;;           ;;js-jsx-mode     ; ts-ls (tsserver wrapper)
+;; ;;           ;;typescript-mode ; ts-ls (tsserver wrapper)
+;; ;;           python-mode     ; pyright
+;; ;;           ;;web-mode        ; ts-ls/HTML/CSS
+;; ;;           ;;haskell-mode    ; haskell-language-server
+;; ;;           ) . lsp-deferred)
+;; ;;   :commands lsp
+;; ;;   :config
+;; ;;   (setq lsp-auto-guess-root t)
+;; ;;   (setq lsp-log-io nil)
+;; ;;   (setq lsp-restart 'auto-restart)
+;; ;;   (setq lsp-enable-symbol-highlighting nil)
+;; ;;   (setq lsp-enable-on-type-formatting nil)
+;; ;;   (setq lsp-signature-auto-activate nil)
+;; ;;   (setq lsp-signature-render-documentation nil)
+;; ;;   (setq lsp-eldoc-hook nil)
+;; ;;   (setq lsp-modeline-code-actions-enable nil)
+;; ;;   (setq lsp-modeline-diagnostics-enable nil)
+;; ;;   (setq lsp-headerline-breadcrumb-enable nil)
+;; ;;   (setq lsp-semantic-tokens-enable nil)
+;; ;;   (setq lsp-enable-folding nil)
+;; ;;   (setq lsp-enable-imenu nil)
+;; ;;   (setq lsp-enable-snippet nil)
+;; ;;   (setq read-process-output-max (* 1024 1024)) ;; 1MB
+;; ;;   (setq lsp-idle-delay 0.5))
+;; ;; 
+;; ;; 
+;; ;; 
+;; ;; (use-package company
+;; ;;   :init
+;; ;;   (global-company-mode)
+;; ;;   :config
+;; ;;   (add-hook 'after-init-hook 'global-company-mode))
+;; ;; 
+;; ;; ;; (use-package company-irony
+;; ;; ;;   :config
+;; ;; ;;   (add-to-list 'company-backends 'company-irony))
+;; ;; ;;   
+;; ;; ;; (use-package irony
+;; ;; ;;   :config
+;; ;; ;;   (add-hook 'c++-mode-hook 'irony-mode)
+;; ;; ;;   (add-hook 'c-mode-hook 'irony-mode)
+;; ;; ;;   (add-hook 'objc-mode-hook 'irony-mode))
+;; ;; 
+;; ;; ;; (use-package lsp-mode
+;; ;; ;;   :init
+;; ;; ;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+;; ;; ;;   (setq lsp-keymap-prefix "C-c l")
+;; ;; ;;   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+;; ;; ;;          (XXX-mode . lsp)
+;; ;; ;;          ;; if you want which-key integration
+;; ;; ;;          (lsp-mode . lsp-enable-which-key-integration))
+;; ;; ;;   :commands lsp)
+;; ;; ;; 
+;; ;; ;; ;; optionally
+;; ;; (use-package lsp-ui
+;; ;;   :commands lsp-ui-mode)
+;; ;; (use-package lsp-treemacs
+;; ;;   :commands lsp-treemacs-sync-mode)
+;; ;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
+;; ;; optionally if you want to use debugger
+;; ;; (use-package dap-mode)
+;; ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
-(use-package helm)
-(require 'helm-config)
-(global-set-key (kbd "C-c h") 'helm-mini)
-
+;; (use-package helm)
+;; (require 'helm-config)
+;; (global-set-key (kbd "C-c h") 'helm-mini)
 ;; (use-package vterm)
-
 
 (use-package zenburn-theme)
 (use-package dracula-theme)
@@ -263,9 +321,8 @@
   nil)
 
 
-;;(global-set-key (kbd "C-x C-n") 'treemacs)
+(global-set-key (kbd "C-c C-n") 'treemacs)
 (global-set-key (kbd "C-x C-b") 'ibuffer) 
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -273,7 +330,7 @@
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
  '(package-selected-packages
-   '(helm lsp-mode company flycheck zeno-theme dracula-theme zenburn-theme treemacs-tab-bar treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil treemacs orderless marginalia vertico evil-collection evil use-package)))
+   '(zeno-theme dracula-theme zenburn-theme helm which-key lsp-treemacs company lsp-pyright lsp-ui lsp-mode flycheck treemacs-tab-bar treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil treemacs orderless marginalia vertico doom-modeline all-the-icons evil-collection evil use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
