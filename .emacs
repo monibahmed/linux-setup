@@ -27,9 +27,9 @@
   :config
   (evil-collection-init))
 
+(use-package all-the-icons)
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
-
 
 (use-package vertico
   :init
