@@ -4,14 +4,12 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
-;; Set up package.el to work with MELPA
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
-;;(package-initialize)
-;;(package-refresh-contents)
+;; (package-initialize)
+;; (package-refresh-contents)
 
-;; Download use-package
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 (require 'use-package-ensure)
@@ -19,7 +17,7 @@
 
 (use-package evil
   :init
-  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
   :config
   (evil-mode 1))
@@ -29,7 +27,10 @@
   :config
   (evil-collection-init))
 
-;; Enable vertico
+(use-package doom-modeline
+  :init (doom-modeline-mode 1))
+
+
 (use-package vertico
   :init
   (vertico-mode)
@@ -206,6 +207,50 @@
   :config (treemacs-set-scope-type 'Tabs))
 
 
+
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
+
+(use-package company
+  :config
+  (global-company-mode))
+
+
+(use-package lsp-mode
+  :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (XXX-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp)
+
+;; optionally
+(use-package lsp-ui :commands lsp-ui-mode)
+;; if you are helm user
+(use-package helm-lsp :commands helm-lsp-workspace-symbol)
+;; if you are ivy user
+;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+;; (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+;; optionally if you want to use debugger
+;; (use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+
+;; optional if you want which-key integration
+(use-package which-key
+    :config
+    (which-key-mode))
+
+
+
+(use-package helm)
+(require 'helm-config)
+(global-set-key (kbd "C-c h") 'helm-mini)
+
 ;; (use-package vterm)
 
 
@@ -226,8 +271,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(helm-minibuffer-history-key "M-p")
  '(package-selected-packages
-   '(zeno-theme dracula-theme zenburn-theme treemacs-tab-bar treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil treemacs orderless marginalia vertico evil-collection evil use-package)))
+   '(helm lsp-mode company flycheck zeno-theme dracula-theme zenburn-theme treemacs-tab-bar treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil treemacs orderless marginalia vertico evil-collection evil use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
