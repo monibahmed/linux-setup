@@ -1,11 +1,12 @@
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
 (toggle-scroll-bar -1)
-(menu-bar-mode -1)
-(tool-bar-mode -1)
+(menu-bar-mode     -1)
+(tool-bar-mode     -1)
+(setq make-backup-files nil) ; stop creating backup~ files
+(setq auto-save-default nil) ; stop creating #autosave# files
 
 (require 'package)
-
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
 ;; (package-initialize)
