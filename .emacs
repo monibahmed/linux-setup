@@ -311,7 +311,7 @@
 ;; (use-package helm)
 ;; (require 'helm-config)
 ;; (global-set-key (kbd "C-c h") 'helm-mini)
-;; (use-package vterm)
+(use-package vterm)
 
 (use-package zenburn-theme)
 (use-package dracula-theme)
@@ -324,17 +324,3 @@
 
 (global-set-key (kbd "C-c C-n") 'treemacs)
 (global-set-key (kbd "C-x C-b") 'ibuffer) 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(helm-minibuffer-history-key "M-p")
- '(package-selected-packages
-   '(zeno-theme dracula-theme zenburn-theme helm which-key lsp-treemacs company lsp-pyright lsp-ui lsp-mode flycheck treemacs-tab-bar treemacs-persp treemacs-magit treemacs-icons-dired treemacs-projectile treemacs-evil treemacs orderless marginalia vertico doom-modeline all-the-icons evil-collection evil use-package)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
