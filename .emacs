@@ -11,10 +11,10 @@
 ;; (customize-set-variable 'tramp-encoding-shell "/bin/bash")
 (if (eq system-type 'darwin)
     (progn
-      (message "Emacs running in Mac OS")
-      (setq mac-command-modifier 'meta)
-      (setq vterm-shell "/bin/zsh")
-      )
+     (message "Emacs running in Mac OS")
+     (setq mac-command-modifier 'meta)
+     (setq vterm-shell "/bin/zsh")
+     )
   )
 
 
@@ -41,9 +41,12 @@
   :config
   (evil-collection-init))
 
+;; Use Doom modeline until you find one better
 (use-package all-the-icons)
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
+
+(use-package org)
 
 (use-package vertico
   :init
@@ -80,6 +83,7 @@
 ;; Add prompt indicator to `completing-read-multiple'.
 ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
 (savehist-mode 1)
+
 (defun crm-indicator (args)
   (cons (format "[CRM%s] %s"
                 (replace-regexp-in-string
@@ -325,10 +329,14 @@
 ;; (global-set-key (kbd "C-c h") 'helm-mini)
 (use-package vterm)
 (use-package multi-vterm)
-
-(use-package zenburn-theme)
-(use-package dracula-theme)
-(use-package zeno-theme)
+(define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+(push (list "find-file-below"
+            (lambda (path)
+              (if-let* ((buf (find-file-noselect path))
+                        (window (display-buffer-below-selected buf nil)))
+                  (select-window window)
+                (message "Failed to open file: %s" path))))
+      vterm-eval-cmds)
 
 (if (display-graphic-p)
     (progn
@@ -352,8 +360,24 @@
       )
   )
 
-(global-set-key (kbd "C-x C-n") 'treemacs)
+
+(require 'ibuf-ext)
+;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
+
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+	       ("mesages" (or
+			  (name . "^\\*")))
+	       ))))
+(add-hook 'ibuffer-mode-hook
+          (lambda ()
+            (ibuffer-switch-to-saved-filter-groups "default")))
 (global-set-key (kbd "C-x C-b") 'ibuffer) 
+
+
+(global-set-key (kbd "<f1>") (lambda() (interactive)(find-file "~/.emacs")))
+(global-set-key (kbd "C-x C-n") 'treemacs)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -363,7 +387,7 @@
    '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
  '(ein:output-area-inlined-images t)
  '(package-selected-packages
-   '(multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
+   '(ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
