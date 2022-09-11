@@ -1,3 +1,9 @@
+# Download Znap, if it's not there yet.
+[[ -f ~/.oh-my-zsh ]] ||
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+source ~/Git/zsh-snap/znap.zsh  # Start Znap
+
 # If you come from bash you might have to change your $PATH.
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/opt/X11/bin
 

@@ -324,6 +324,7 @@
 ;; (require 'helm-config)
 ;; (global-set-key (kbd "C-c h") 'helm-mini)
 (use-package vterm)
+(use-package multi-vterm)
 
 (use-package zenburn-theme)
 (use-package dracula-theme)
@@ -362,7 +363,7 @@
    '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
  '(ein:output-area-inlined-images t)
  '(package-selected-packages
-   '(conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
+   '(multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
