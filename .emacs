@@ -6,6 +6,17 @@
 (setq make-backup-files nil) ; stop creating backup~ files
 (setq auto-save-default nil) ; stop creating #autosave# files
 (setq vc-follow-symlinks nil)
+(setq tramp-verbose 10)
+
+;; (customize-set-variable 'tramp-encoding-shell "/bin/bash")
+(if (eq system-type 'darwin)
+    (progn
+      (message "Emacs running in Mac OS")
+      (setq mac-command-modifier 'meta)
+      (setq vterm-shell "/bin/zsh")
+      )
+  )
+
 
 (require 'package)
 (add-to-list 'package-archives
@@ -319,19 +330,39 @@
 (use-package zeno-theme)
 
 (if (display-graphic-p)
-    (load-theme 'zeno t)
-  nil)
+    (progn
+      (use-package doom-themes
+	:ensure t
+	:config
+	;; Global settings (defaults)
+	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+              doom-themes-enable-italic t) ; if nil, italics is universally disabled
+	(load-theme 'doom-moonlight t)
 
+	;; Enable flashing mode-line on errors
+	(doom-themes-visual-bell-config)
+	;; Enable custom neotree theme (all-the-icons must be installed!)
+	(doom-themes-neotree-config)
+	;; or for treemacs users
+	(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+	(doom-themes-treemacs-config)
+	;; Corrects (and improves) org-mode's native fontification.
+	(doom-themes-org-config))
+      )
+  )
 
-(global-set-key (kbd "C-c C-n") 'treemacs)
+(global-set-key (kbd "C-x C-n") 'treemacs)
 (global-set-key (kbd "C-x C-b") 'ibuffer) 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
+ '(ein:output-area-inlined-images t)
  '(package-selected-packages
-   '(vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
+   '(conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
