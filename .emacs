@@ -46,7 +46,8 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
-(use-package org)
+(require 'org)
+(use-package darkroom)
 
 (use-package vertico
   :init
@@ -386,8 +387,23 @@
  '(custom-safe-themes
    '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
  '(ein:output-area-inlined-images t)
+ '(org-agenda-files '("~/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons)))
+   '(darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+ '(safe-local-variable-values
+   '((eval progn
+	   (turn-off-auto-fill)
+	   (text-scale-set 1)
+	   (load-theme 'doom-spacegray t))
+     (load-theme 'doom-spacegray t)
+     (if
+	 (display-graphic-p)
+	 (load-theme 'doom-spacegray t))
+     (olivetti-body-width . 80)
+     (visual-fill-column-width . 80)
+     (eval progn
+	   (turn-off-auto-fill)
+	   (text-scale-set 1)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
