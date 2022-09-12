@@ -1,12 +1,33 @@
+;; -*- lexical-binding: t; -*-
+
+;; The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 50 1000 1000))
+
+;; Profile emacs startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s seconds with %d garbage collections."
+                     (emacs-init-time "%.2f")
+                     gcs-done)))
+
+
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
 (toggle-scroll-bar -1)
 (menu-bar-mode     -1)
 (tool-bar-mode     -1)
+(tooltip-mode      -1)
 (setq make-backup-files nil) ; stop creating backup~ files
 (setq auto-save-default nil) ; stop creating #autosave# files
 (setq vc-follow-symlinks nil)
 (setq tramp-verbose 10)
+
+;; Enable good retina support for Mac OS
+;;(set-face-attribute 'default nil :font "Fira Code Retina" :height 280)
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
 
 ;; (customize-set-variable 'tramp-encoding-shell "/bin/bash")
 (if (eq system-type 'darwin)
@@ -19,15 +40,21 @@
 
 
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
-;; (package-initialize)
-;; (package-refresh-contents)
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+
 
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
+
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
+
+(use-package command-log-mode)
 
 (use-package evil
   :init
@@ -48,6 +75,27 @@
 
 (require 'org)
 (use-package darkroom)
+
+
+(use-package ivy
+  :diminish
+  :bind (("C-s" . swiper)
+         :map ivy-minibuffer-map
+         ("TAB" . ivy-alt-done)	
+         ("C-l" . ivy-alt-done)
+         ("C-j" . ivy-next-line)
+         ("C-k" . ivy-previous-line)
+         :map ivy-switch-buffer-map
+         ("C-k" . ivy-previous-line)
+         ("C-l" . ivy-done)
+         ("C-d" . ivy-switch-buffer-kill)
+         :map ivy-reverse-i-search-map
+         ("C-k" . ivy-previous-line)
+         ("C-d" . ivy-reverse-i-search-kill))
+  :config
+  (ivy-mode 1))
+
+
 
 (use-package vertico
   :init
@@ -373,11 +421,21 @@
 (add-hook 'ibuffer-mode-hook
           (lambda ()
             (ibuffer-switch-to-saved-filter-groups "default")))
+
 (global-set-key (kbd "C-x C-b") 'ibuffer) 
-
-
 (global-set-key (kbd "<f1>") (lambda() (interactive)(find-file "~/.emacs")))
+(global-set-key (kbd "<f2>") (lambda() (interactive)(find-file "~/.notes")))
+
 (global-set-key (kbd "C-x C-n") 'treemacs)
+
+
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'org-capture)
+(global-set-key "\C-cb" 'org-iswitchb)
+
+
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -387,9 +445,10 @@
  '(custom-safe-themes
    '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
  '(ein:output-area-inlined-images t)
- '(org-agenda-files '("~/org-notes/latex_example.org"))
+ '(org-agenda-files
+   '("~/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+   '(command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
    '((eval progn
 	   (turn-off-auto-fill)
