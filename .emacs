@@ -33,7 +33,6 @@
 (if (eq system-type 'darwin)
     (progn
      (message "Emacs running in Mac OS")
-     (toggle-frame-fullscreen)
      (setq mac-command-modifier 'meta)
      (setq vterm-shell "/bin/zsh")
      )
@@ -77,14 +76,17 @@
     :global-prefix "C-SPC")
 
   (rune/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")
-    "ts" '(hydra-text-scale/body :which-key "scale text")
-    "xb" 'ibuffer
-    "xv" 'vterm
-    "fe" '(lambda() (interactive)(find-file "~/.emacs"))
-    "fz" '(lambda() (interactive)(find-file "~/.zshrc"))
-    "fn" '(lambda() (interactive)(find-file "~/.notes"))
+    "t"  '(:ignore t :which-key "Toggles")
+    "tt" '(load-theme :which-key "Choose Theme")
+    "ts" '(hydra-text-scale/body :which-key "Scale Text")
+    "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
+    "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme")
+    "xb" '(ibuffer :which-key "ibuffer")
+    "xv" '(multi-vterm :which-key "vterm")
+    "xn" '(treemac :which-key "Tree Browser")
+    "fe" '(lambda() (interactive)(find-file "~/.emacs") :which-key ".emacs")
+    "fz" '(lambda() (interactive)(find-file "~/.zshrc") :which-key ".zshrc")
+    "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
     )
   )
 
@@ -127,11 +129,20 @@
   :init (doom-modeline-mode 1))
 
 (require 'org)
+(setq org-capture-templates
+      '(("t" "Todo" entry (file+headline "~/org-notes/gtd.org" "Tasks")
+         "* TODO %?\n  %i\n  %a")
+        ("j" "Journal" entry (file+datetree "~/org-notes/journal.org")
+         "* %?\nEntered on %U\n  %i\n  %a")))
 (use-package darkroom)
 
 
 (use-package vertico
   :init
+  ;;  :bind (:map minibuffer-local-map
+  ;;	      ("C-k" . vertico-previous)
+  ;;	      ("C-j" . vertico-next)
+  ;;	      )
   (vertico-mode)
 
   ;; Different scroll margin
@@ -150,7 +161,6 @@
 ;; Enable rich annotations using the Marginalia package
 (use-package marginalia
   ;; Either bind `marginalia-cycle' globally or only in the minibuffer
-  :ensure t
   :bind (("M-A" . marginalia-cycle)
          :map minibuffer-local-map
          ("M-A" . marginalia-cycle))
@@ -463,10 +473,10 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
+   '("afa47084cb0beb684281f480aa84dab7c9170b084423c7f87ba755b15f6776ef" "7b1ea77093c438aa5887b2649ca079c896cc8780afef946d3b6c53931081a726" default))
  '(ein:output-area-inlined-images t)
  '(org-agenda-files
-   '("~/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
+   '("~/org-notes/gtd.org" "/Users/monibahmed/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
    '(general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
