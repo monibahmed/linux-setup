@@ -33,6 +33,7 @@
 (if (eq system-type 'darwin)
     (progn
      (message "Emacs running in Mac OS")
+     (toggle-frame-fullscreen)
      (setq mac-command-modifier 'meta)
      (setq vterm-shell "/bin/zsh")
      )
@@ -78,7 +79,21 @@
   (rune/leader-keys
     "t"  '(:ignore t :which-key "toggles")
     "tt" '(counsel-load-theme :which-key "choose theme")
-    "ts" '(hydra-text-scale/body :which-key "scale text")))
+    "ts" '(hydra-text-scale/body :which-key "scale text")
+    "xb" 'ibuffer
+    "xv" 'vterm
+    "fe" '(lambda() (interactive)(find-file "~/.emacs"))
+    "fz" '(lambda() (interactive)(find-file "~/.zshrc"))
+    "fn" '(lambda() (interactive)(find-file "~/.notes"))
+    )
+  )
+
+(global-set-key (kbd "C-x C-b") 'ibuffer) 
+(global-set-key (kbd "C-x C-n") 'treemacs)
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'org-capture)
+(global-set-key "\C-cb" 'org-iswitchb)
 
 
 ;; Don't use evil binding in Vterm?
@@ -91,7 +106,7 @@
   (setq evil-want-C-i-jump nil)
   ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
   ;;(setq evil-emacs-state-modes nil)
-  (setq evil-want-minibuffer t)
+  ;;(setq evil-want-minibuffer t)
   :config
   (evil-mode 1)
   (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
@@ -101,7 +116,7 @@
   )
 
 (use-package evil-collection
-  :custom (evil-collection-setup-minibuffer t)
+  ;;:custom (evil-collection-setup-minibuffer t)
   :after evil
   :config
   (evil-collection-init))
@@ -430,27 +445,14 @@
 
 (require 'ibuf-ext)
 ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
-
 (setq ibuffer-saved-filter-groups
       (quote (("default"
 	       ("mesages" (or
-			  (name . "^\\*")))
+			   (name . "^\\*")))
 	       ))))
 (add-hook 'ibuffer-mode-hook
           (lambda ()
             (ibuffer-switch-to-saved-filter-groups "default")))
-
-(global-set-key (kbd "C-x C-b") 'ibuffer) 
-(global-set-key (kbd "<f1>") (lambda() (interactive)(find-file "~/.emacs")))
-(global-set-key (kbd "<f2>") (lambda() (interactive)(find-file "~/.notes")))
-
-(global-set-key (kbd "C-x C-n") 'treemacs)
-
-
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cc" 'org-capture)
-(global-set-key "\C-cb" 'org-iswitchb)
 
 
 
