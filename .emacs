@@ -1,4 +1,17 @@
 ;; -*- lexical-binding: t; -*-
+;; This Emacs configuration file sets up packages for running efficiently. Emacs provides a framework for doing things quickly, so you can think more and type less.
+;; Our Emacs philosophy:
+;; 1. Looks at feels the way we like it
+;; 2. Quickly create, open, close, search, compile/run projects
+;; 3. Enable repository management and creation
+;; 4. Enable code frameworks to streamline the process
+
+;; Find a good emacs package manager
+;; Emacs works in Modes, Major and Minor modes
+;; Section 1 -- Look and feel
+;; Section 2 -- Project Management
+;; Section 3 -- Prgramming Language Enhancements
+;; Section 4 -- Organization of Task
 
 ;; The default is 800 kilobytes.  Measured in bytes.
 (setq gc-cons-threshold (* 50 1000 1000))
@@ -154,6 +167,7 @@
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
+(use-package forge)
 
 (require 'org)
 (setq org-capture-templates
@@ -217,7 +231,7 @@
 (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
 ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
-;; Vertico commands are hidden in normal buffers.
+;; Vertico commands are hidden in normal buffer
 (setq read-extended-command-predicate
       #'command-completion-default-include-p)
 
@@ -504,7 +518,7 @@
  '(org-agenda-files
    '("~/org-notes/gtd.org" "/Users/monibahmed/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+   '(forge evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
    '((eval progn
 	   (turn-off-auto-fill)

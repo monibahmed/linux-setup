@@ -17,11 +17,11 @@ conda-base:
 	conda install -y mamba ;\
 	
 emacs:
-	#git clone git://git.savannah.gnu.org/emacs.git ;\
+	git clone git://git.savannah.gnu.org/emacs.git ;\
 	cd emacs ;\
-	#git checkout emacs-28 ;\
+#	git checkout emacs-28 ;\
 	./autogen ;\
-	./configure --with-pgtk --with-mail-utils --with-native-compilation compilation	;\
+	./configure --with-pgtk --with-mail-utils --with-native-compilation ;\
 
 gh-cli:
 	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |  sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg ;\
