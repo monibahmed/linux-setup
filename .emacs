@@ -9,8 +9,11 @@
 ;; Find a good emacs package manager
 ;; Emacs works in Modes, Major and Minor modes
 ;; Section 1 -- Look and feel
+;; Centaur-tabs
 ;; Section 2 -- Project Management
+;; Perspecttive, Persp-mode
 ;; Section 3 -- Prgramming Language Enhancements
+;; yassnippets
 ;; Section 4 -- Organization of Task
 
 ;; The default is 800 kilobytes.  Measured in bytes.
@@ -42,7 +45,7 @@
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 
-;; (customize-set-variable 'tramp-encoding-shell "/bin/bash")
+(customize-set-variable 'tramp-encoding-shell "/bin/bash")
 (if (eq system-type 'darwin)
     (progn
      (message "Emacs running in Mac OS")
@@ -52,9 +55,10 @@
   )
 
 (require 'package)
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
+(setq package-archives
+      '(("melpa" . "https://melpa.org/packages/")
+        ("org" . "https://orgmode.org/elpa/")
+        ("elpa" . "https://elpa.gnu.org/packages/")))
 (package-initialize)
 (unless package-archive-contents
   (package-refresh-contents))
@@ -483,7 +487,7 @@
 	;; Enable flashing mode-line on errors
 	(doom-themes-visual-bell-config)
 	;; Enable custom neotree theme (all-the-icons must be installed!)
-	(doom-themes-neotree-config)
+	;;(doom-themes-neotree-config)
 	;; or for treemacs users
 	(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
 	(doom-themes-treemacs-config)
@@ -492,6 +496,13 @@
       )
   )
 
+(use-package centaur-tabs
+  :demand
+  :config
+  (centaur-tabs-mode t)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tab-forward))
 
 (require 'ibuf-ext)
 ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
@@ -518,7 +529,7 @@
  '(org-agenda-files
    '("~/org-notes/gtd.org" "/Users/monibahmed/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(forge evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+   '(centaur-tabs forge evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
    '((eval progn
 	   (turn-off-auto-fill)
