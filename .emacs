@@ -38,7 +38,6 @@
      )
   )
 
-
 (require 'package)
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
@@ -128,13 +127,40 @@
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
+
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'vertico))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/")
+    (setq projectile-project-search-path '("~/")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+;;(use-package counsel-projectile)
+;;(use-package ivy)
+;;(use-package diminish)
+;;(use-package consult)
+;;(use-package flymake)
+;;(use-package flycheck)
+;; Use ripgrep for checking variables inside
+;;(use-package ripgrep)
+;;(use-package rg)
+
+(use-package magit
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+
 (require 'org)
 (setq org-capture-templates
       '(("t" "Todo" entry (file+headline "~/org-notes/gtd.org" "Tasks")
          "* TODO %?\n  %i\n  %a")
         ("j" "Journal" entry (file+datetree "~/org-notes/journal.org")
          "* %?\nEntered on %U\n  %i\n  %a")))
-(use-package darkroom)
 
 
 (use-package vertico
@@ -478,7 +504,7 @@
  '(org-agenda-files
    '("~/org-notes/gtd.org" "/Users/monibahmed/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+   '(evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
    '((eval progn
 	   (turn-off-auto-fill)
