@@ -67,5 +67,52 @@
 
 ;; enable evil mode
 (use-package evil
-:straight t
-:init (evil-mode 1))
+  :straight t
+  :init (evil-mode 1))
+
+
+;; Don't use evil binding in Vterm?
+(use-package evil
+  :straight t
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-d-scroll t)
+  (setq evil-want-C-i-jump nil)
+  ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
+  ;;(setq evil-emacs-state-modes nil)
+  ;;(setq evil-want-minibuffer t)
+  :config
+  (evil-mode 1)
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+  ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
+  ;;(evil-set-initial-state 'dashboard-mode 'normal)
+  )
+
+(use-package evil-collection
+  ;;:custom (evil-collection-setup-minibuffer t)
+  :straight t
+  :after evil
+  :config
+  (evil-collection-init))
+
+
+(use-package
+  :straight t
+  ibuf-ext)
+;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
+(setq ibuffer-saved-filter-groups
+      (quote
+       (("default"
+	 ("mesages" (or
+		     (name . "^\\*")))
+	 ))))
+
+(add-hook
+ 'ibuffer-mode-hook
+ (lambda ()
+   (ibuffer-switch-to-saved-filter-groups "default")))
+
+(global-set-key (kbd "C-x C-b") 'ibuffer)
