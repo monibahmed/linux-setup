@@ -29,9 +29,13 @@
 
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
-(toggle-scroll-bar -1)
+(if (display-graphic-p)
+    (progn
+      (toggle-scroll-bar -1)
+      (tool-bar-mode     -1)
+      )
+  )
 (menu-bar-mode     -1)
-(tool-bar-mode     -1)
 (tooltip-mode      -1)
 (setq make-backup-files nil) ; stop creating backup~ files
 (setq auto-save-default nil) ; stop creating #autosave# files
@@ -74,7 +78,9 @@
 ;;(use-package rainbow-delimiters)
 ;;(use-package helpful)
 
-
+(use-package exec-path-from-shell)
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 ;; Your own keybinding with Prefix
 (use-package hydra)
@@ -166,6 +172,10 @@
 ;; Use ripgrep for checking variables inside
 ;;(use-package ripgrep)
 ;;(use-package rg)
+;;(use-package org-ql)
+;; Use custom for defining values rather the setq
+;; (use-package org-wild...)
+;; esc esc repeat complex command
 
 (use-package magit
   :custom
@@ -365,6 +375,17 @@
     :config
     (which-key-mode))
 
+
+
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . efs/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
+  :config
+  (lsp-enable-which-key-integration t))
+
 ;; THIS IS FOR CODE COMPLETION/CHECKING
 ;; ;; (use-package flycheck
 ;; ;;   :init (global-flycheck-mode))
@@ -529,7 +550,7 @@
  '(org-agenda-files
    '("~/org-notes/gtd.org" "/Users/monibahmed/org-notes/org-mode-tutorial.org" "/Users/monibahmed/org-notes/latex_example.org"))
  '(package-selected-packages
-   '(centaur-tabs forge evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
+   '(lsp-mode centaur-tabs forge evil-magit rg ripgrep general command-log-mode darkroom olivetti ibuf-ext org-mode multi-vterm conda ein vterm zeno-theme zenburn-theme which-key vertico use-package treemacs-tab-bar treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil orderless marginalia evil-collection dracula-theme doom-modeline all-the-icons))
  '(safe-local-variable-values
    '((eval progn
 	   (turn-off-auto-fill)

@@ -3,7 +3,7 @@ if [ ! -f $HOME/.oh-my-zsh/oh-my-zsh.sh ]; then
     sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
-export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/opt/X11/bin
+export PATH=/opt/local/bin/:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/TeX/texbin:/opt/X11/bin
 export ZSH="$HOME/.oh-my-zsh"
 
 source $ZSH/oh-my-zsh.sh
