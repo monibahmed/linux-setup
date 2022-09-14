@@ -176,7 +176,7 @@
 ;; Use custom for defining values rather the setq
 ;; (use-package org-wild...)
 ;; esc esc repeat complex command
-
+;; profolio doct
 (use-package magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
