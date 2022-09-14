@@ -68,12 +68,6 @@
 ;; enable evil mode
 (use-package evil
   :straight t
-  :init (evil-mode 1))
-
-
-;; Don't use evil binding in Vterm?
-(use-package evil
-  :straight t
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
@@ -99,20 +93,54 @@
   (evil-collection-init))
 
 
-(use-package
-  :straight t
-  ibuf-ext)
 ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
+(require 'ibuf-ext)
 (setq ibuffer-saved-filter-groups
-      (quote
-       (("default"
-	 ("mesages" (or
-		     (name . "^\\*")))
-	 ))))
+      (quote (("default"
+	 ("Dotfiles" (or (filename . "^\\.")))
+	 ("Messages" (or (name     . "^\\*")))
+	 )
+	)
+       )
+      )
 
 (add-hook
  'ibuffer-mode-hook
  (lambda ()
    (ibuffer-switch-to-saved-filter-groups "default")))
+
+
+(use-package hydra
+  :straight t)
+(defhydra hydra-text-scale (:timeout 4)
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t))
+
+(use-package general
+  :straight t
+  :config
+  (general-create-definer rune/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (rune/leader-keys
+    "t"  '(:ignore t :which-key "Toggles")
+    "tt" '(load-theme :which-key "Choose Theme")
+    "ts" '(hydra-text-scale/body :which-key "Scale Text")
+    "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
+    "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme")
+    "xb" '(ibuffer :which-key "ibuffer")
+    "xv" '(multi-vterm :which-key "vterm")
+    "xn" '(treemac :which-key "Tree Browser")
+    "fe" '(lambda() (interactive)(find-file "~/.emacs") :which-key ".emacs")
+    "fz" '(lambda() (interactive)(find-file "~/.zshrc") :which-key ".zshrc")
+    "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
+    )
+  )
+
+
 
 (global-set-key (kbd "C-x C-b") 'ibuffer)
