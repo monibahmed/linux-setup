@@ -145,8 +145,8 @@
   :config
   (evil-collection-init))
 
-;; Use Doom modeline until you find one better
-(use-package all-the-icons)
+(use-package all-the-icons
+  :if (display-graphic-p))
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
 
