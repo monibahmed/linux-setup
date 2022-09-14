@@ -522,8 +522,8 @@
   :config
   (centaur-tabs-mode t)
   :bind
-  ("C-<prior>" . centaur-tabs-backward)
-  ("C-<next>" . centaur-tab-forward))
+  ("C-j" . centaur-tabs-backward)
+  ("C-k" . centaur-tabs-forward))
 
 (require 'ibuf-ext)
 ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
