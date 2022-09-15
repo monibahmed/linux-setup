@@ -15,7 +15,7 @@ conda:
 
 conda-base:
 	conda install -y mamba ;\
-	
+
 emacs:
 	git clone git://git.savannah.gnu.org/emacs.git ;\
 	cd emacs ;\

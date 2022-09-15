@@ -45,10 +45,9 @@
 (setq auto-save-default nil) ; stop creating #autosave# files
 (setq package-enable-at-startup nil)
 (setq vc-follow-symlinks nil)
-
+(add-to-list 'default-frame-alist '(undecorated . t))
 ;;https://www.emacswiki.org/emacs/YesOrNoP
 (defalias 'yes-or-no-p 'y-or-n-p)
-
 
 (if (eq system-type 'darwin)
     (progn
@@ -60,10 +59,34 @@
   )
 
 
-
+;;some helper packages
 ;;notified if the definition of a function you are customizing change
 (use-package el-patch
   :straight t)
+;; Persist history over Emacs restarts. Vertico sorts by history position.
+(use-package savehist
+  :straight t
+  :init (savehist-mode))
+;; divides search pattern into space separated components
+(use-package orderless
+  :straight t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+;;what key should you push next?
+(use-package which-key
+  :straight t
+  :init (which-key-mode))
+;; Enable rich annotations using the Marginalia package
+(use-package marginalia
+  :straight t
+  ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+  :bind (("M-A" . marginalia-cycle)
+         :map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
+  :init
+  (marginalia-mode))
 
 ;; enable evil mode
 (use-package evil
@@ -97,19 +120,15 @@
 (require 'ibuf-ext)
 (setq ibuffer-saved-filter-groups
       (quote (("default"
-	 ("Dotfiles" (or (filename . "^\\.")))
-	 ("Messages" (or (name     . "^\\*")))
-	 )
-	)
-       )
-      )
+	 ("Dotfiles" (or (name . "^\\.")))
+	 ("Messages" (or (name . "^\\*")))
+	 ))))
 
-(add-hook
- 'ibuffer-mode-hook
+(add-hook 'ibuffer-mode-hook
  (lambda ()
    (ibuffer-switch-to-saved-filter-groups "default")))
 
-
+;; Customize your keyboard shortcuts
 (use-package hydra
   :straight t)
 (defhydra hydra-text-scale (:timeout 4)
@@ -131,8 +150,7 @@
     "tt" '(load-theme :which-key "Choose Theme")
     "ts" '(hydra-text-scale/body :which-key "Scale Text")
     "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
-    "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme")
-    "xb" '(ibuffer :which-key "ibuffer")
+    "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme") "xb" '(ibuffer :which-key "ibuffer")
     "xv" '(multi-vterm :which-key "vterm")
     "xn" '(treemac :which-key "Tree Browser")
     "fe" '(lambda() (interactive)(find-file "~/.emacs") :which-key ".emacs")
@@ -140,7 +158,37 @@
     "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
     )
   )
-
-
-
+;;move these to hydra or somewhere nicer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+
+;; Completion frameworks
+(use-package vertico
+  :straight t
+  :bind (:map
+	 vertico-map
+	 ("C-j" . vertico-next)
+	 ("C-k" . vertico-previous)
+	 ("C-f" . vertico-exit)
+	 :map minibuffer-local-map
+	 ("M-h" . backward-kill-word))
+  :custom (vertico-cycle t)
+  :init (vertico-mode))
+
+
+
+;; themes at the end
+(if (display-graphic-p)
+    (progn
+      (use-package emacs
+	:straight t
+	:init
+	;; Add all your customizations prior to loading the themes
+	(setq modus-themes-italic-constructs t
+              modus-themes-bold-constructs nil
+              modus-themes-region '(bg-only no-extend))
+	:config
+	;; Load the theme of your choice:
+	(load-theme 'modus-operandi) ;; OR (load-theme 'modus-vivendi)
+	:bind ("<f5>" . modus-themes-toggle))
+      )
+  )
