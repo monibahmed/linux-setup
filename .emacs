@@ -29,7 +29,6 @@
 
 (use-package exec-path-from-shell
   :straight t)
-(always-use-deffered
 ;; Emacs options for different things
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
@@ -61,6 +60,10 @@
 
 
 ;;some helper packages
+;;Undo/Redo in Emacs
+(use-package undo-tree
+  :straight t
+  :init (global-undo-tree-mode))
 ;;notified if the definition of a function you are customizing change
 (use-package el-patch
   :straight t)
@@ -98,6 +101,7 @@
   (setq evil-want-C-u-scroll t)
   (setq evil-want-C-d-scroll t)
   (setq evil-want-C-i-jump nil)
+  (setq evil-undo-system 'undo-tree)
   ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
   ;;(setq evil-emacs-state-modes nil)
   ;;(setq evil-want-minibuffer t)
