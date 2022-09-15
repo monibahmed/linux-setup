@@ -29,7 +29,7 @@
 
 (use-package exec-path-from-shell
   :straight t)
-
+(always-use-deffered
 ;; Emacs options for different things
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
@@ -45,7 +45,8 @@
 (setq auto-save-default nil) ; stop creating #autosave# files
 (setq package-enable-at-startup nil)
 (setq vc-follow-symlinks nil)
-(add-to-list 'default-frame-alist '(undecorated . t))
+;;doesn't work as expected
+;;(add-to-list 'default-frame-alist '(undecorated . t))
 ;;https://www.emacswiki.org/emacs/YesOrNoP
 (defalias 'yes-or-no-p 'y-or-n-p)
 
@@ -174,8 +175,15 @@
   :custom (vertico-cycle t)
   :init (vertico-mode))
 
+(use-package consult
+  :straight t
+  ;;:demand t
+  :bind (("C-c s" . consult-line)
+	 ("C-M-l" . consult-imenu)
+	 ("C-r" . consult-history)
+	 ))
 
-
+	  ;; Project management
 ;; themes at the end
 (if (display-graphic-p)
     (progn
