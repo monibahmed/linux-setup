@@ -165,8 +165,9 @@
   )
 ;;move these to hydra or somewhere nicer
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+;;(global-set-key (kbd "C-e") 'end-of-line)
 
-;; Completion frameworks
+;; Completion frameworks and doing stuff 
 (use-package vertico
   :straight t
   :bind (:map
@@ -187,7 +188,15 @@
 	 ("C-r" . consult-history)
 	 ))
 
-	  ;; Project management
+;;Do commands and operatioms on buffers or synbols
+(use-package embark
+  :straight t
+  :bind (("C-." . embark-act)
+	 ("M-." . embark-dwim)
+	 ("C-h B" . embark-bindings))
+  :init (setq prefix-help-command #'embark-prefix-help-command))
+
+;; Project management
 ;; themes at the end
 (if (display-graphic-p)
     (progn
@@ -202,5 +211,4 @@
 	;; Load the theme of your choice:
 	(load-theme 'modus-operandi) ;; OR (load-theme 'modus-vivendi)
 	:bind ("<f5>" . modus-themes-toggle))
-      )
-  )
+      ))
