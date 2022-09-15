@@ -191,8 +191,8 @@
 ;;Do commands and operatioms on buffers or synbols
 (use-package embark
   :straight t
-  :bind (("C-." . embark-act)
-	 ("M-." . embark-dwim)
+  :bind (("C-c e" . embark-act)
+	 ("M-." . embark-dwi)
 	 ("C-h B" . embark-bindings))
   :init (setq prefix-help-command #'embark-prefix-help-command))
 
