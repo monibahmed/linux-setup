@@ -71,6 +71,13 @@
 (use-package savehist
   :straight t
   :init (savehist-mode))
+;; a better window manager?
+(use-package ace-window
+  :straight t
+  :bind ("M-o" . 'ace-window)
+  :init
+  (setq aw-dispatch-always t)
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 ;; divides search pattern into space separated components
 (use-package orderless
   :straight t
@@ -78,10 +85,10 @@
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
-;;what key should you push next?
-(use-package which-key
-  :straight t
-  :init (which-key-mode))
+;;what key should you push next? not needed embark 
+;;(use-package which-key
+;;  :straight t
+;;  :init (which-key-mode))
 ;; Enable rich annotations using the Marginalia package
 (use-package marginalia
   :straight t
@@ -102,6 +109,8 @@
   (setq evil-want-C-d-scroll t)
   (setq evil-want-C-i-jump nil)
   (setq evil-undo-system 'undo-tree)
+  (setq evil-insert-state-cursor '(bar))
+  (setq evil-normal-state-cursor '(box))
   ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
   ;;(setq evil-emacs-state-modes nil)
   ;;(setq evil-want-minibuffer t)
@@ -192,11 +201,32 @@
 (use-package embark
   :straight t
   :bind (("C-c e" . embark-act)
-	 ("M-." . embark-dwi)
+	 ("M-." . embark-dwim)
 	 ("C-h B" . embark-bindings))
   :init (setq prefix-help-command #'embark-prefix-help-command))
+(use-package embark-consult
+  :straight t
+  :after (embark consult)
+  :demand t
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+;; Help you code
+;; Quickly comment/uncomment code
+(use-package evil-nerd-commenter
+  :straight t
+  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+
+(use-package lsp-mode
+  :straight t
+  :commands (lsp lsp-deffered)
+  :init (setq lsp-keymap-prefix "C-c l"))
+
+(use-package company
+  :straight t
+  :init (global-company-mode t))
 
 ;; Project management
+
 ;; themes at the end
 (if (display-graphic-p)
     (progn
