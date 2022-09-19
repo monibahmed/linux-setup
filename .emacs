@@ -11,6 +11,7 @@
 
 ;;Some initial package and environment setup
 ;;https://github.com/radian-software/straight.el
+(setq straight-vc-git-default-clone-depth 1)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -26,9 +27,10 @@
   )
 
 (straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
 
-(use-package exec-path-from-shell
-  :straight t)
+(use-package exec-path-from-shell)
+
 ;; Emacs options for different things
 (setq inhibit-splash-screen t)
 (setq make-backup-files nil)
@@ -51,47 +53,41 @@
 
 (if (eq system-type 'darwin)
     (progn
-     (message "Emacs running in Mac OS")
-     (exec-path-from-shell-initialize)
-     (setq mac-command-modifier 'meta)
-     (setq vterm-shell "/bin/zsh")
-     )
+      (message "Emacs running in Mac OS")
+      (exec-path-from-shell-initialize)
+      (setq frame-resize-pixelwise t)
+      (setq mac-command-modifier 'meta)
+      (setq vterm-shell "/bin/zsh")
+      )
   )
 
 
 ;;some helper packages
 ;;Undo/Redo in Emacs
 (use-package undo-tree
-  :straight t
   :init (global-undo-tree-mode))
 ;;notified if the definition of a function you are customizing change
-(use-package el-patch
-  :straight t)
+(use-package el-patch)
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist
-  :straight t
   :init (savehist-mode))
 ;; a better window manager?
 (use-package ace-window
-  :straight t
-  :bind ("M-o" . 'ace-window)
+  :bind ("C-c o" . 'ace-window)
   :init
   (setq aw-dispatch-always t)
   (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
 ;; divides search pattern into space separated components
 (use-package orderless
-  :straight t
   :custom
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
 ;;what key should you push next? not needed embark 
-;;(use-package which-key
-;;  :straight t
-;;  :init (which-key-mode))
+(use-package which-key
+  :init (which-key-mode))
 ;; Enable rich annotations using the Marginalia package
 (use-package marginalia
-  :straight t
   ;; Either bind `marginalia-cycle' globally or only in the minibuffer
   :bind (("M-A" . marginalia-cycle)
          :map minibuffer-local-map
@@ -101,7 +97,6 @@
 
 ;; enable evil mode
 (use-package evil
-  :straight t
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
@@ -124,27 +119,28 @@
 
 (use-package evil-collection
   ;;:custom (evil-collection-setup-minibuffer t)
-  :straight t
   :after evil
   :config
   (evil-collection-init))
 
-
+(use-package ibuffer
+  :straight nil
+  :bind ("C-x C-b" . ibuffer))
 ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
-(require 'ibuf-ext)
+(use-package ibuf-ext
+  :straight nil)
 (setq ibuffer-saved-filter-groups
       (quote (("default"
-	 ("Dotfiles" (or (name . "^\\.")))
-	 ("Messages" (or (name . "^\\*")))
-	 ))))
+	       ("Dotfiles" (or (name . "^\\.")))
+	       ("Messages" (or (name . "^\\*")))
+	       ))))
 
 (add-hook 'ibuffer-mode-hook
- (lambda ()
-   (ibuffer-switch-to-saved-filter-groups "default")))
+	  (lambda ()
+	    (ibuffer-switch-to-saved-filter-groups "default")))
 
 ;; Customize your keyboard shortcuts
-(use-package hydra
-  :straight t)
+(use-package hydra)
 (defhydra hydra-text-scale (:timeout 4)
   "scale text"
   ("j" text-scale-increase "in")
@@ -152,7 +148,6 @@
   ("f" nil "finished" :exit t))
 
 (use-package general
-  :straight t
   :config
   (general-create-definer rune/leader-keys
     :keymaps '(normal insert visual emacs)
@@ -172,13 +167,10 @@
     "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
     )
   )
-;;move these to hydra or somewhere nicer
-(global-set-key (kbd "C-x C-b") 'ibuffer)
 ;;(global-set-key (kbd "C-e") 'end-of-line)
 
 ;; Completion frameworks and doing stuff 
 (use-package vertico
-  :straight t
   :bind (:map
 	 vertico-map
 	 ("C-j" . vertico-next)
@@ -190,7 +182,6 @@
   :init (vertico-mode))
 
 (use-package consult
-  :straight t
   ;;:demand t
   :bind (("C-c s" . consult-line)
 	 ("C-M-l" . consult-imenu)
@@ -199,46 +190,61 @@
 
 ;;Do commands and operatioms on buffers or synbols
 (use-package embark
-  :straight t
   :bind (("C-c e" . embark-act)
 	 ("M-." . embark-dwim)
 	 ("C-h B" . embark-bindings))
   :init (setq prefix-help-command #'embark-prefix-help-command))
 (use-package embark-consult
-  :straight t
   :after (embark consult)
   :demand t
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Help you code
+(use-package vterm)
+;; 
 ;; Quickly comment/uncomment code
 (use-package evil-nerd-commenter
-  :straight t
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-
-(use-package lsp-mode
-  :straight t
-  :commands (lsp lsp-deffered)
-  :init (setq lsp-keymap-prefix "C-c l"))
-
-(use-package company
-  :straight t
-  :init (global-company-mode t))
+;; 
+;; (use-package lsp-mode
+;;   :commands (lsp lsp-deffered)
+;;   :init (setq lsp-keymap-prefix "C-c l"))
+;; 
+;; (use-package company
+;;   :init (global-company-mode t))
 
 ;; Project management
+(use-package perspective
+  :bind
+  ("C-x C-b" . persp-ibuffer)
+  :custom
+  (persp-mode-prefix-key (kbd "C-x C-x"))
+  :init
+  (persp-mode))
+
+
+;; Organize your notes and maybe part of your life
+(use-package org
+  :config (setq org-confirm-babel-evaluate nil))
+
+(use-package org-roam)
 
 ;; themes at the end
 (if (display-graphic-p)
     (progn
-      (use-package emacs
-	:straight t
-	:init
-	;; Add all your customizations prior to loading the themes
-	(setq modus-themes-italic-constructs t
-              modus-themes-bold-constructs nil
-              modus-themes-region '(bg-only no-extend))
+      (use-package doom-themes
 	:config
-	;; Load the theme of your choice:
-	(load-theme 'modus-operandi) ;; OR (load-theme 'modus-vivendi)
-	:bind ("<f5>" . modus-themes-toggle))
+	;; Global settings (defaults)
+	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+              doom-themes-enable-italic t) ; if nil, italics is universally disabled
+	(load-theme 'doom-moonlight t)
+	;; Enable flashing mode-line on errors
+	(doom-themes-visual-bell-config)
+	;; Enable custom neotree theme (all-the-icons must be installed!)
+	(doom-themes-neotree-config)
+	;; or for treemacs users
+	(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+	(doom-themes-treemacs-config)
+	;; Corrects (and improves) org-mode's native fontification.
+	(doom-themes-org-config))
       ))
