@@ -201,6 +201,7 @@
 
 ;; Help you code
 (use-package vterm)
+(use-package multi-vterm)
 ;; 
 ;; Quickly comment/uncomment code
 (use-package evil-nerd-commenter
