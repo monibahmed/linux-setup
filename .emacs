@@ -202,19 +202,20 @@
 ;; Help you code
 (use-package vterm)
 (use-package multi-vterm)
-;; 
+
 ;; Quickly comment/uncomment code
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-;; 
+
 ;; (use-package lsp-mode
 ;;   :commands (lsp lsp-deffered)
 ;;   :init (setq lsp-keymap-prefix "C-c l"))
-;; 
+
 ;; (use-package company
 ;;   :init (global-company-mode t))
 
 ;; Project management
+(use-package magit)o
 (use-package perspective
   :bind
   ("C-x C-b" . persp-ibuffer)
@@ -223,7 +224,7 @@
   :init
   (persp-mode))
 
-
+  
 ;; Organize your notes and maybe part of your life
 (use-package org
   :config (setq org-confirm-babel-evaluate nil))
