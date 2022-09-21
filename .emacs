@@ -133,6 +133,7 @@
       (quote (("default"
 	       ("Dotfiles" (or (name . "^\\.")))
 	       ("Messages" (or (name . "^\\*")))
+	       ("Magit" (or (name . "^\\magit*")))
 	       ))))
 
 (add-hook 'ibuffer-mode-hook
