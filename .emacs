@@ -201,8 +201,13 @@
   :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 ;; Help you code
-(use-package vterm)
-(use-package multi-vterm)
+(if (not (eq system-type 'windows-nt))
+    (progn
+      (message "Emacs running in Windows")
+      (use-package vterm)
+      (use-package multi-vterm)
+      ))
+
 
 ;; Quickly comment/uncomment code
 (use-package evil-nerd-commenter
@@ -216,7 +221,7 @@
 ;;   :init (global-company-mode t))
 
 ;; Project management
-(use-package magit)o
+(use-package magit)
 (use-package perspective
   :bind
   ("C-x C-b" . persp-ibuffer)
