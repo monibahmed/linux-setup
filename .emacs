@@ -38,8 +38,7 @@
     (progn
       (toggle-scroll-bar -1)
       (tool-bar-mode     -1)
-      )
-  )
+      ))
 (menu-bar-mode     -1)
 (tooltip-mode      -1)
 (setq make-backup-files nil) ; stop creating backup~ files
@@ -54,13 +53,13 @@
 (if (eq system-type 'darwin)
     (progn
       (message "Emacs running in Mac OS")
-      (exec-path-from-shell-initialize)
       (setq frame-resize-pixelwise t)
       (setq mac-command-modifier 'meta)
       (setq vterm-shell "/bin/zsh")
-      )
-  )
+      ))
 
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 ;;some helper packages
 ;;Undo/Redo in Emacs
@@ -83,7 +82,7 @@
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
-;;what key should you push next? not needed embark 
+;; what key should you push next? not needed embark 
 (use-package which-key
   :init (which-key-mode))
 ;; Enable rich annotations using the Marginalia package
@@ -162,7 +161,7 @@
     "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
     "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme") "xb" '(ibuffer :which-key "ibuffer")
     "xv" '(multi-vterm :which-key "vterm")
-    "xn" '(treemac :which-key "Tree Browser")
+    ;;"xn" '(treemac :which-key "Tree Browser")
     "fe" '(lambda() (interactive)(find-file "~/.emacs") :which-key ".emacs")
     "fz" '(lambda() (interactive)(find-file "~/.zshrc") :which-key ".zshrc")
     "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
@@ -203,9 +202,17 @@
 ;; Help you code
 (if (not (eq system-type 'windows-nt))
     (progn
-      (message "Emacs running in Windows")
       (use-package vterm)
       (use-package multi-vterm)
+
+      (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+      (push (list "find-file-below"
+		  (lambda (path)
+		    (if-let* ((buf (find-file-noselect path))
+                             (window (display-buffer-below-selected buf nil)))
+			(select-window window)
+                      (message "Failed to open file: %s" path))))
+	    vterm-eval-cmds)
       ))
 
 
@@ -213,12 +220,85 @@
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
-;; (use-package lsp-mode
-;;   :commands (lsp lsp-deffered)
-;;   :init (setq lsp-keymap-prefix "C-c l"))
 
-;; (use-package company
-;;   :init (global-company-mode t))
+
+;; Scala
+;; Enable scala-mode for highlighting, indentation and motion commands
+(use-package scala-mode
+  :interpreter ("scala" . scala-mode))
+
+;; Enable sbt mode for executing sbt commands
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+;; Enable nice rendering of diagnostics like compile errors.
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  ;; You could also swap out lsp for lsp-deffered in order to defer loading
+  :hook  (scala-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
+  :config
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  ;; (setq gc-cons-threshold 100000000) ;; 100mb
+  ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; (setq lsp-idle-delay 0.500)
+  ;; (setq lsp-log-io nil)
+  ;; (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil))
+
+;; Add metals backend for lsp-mode
+(use-package lsp-metals)
+
+;; Enable nice rendering of documentation on hover
+;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
+;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
+;;   In that case you have to not only disable this but also remove from the packages since
+;;   lsp-mode can activate it automatically.
+(use-package lsp-ui)
+
+;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
+;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
+;; to avoid odd behavior with snippets and indentation
+(use-package yasnippet)
+
+;; Use company-capf as a completion provider.
+;;
+;; To Company-lsp users:
+;;   Company-lsp is no longer maintained and has been removed from MELPA.
+;;   Please migrate to company-capf.
+(use-package company
+  :hook (scala-mode . company-mode)
+  :config
+  (setq lsp-completion-provider :capf))
+
+;; Posframe is a pop-up tool that must be manually installed for dap-mode
+(use-package posframe)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
+
+(use-package lsp-mode
+  :commands (lsp lsp-deffered)
+  :init (setq lsp-keymap-prefix "C-c l"))
+
+(use-package company
+  :init (global-company-mode t))
 
 ;; Project management
 (use-package magit)
@@ -233,13 +313,19 @@
   
 ;; Organize your notes and maybe part of your life
 (use-package org
-  :config (setq org-confirm-babel-evaluate nil))
+  :init
+  (setq org-confirm-babel-evaluate nil)
+  ;;(setq org-startup-folded 'content')
+  (setq org-startup-indented  t)
+  (setq org-startup-numerated t)
+  :hook visual-line-mode)
 
 (use-package org-roam)
 
 ;; themes at the end
 (if (display-graphic-p)
     (progn
+      (use-package all-the-icons)
       (use-package doom-themes
 	:config
 	;; Global settings (defaults)
@@ -249,10 +335,26 @@
 	;; Enable flashing mode-line on errors
 	(doom-themes-visual-bell-config)
 	;; Enable custom neotree theme (all-the-icons must be installed!)
-	(doom-themes-neotree-config)
+	;;(doom-themes-neotree-config)
 	;; or for treemacs users
-	(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-	(doom-themes-treemacs-config)
+	;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+	;;(doom-themes-treemacs-config)
 	;; Corrects (and improves) org-mode's native fontification.
 	(doom-themes-org-config))
       ))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("7a424478cb77a96af2c0f50cfb4e2a88647b3ccca225f8c650ed45b7f50d9525" "b9761a2e568bee658e0ff723dd620d844172943eb5ec4053e2b199c59e0bcc22" default))
+ '(safe-local-variable-values
+   '((diff-add-log-use-relative-names . t)
+     (vc-git-annotate-switches . "-w"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
