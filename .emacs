@@ -30,6 +30,10 @@
 (setq straight-use-package-by-default t)
 
 (use-package exec-path-from-shell)
+(dolist (var '("ZSH" "JAVA_HOME" "LANG" "CONDA_SHLVL" "CONDA_PREFIX" "SSH_AUTH_SOCK" "CONDA_PYTHON_EXE" "CONDA_DEFAULT_ENV" "CONDA_PROMPT_MODIFIER" ))
+  (add-to-list 'exec-path-from-shell-variables var))
+  (exec-path-from-shell-initialize)
+
 
 ;; Emacs options for different things
 (setq inhibit-splash-screen t)
