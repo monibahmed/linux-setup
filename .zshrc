@@ -75,3 +75,4 @@ export JAVA_HOME="/Users/monibahmed/Library/Caches/Coursier/arc/https/github.com
 # >>> coursier install directory >>>
 export PATH="$PATH:/Users/monibahmed/Library/Application Support/Coursier/bin"
 # <<< coursier install directory <<<
+export PATH="/usr/local/sbin:$PATH"

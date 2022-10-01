@@ -40,10 +40,10 @@
 (setq make-backup-files nil)
 (if (display-graphic-p)
     (progn
-      (toggle-scroll-bar -1)
+      (toggle-scroll-bar -1)		       
       (tool-bar-mode     -1)
       ))
-(menu-bar-mode     -1)
+;;(menu-bar-mode     1)
 (tooltip-mode      -1)
 (setq make-backup-files nil) ; stop creating backup~ files
 (setq auto-save-default nil) ; stop creating #autosave# files
@@ -60,7 +60,9 @@
       (setq frame-resize-pixelwise t)
       (setq mac-command-modifier 'meta)
       (setq vterm-shell "/bin/zsh")
-      ))
+      (use-package homebrew
+	:straight (homebrew :host github :repo "jdormit/homebrew.el")
+	)))
 
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
@@ -349,9 +351,68 @@
   ;;(setq org-startup-folded 'content')
   (setq org-startup-indented  t)
   (setq org-startup-numerated t)
-  :hook visual-line-mode)
+  :hook (visual-line-mode))
 
 (use-package org-roam)
+
+;; (use-package jupyter
+;;   :commands (jupyter-run-server-repl
+;;              jupyter-run-repl
+;;              jupyter-server-list-kernels))
+(use-package geiser)
+(use-package geiser-mit)
+(use-package ob
+  :straight nil
+  :config (progn
+            ;; load more languages for org-babel
+            (org-babel-do-load-languages
+             'org-babel-load-languages
+             '((python . t)
+               (shell . t)
+	       (scheme . t)
+               ;;(latex . t)
+               ;;(ditaa . t)
+               ;;(C . t)
+               ;;(dot . t)
+               ;;(plantuml . t)
+               ;;(makefile . t)
+               ;;(jupyter . t)    ; must be last
+	       ))
+;; ;;             (setq org-babel-default-header-args:sh    '((:results . "output replace"))
+;; ;;                   org-babel-default-header-args:bash  '((:results . "output replace"))
+;; ;;                   org-babel-default-header-args:shell '((:results . "output replace"))
+;; ;;                   org-babel-default-header-args:jupyter-python '((:async . "yes")
+;; ;;                                                                  (:session . "py")
+;; ;;                                                                  (:kernel . "sagemath")))
+;; ;; 
+;; ;;             (setq org-confirm-babel-evaluate nil
+;; ;;                   org-plantuml-jar-path "/usr/share/plantuml/plantuml.jar"
+;; ;;                   org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar")
+;; ;;            (add-to-list 'org-src-lang-modes (quote ("plantuml" . plantuml)))
+	    ))
+
+;; ;; (org-babel-do-load-languages
+;; ;;  'org-babel-load-languages
+;; ;;  '((python . t)
+;; ;;    (shell . t)
+;; ;;    (jupyter . t)
+;; ;;    ))
+;; ;; 
+(use-package conda
+  :config
+  (conda-env-initialize-interactive-shells)
+  (conda-env-initialize-eshell)
+  (conda-env-autoactivate-mode t)
+  (setq conda-anaconda-home (expand-file-name "~/miniconda3/"))
+  (setq conda-env-home-directory (expand-file-name "~/miniconda3/"))
+  (setq conda-env-subdirectory "envs"))
+;; ;; 
+;; ;; (unless (getenv "CONDA_DEFAULT_ENV")
+;; ;;   (conda-env-activate "base"))
+;; ;; (defun my/jupyter-refresh-kernelspecs ()
+;; ;;   "Refresh Jupyter kernelspecs"
+;; ;;   (interactive)
+;; ;;   (jupyter-available-kernelspecs t))
 
 ;; themes at the end
 (if (display-graphic-p)
