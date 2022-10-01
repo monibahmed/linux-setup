@@ -121,6 +121,33 @@
   :after evil
   :config
   (evil-collection-init))
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode 1))
+(use-package evil-snipe
+  :init (evil-snipe-mode 1))
+(use-package evil-matchit
+  :after evil
+  :init
+  (setq evilmi-shortcut "M-m")
+  (global-evil-matchit-mode 1))
+(use-package evil-lion
+  :after evil
+  :config
+  (evil-lion-mode))
+(use-package evil-numbers
+  :after evil)
+(use-package vimish-fold
+  :after evil)
+(use-package evil-vimish-fold
+  :after vimish-fold
+  :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
+
+(define-key evil-normal-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
+(define-key evil-visual-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
+(define-key evil-normal-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
+(define-key evil-visual-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
 
 (use-package ibuffer
   :straight nil
