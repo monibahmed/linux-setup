@@ -429,6 +429,10 @@ Now the looks
    )
 #+end_src
 
+* TODO Eshell
+Completions
+
+* TODO Powerline/Modeline
 * TODO Experiment
 #+begin_src emacs-lisp :tangle no
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
@@ -473,5 +477,5 @@ Install Conda
 
 #+RESULTS:
 : /Users/monibahmed/miniconda3/bin/python
-
+* TODO Dired
 
