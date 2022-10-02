@@ -478,4 +478,4 @@ Install Conda
 #+RESULTS:
 : /Users/monibahmed/miniconda3/bin/python
 * TODO Dired
-
+* TODO Persistent Emacs like TMUX
