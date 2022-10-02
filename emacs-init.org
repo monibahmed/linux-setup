@@ -1,6 +1,6 @@
 #+TITLE: My .emacs file
 #+STARTUP: content
-#+PROPERTY: header-args:emacs-lisp :results output silent :tangle ./.emacs
+#+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
@@ -18,7 +18,7 @@ Benchmark Emacs startup time
 #+end_src
 
 * Basic Emacs Settings
-#+begin_src emacs-lisp :tangle ./.emacs
+#+begin_src emacs-lisp 
   ;; Emacs options for different things
   (setq inhibit-splash-screen t)
   (setq make-backup-files nil)
@@ -115,7 +115,7 @@ Because this is one of the main reasons to use Emacs:
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
 
-* Evil ... Muwwaaahhhahahahaa!
+* Evil Muwwaaahhhahahahaa!
 Evil mode for keybinding and most of efficiency goodness
 
 #+begin_src emacs-lisp
@@ -180,63 +180,47 @@ Evil mode for keybinding and most of efficiency goodness
 
 * Useful packages
 For using getting around and understanding Emacs
-
+** Helper Packages
+For extending Emacs functionality
 #+begin_src emacs-lisp
+
   ;;some helper packages
-  ;;Undo/Redo in Emacs
-  (use-package undo-tree
-    :init (global-undo-tree-mode))
-  ;;notified if the definition of a function you are customizing change
-  (use-package el-patch)
-  ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist
-    :init (savehist-mode))
-  ;; a better window manager?
-  (use-package ace-window
-    :bind ("C-c o" . 'ace-window)
-    :init
-    (setq aw-dispatch-always t)
-    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-  ;; divides search pattern into space separated components
-  (use-package orderless
-    :custom
-    (completion-styles '(orderless basic))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles basic partial-completion)))))
-  ;; what key should you push next? not needed embark
-  (use-package which-key
-    :init (which-key-mode))
-  ;; Enable rich annotations using the Marginalia package
-  (use-package marginalia
-    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
-    :bind (("M-A" . marginalia-cycle)
-           :map minibuffer-local-map
-           ("M-A" . marginalia-cycle))
-    :init
-    (marginalia-mode))
+    ;;Undo/Redo in Emacs
+    (use-package undo-tree
+      :init (global-undo-tree-mode))
+    ;;notified if the definition of a function you are customizing change
+    (use-package el-patch)
+    ;; Persist history over Emacs restarts. Vertico sorts by history position.
+    (use-package savehist
+      :init (savehist-mode))
+    ;; a better window manager?
+    (use-package ace-window
+      :bind ("C-c o" . 'ace-window)
+      :init
+      (setq aw-dispatch-always t)
+      (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+    ;; divides search pattern into space separated components
+    (use-package orderless
+      :custom
+      (completion-styles '(orderless basic))
+      (completion-category-defaults nil)
+      (completion-category-overrides '((file (styles basic partial-completion)))))
+    ;; what key should you push next? not needed embark
+    (use-package which-key
+      :init (which-key-mode))
+    ;; Enable rich annotations using the Marginalia package
+    (use-package marginalia
+      ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+      :bind (("M-A" . marginalia-cycle)
+             :map minibuffer-local-map
+             ("M-A" . marginalia-cycle))
+      :init
+      (marginalia-mode))
+  (use-package restart-emacs)
+
 #+end_src
-
-
+** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
-  (use-package ibuffer
-    :straight nil
-    :demand t
-    :bind ("C-x C-b" . ibuffer))
-  ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
-  (use-package ibuf-ext
-    :straight nil
-    :demand t)
-  (setq ibuffer-saved-filter-groups
-        (quote (("default"
-                 ("Dotfiles" (or (name . "^\\.")))
-                 ("Messages" (or (name . "^\\*")))
-                 ("Magit" (or (name . "^\\magit*")))
-                 ))))
-
-  (add-hook 'ibuffer-mode-hook
-            (lambda ()
-              (ibuffer-switch-to-saved-filter-groups "default")))
-
   ;; Customize your keyboard shortcuts
   (use-package hydra)
   (defhydra hydra-text-scale (:timeout 4)
@@ -258,15 +242,19 @@ For using getting around and understanding Emacs
       "ts" '(hydra-text-scale/body :which-key "Scale Text")
       "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
       "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme") "xb" '(ibuffer :which-key "ibuffer")
-      "xv" '(multi-vterm :which-key "vterm")
-      "vn" '(multi-vterm :which-key 'pmi/named-term)
+      "xv" '(multi-vterm :which-key "multi-vterm")
+      ;;"vn" '(multi-vterm :which-key 'pmi/named-term)
       ;;"xn" '(treemac :which-key "Tree Browser")
-      "fe" '(lambda() (interactive)(find-file "~/emacs-init.org") :which-key "emacs-init.org")
+      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
       "fz" '(lambda() (interactive)(find-file "~/.zshrc") :which-key ".zshrc")
       "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
       )
     )
   ;;(global-set-key (kbd "C-e") 'end-of-line)
+#+end_src
+
+** Do Stuff in Emacs Easily
+#+begin_src emacs-lisp
 
   ;; Completion frameworks and doing stuff
   (use-package vertico
@@ -305,46 +293,78 @@ Manage your projects
 #+begin_src emacs-lisp
   ;; Project management
   (use-package magit)
+  #+end_src
+
+** Buffer Management
+
+#+begin_src emacs-lisp
+
+  (use-package ibuffer
+    :straight nil
+    :demand t)
+    ;;:bind ("C-x C-b" . ibuffer))
+  ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
+  
+  (use-package ibuf-ext
+    :straight nil
+    :demand t)
+  (setq ibuffer-saved-filter-groups
+        (quote (("default"
+                 ("Dotfiles" (or (name . "^\\.")))
+                 ("Messages" (or (name . "^\\*")))
+                 ("Magit" (or (name . "^\\magit*")))
+                 ))))
+
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default")))
+
+
+#+end_src
+
+#+begin_src emacs-lisp
+
   (use-package perspective
     :demand t
-    :bind
-    ("C-x C-b" . persp-ibuffer)
+    :bind ("C-x C-b" . persp-ibuffer)
     :custom
     (persp-mode-prefix-key (kbd "C-x C-x"))
     :init
     (persp-mode))
+
 #+end_src 
 
 * Themes
 Now the looks
 
 #+begin_src emacs-lisp
-  ;; themes at the end
-  (if (display-graphic-p)
-      (progn
-        (use-package all-the-icons)
-        (use-package doom-modeline
-          :init (doom-modeline-mode t))
-        (use-package doom-themes
-          :demand t
-          :config
-          ;; Global settings (defaults)
-          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-                doom-themes-enable-italic t) ; if nil, italics is universally disabled
-          (load-theme 'doom-moonlight t)
-          ;; Enable flashing mode-line on errors
-          (doom-themes-visual-bell-config)
-          ;; Enable custom neotree theme (all-the-icons must be installed!)
-          ;;(doom-themes-neotree-config)
-          ;; or for treemacs users
-          ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-          ;;(doom-themes-treemacs-config)
-          ;; Corrects (and improves) org-mode's native fontification.
-          (doom-themes-org-config))
-        ))
+;; themes at the end
+(if (display-graphic-p)
+    (progn
+    (use-package all-the-icons)
+    (use-package doom-modeline
+        :init (doom-modeline-mode t))
+    (use-package doom-themes
+        :demand t
+        :config
+        ;; Global settings (defaults)
+        (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+            doom-themes-enable-italic t) ; if nil, italics is universally disabled
+        (load-theme 'doom-moonlight t)
+        ;; Enable flashing mode-line on errors
+        (doom-themes-visual-bell-config)
+        ;; Enable custom neotree theme (all-the-icons must be installed!)
+        ;;(doom-themes-neotree-config)
+        ;; or for treemacs users
+        ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+        ;;(doom-themes-treemacs-config)
+        ;; Corrects (and improves) org-mode's native fontification.
+        (doom-themes-org-config))
+    ))
 #+end_src
 
 * Mac Os Specific
+** Get Emacs Variables from Shell
 #+begin_src emacs-lisp
 
   (if (eq system-type 'darwin)
@@ -364,16 +384,22 @@ Now the looks
 #+end_src
 
 * MacOS and Linux
-#+begin_src emacs-lisp
-  (if (not (eq system-type 'windows-nt))
-      (progn
-        (use-package vterm
+** TODO Shell Support
+#+begin_src emacs-lisp :tangle no
+  ;;  (if (not (eq system-type 'windows-nt))
+  ;;      (progn
+          (use-package vterm
+            :demand t
+            :config (setq vterm-max-scrollback 10000))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+        (use-package multi-vterm
           :demand t)
-        (use-package multi-vterm)
 
         (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
         (push (list "find-file-below"
-                    (lambda (path)
+                    (lambda (pathj)
                       (if-let* ((buf (find-file-noselect path))
                                 (window (display-buffer-below-selected buf nil)))
                           (select-window window)
@@ -385,9 +411,25 @@ Now the looks
           (interactive "sTerminal purpose: ")
           (vterm (concat "term-" term-name)))
         ))
+
+  (use-package shell-pop
+    :demand t)
+
+  (custom-set-variables
+   ;;'(shell-pop-default-directory "/Users/kyagi/git")
+   '(shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+   '(shell-pop-term-shell "/bin/zsh")
+   '(shell-pop-universal-key "C-`")
+   '(shell-pop-window-size 30)
+   '(shell-pop-full-span t)
+   '(shell-pop-window-position "bottom")
+   ;;'(shell-pop-autocd-to-working-dir t)
+   ;;'(shell-pop-restore-window-configuration t)
+   ;;'(shell-pop-cleanup-buffer-at-process-exit t))
+   )
 #+end_src
 
-* Experiment
+* TODO Experiment
 #+begin_src emacs-lisp :tangle no
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
   (use-package zmq
@@ -431,3 +473,5 @@ Install Conda
 
 #+RESULTS:
 : /Users/monibahmed/miniconda3/bin/python
+
+
