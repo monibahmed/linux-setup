@@ -99,7 +99,8 @@ Because this is one of the main reasons to use Emacs:
        (emacs-lisp . t)
        (python . t)
        (scheme . t)
-       (jupyter . t))))
+      ;; (jupyter . t)
+       )))
 #+end_src
  
 #+begin_src emacs-lisp
