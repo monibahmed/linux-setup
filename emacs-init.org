@@ -1,0 +1,433 @@
+#+TITLE: My .emacs file
+#+STARTUP: content
+#+PROPERTY: header-args:emacs-lisp :results output silent :tangle ./.emacs
+
+* Benchmarking Emacs Boot time
+Benchmark Emacs startup time
+#+begin_src emacs-lisp
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  (setq gc-cons-threshold (* 50 1000 1000))
+
+  ;; Profile emacs startup
+  (add-hook
+   'emacs-startup-hook
+   (lambda ()
+     (message "*** Emacs loaded in %s seconds with %d garbage collections."
+              (emacs-init-time "%.2f")
+              gcs-done)))
+#+end_src
+
+* Basic Emacs Settings
+#+begin_src emacs-lisp :tangle ./.emacs
+  ;; Emacs options for different things
+  (setq inhibit-splash-screen t)
+  (setq make-backup-files nil)
+  (toggle-scroll-bar -1)
+  (tool-bar-mode     -1)
+  (menu-bar-mode     -1)
+  (global-auto-revert-mode 1)
+  (if (display-graphic-p)
+      (progn (menu-bar-mode     1)))
+  (tooltip-mode      -1)
+  (setq make-backup-files nil) ; stop creating backup~ files
+  (setq auto-save-default nil) ; stop creating #autosave# files
+  (setq package-enable-at-startup nil)
+  (setq vc-follow-symlinks nil)
+  ;; Trying to speed up emacs load
+  (setq jit-lock-stealth-time nil)
+  (setq jit-lock-defer-time nil)
+  (setq jit-lock-defer-time 0.05)
+  (setq jit-lock-stealth-load 200)
+  (setq custom-file (concat user-emacs-directory "custom.el"))
+
+  ;;doesn't work as expected
+  ;;(add-to-list 'default-frame-alist '(undecorated . t))
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+* Package Manager
+Using Straight.el for package management.
+
+#+begin_src emacs-lisp
+  (setq straight-vc-git-default-clone-depth 1)
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 6))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+
+  (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t)
+  (setq use-package-always-defer t)
+#+end_src
+
+* Org Mode Setup
+Because this is one of the main reasons to use Emacs:
+
+#+begin_src emacs-lisp
+  ;; Organize your notes and maybe part of your life
+
+  (use-package org
+    :demand t
+    :init
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    :hook (visual-line-mode))
+
+  ;; Org Babel for code blocks
+  (use-package ob
+    :demand t
+    :straight nil
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
+
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell . t)
+       (emacs-lisp . t)
+       (python . t)
+       (scheme . t)
+       (jupyter . t))))
+#+end_src
+ 
+#+begin_src emacs-lisp
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/emacs-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .emacs")
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+* Evil ... Muwwaaahhhahahahaa!
+Evil mode for keybinding and most of efficiency goodness
+
+#+begin_src emacs-lisp
+  ;; enable evil mode
+  (use-package evil
+    :demand t
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-d-scroll t)
+    (setq evil-want-C-i-jump nil)
+    (setq evil-undo-system 'undo-tree)
+    (setq evil-insert-state-cursor '(bar))
+    (setq evil-normal-state-cursor '(box))
+    ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
+    ;;(setq evil-emacs-state-modes nil)
+    ;;(setq evil-want-minibuffer t)
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+    ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
+    ;;(evil-set-initial-state 'dashboard-mode 'normal)
+    )
+
+  (use-package evil-collection
+    ;;:custom (evil-collection-setup-minibuffer t)
+    :demand t
+    :after evil
+    :config
+    (evil-collection-init))
+
+  (use-package evil-surround
+    :after evil
+    :config
+    (global-evil-surround-mode 1))
+  (use-package evil-snipe
+    :init (evil-snipe-mode 1))
+  (use-package evil-matchit
+    :after evil
+    :init
+    (setq evilmi-shortcut "M-m")
+    (global-evil-matchit-mode 1))
+  (use-package evil-lion
+    :after evil
+    :config
+    (evil-lion-mode))
+  (use-package evil-numbers
+    :after evil)
+  (use-package vimish-fold
+    :after evil)
+  (use-package evil-vimish-fold
+    :after vimish-fold
+    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
+
+  (define-key evil-normal-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
+  (define-key evil-visual-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
+  (define-key evil-normal-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
+  (define-key evil-visual-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
+#+end_src
+
+* Useful packages
+For using getting around and understanding Emacs
+
+#+begin_src emacs-lisp
+  ;;some helper packages
+  ;;Undo/Redo in Emacs
+  (use-package undo-tree
+    :init (global-undo-tree-mode))
+  ;;notified if the definition of a function you are customizing change
+  (use-package el-patch)
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init (savehist-mode))
+  ;; a better window manager?
+  (use-package ace-window
+    :bind ("C-c o" . 'ace-window)
+    :init
+    (setq aw-dispatch-always t)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+  ;; divides search pattern into space separated components
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
+  ;; what key should you push next? not needed embark
+  (use-package which-key
+    :init (which-key-mode))
+  ;; Enable rich annotations using the Marginalia package
+  (use-package marginalia
+    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+    :bind (("M-A" . marginalia-cycle)
+           :map minibuffer-local-map
+           ("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode))
+#+end_src
+
+
+#+begin_src emacs-lisp
+  (use-package ibuffer
+    :straight nil
+    :demand t
+    :bind ("C-x C-b" . ibuffer))
+  ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
+  (use-package ibuf-ext
+    :straight nil
+    :demand t)
+  (setq ibuffer-saved-filter-groups
+        (quote (("default"
+                 ("Dotfiles" (or (name . "^\\.")))
+                 ("Messages" (or (name . "^\\*")))
+                 ("Magit" (or (name . "^\\magit*")))
+                 ))))
+
+  (add-hook 'ibuffer-mode-hook
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default")))
+
+  ;; Customize your keyboard shortcuts
+  (use-package hydra)
+  (defhydra hydra-text-scale (:timeout 4)
+    "scale text"
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finished" :exit t))
+
+  (use-package general
+    :config
+    (general-create-definer rune/leader-keys
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC")
+
+    (rune/leader-keys
+      "t"  '(:ignore t :which-key "Toggles")
+      "tt" '(load-theme :which-key "Choose Theme")
+      "ts" '(hydra-text-scale/body :which-key "Scale Text")
+      "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
+      "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme") "xb" '(ibuffer :which-key "ibuffer")
+      "xv" '(multi-vterm :which-key "vterm")
+      "vn" '(multi-vterm :which-key 'pmi/named-term)
+      ;;"xn" '(treemac :which-key "Tree Browser")
+      "fe" '(lambda() (interactive)(find-file "~/emacs-init.org") :which-key "emacs-init.org")
+      "fz" '(lambda() (interactive)(find-file "~/.zshrc") :which-key ".zshrc")
+      "fn" '(lambda() (interactive)(find-file "~/.notes") :which-key ".notes")
+      )
+    )
+  ;;(global-set-key (kbd "C-e") 'end-of-line)
+
+  ;; Completion frameworks and doing stuff
+  (use-package vertico
+    :bind (:map
+           vertico-map
+           ("C-j" . vertico-next)
+           ("C-k" . vertico-previous)
+           ("C-f" . vertico-exit)
+           :map minibuffer-local-map
+           ("M-h" . backward-kill-word))
+    :custom (vertico-cycle t)
+    :init (vertico-mode))
+
+  (use-package consult
+    :bind (("C-c s" . consult-line)
+           ("C-M-l" . consult-imenu)
+           ("C-r" . consult-history)
+           ))
+
+  ;;Do commands and operatioms on buffers or synbols
+  (use-package embark
+    :bind (("C-c e" . embark-act)
+           ("M-." . embark-dwim)
+           ("C-h B" . embark-bindings))
+    :init (setq prefix-help-command #'embark-prefix-help-command))
+  (use-package embark-consult
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+
+#+end_src
+
+* Project Management
+Manage your projects
+
+#+begin_src emacs-lisp
+  ;; Project management
+  (use-package magit)
+  (use-package perspective
+    :demand t
+    :bind
+    ("C-x C-b" . persp-ibuffer)
+    :custom
+    (persp-mode-prefix-key (kbd "C-x C-x"))
+    :init
+    (persp-mode))
+#+end_src 
+
+* Themes
+Now the looks
+
+#+begin_src emacs-lisp
+  ;; themes at the end
+  (if (display-graphic-p)
+      (progn
+        (use-package all-the-icons)
+        (use-package doom-modeline
+          :init (doom-modeline-mode t))
+        (use-package doom-themes
+          :demand t
+          :config
+          ;; Global settings (defaults)
+          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+                doom-themes-enable-italic t) ; if nil, italics is universally disabled
+          (load-theme 'doom-moonlight t)
+          ;; Enable flashing mode-line on errors
+          (doom-themes-visual-bell-config)
+          ;; Enable custom neotree theme (all-the-icons must be installed!)
+          ;;(doom-themes-neotree-config)
+          ;; or for treemacs users
+          ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+          ;;(doom-themes-treemacs-config)
+          ;; Corrects (and improves) org-mode's native fontification.
+          (doom-themes-org-config))
+        ))
+#+end_src
+
+* Mac Os Specific
+#+begin_src emacs-lisp
+
+  (if (eq system-type 'darwin)
+      (progn
+        (message "Emacs running in Mac OS")
+        (setq frame-resize-pixelwise t)
+        (setq mac-command-modifier 'meta)
+
+        (use-package exec-path-from-shell
+          :demand t)
+        (dolist (var '("ZSH" "JAVA_HOME" "LANG" "CONDA_SHLVL"
+                       "CONDA_PREFIX" "SSH_AUTH_SOCK" "CONDA_PYTHON_EXE"
+                       "CONDA_DEFAULT_ENV" "CONDA_PROMPT_MODIFIER" ))
+          (add-to-list 'exec-path-from-shell-variables var))
+        (exec-path-from-shell-initialize)
+        ))
+#+end_src
+
+* MacOS and Linux
+#+begin_src emacs-lisp
+  (if (not (eq system-type 'windows-nt))
+      (progn
+        (use-package vterm
+          :demand t)
+        (use-package multi-vterm)
+
+        (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+        (push (list "find-file-below"
+                    (lambda (path)
+                      (if-let* ((buf (find-file-noselect path))
+                                (window (display-buffer-below-selected buf nil)))
+                          (select-window window)
+                        (message "Failed to open file: %s" path))))
+              vterm-eval-cmds)
+
+        (defun pmi/named-term (term-name)
+          "Generate a terminal with buffer name TERM-NAME."
+          (interactive "sTerminal purpose: ")
+          (vterm (concat "term-" term-name)))
+        ))
+#+end_src
+
+* Experiment
+#+begin_src emacs-lisp :tangle no
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  (use-package zmq
+    :demand t)
+  (use-package jupyter
+    :demand t
+    :after (:all org python))
+  ;;(org-babel-jupyter-override-src-block "python")
+  (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+#+end_src
+
+Install Conda
+
+#+begin_src emacs-lisp :tangle no
+  (use-package conda
+    :demand t
+    :config
+    (conda-env-initialize-interactive-shells)
+    (conda-env-initialize-eshell)
+    (conda-env-autoactivate-mode t)
+    (setq conda-anaconda-home (expand-file-name "~/miniconda3/"))
+    (setq conda-env-home-directory (expand-file-name "~/miniconda3/"))
+    (setq conda-env-subdirectory "envs"))
+#+end_src
+
+
+
+#+BEGIN_SRC python :session  :tangle no
+  x = 'foo'
+  y = 'bar'
+  x + ' ' + y
+#+END_SRC
+
+#+RESULTS:
+: foo bar
+
+#+BEGIN_SRC python :session :tangle no
+  import sys
+  sys.executable
+#+END_SRC
+
+#+RESULTS:
+: /Users/monibahmed/miniconda3/bin/python
