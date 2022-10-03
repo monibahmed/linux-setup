@@ -386,12 +386,19 @@ Now the looks
 
 * MacOS and Linux
 ** TODO Shell Support
-#+begin_src emacs-lisp :tangle no
-  ;;  (if (not (eq system-type 'windows-nt))
-  ;;      (progn
-          (use-package vterm
-            :demand t
-            :config (setq vterm-max-scrollback 10000))
+#+begin_src emacs-lisp
+
+  (if (not (eq system-type 'windows-nt))
+      (progn
+        (use-package vterm
+          :demand t
+          :config (setq vterm-max-scrollback 10000))
+        (use-package multi-vterm
+          :demand t)
+        (use-package vterm-toggle
+          :bind ("C-`" . vterm-toggle))
+        ))
+  
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
