@@ -65,7 +65,7 @@ Using Straight.el for package management.
 
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t)
-  (setq use-package-always-defer t)
+;;  (setq use-package-always-defer t)
 #+end_src
 
 * Org Mode Setup
@@ -75,7 +75,6 @@ Because this is one of the main reasons to use Emacs:
   ;; Organize your notes and maybe part of your life
 
   (use-package org
-    :demand t
     :init
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
@@ -84,7 +83,6 @@ Because this is one of the main reasons to use Emacs:
 
   ;; Org Babel for code blocks
   (use-package ob
-    :demand t
     :straight nil
     :init
     (require 'org-tempo)
@@ -99,7 +97,7 @@ Because this is one of the main reasons to use Emacs:
        (emacs-lisp . t)
        (python . t)
        (scheme . t)
-      ;; (jupyter . t)
+       ;; (jupyter . t)
        )))
 #+end_src
  
@@ -122,7 +120,6 @@ Evil mode for keybinding and most of efficiency goodness
 #+begin_src emacs-lisp
   ;; enable evil mode
   (use-package evil
-    :demand t
     :init
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
@@ -145,7 +142,6 @@ Evil mode for keybinding and most of efficiency goodness
 
   (use-package evil-collection
     ;;:custom (evil-collection-setup-minibuffer t)
-    :demand t
     :after evil
     :config
     (evil-collection-init))
@@ -186,37 +182,37 @@ For extending Emacs functionality
 #+begin_src emacs-lisp
 
   ;;some helper packages
-    ;;Undo/Redo in Emacs
-    (use-package undo-tree
-      :init (global-undo-tree-mode))
-    ;;notified if the definition of a function you are customizing change
-    (use-package el-patch)
-    ;; Persist history over Emacs restarts. Vertico sorts by history position.
-    (use-package savehist
-      :init (savehist-mode))
-    ;; a better window manager?
-    (use-package ace-window
-      :bind ("C-c o" . 'ace-window)
-      :init
-      (setq aw-dispatch-always t)
-      (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-    ;; divides search pattern into space separated components
-    (use-package orderless
-      :custom
-      (completion-styles '(orderless basic))
-      (completion-category-defaults nil)
-      (completion-category-overrides '((file (styles basic partial-completion)))))
-    ;; what key should you push next? not needed embark
-    (use-package which-key
-      :init (which-key-mode))
-    ;; Enable rich annotations using the Marginalia package
-    (use-package marginalia
-      ;; Either bind `marginalia-cycle' globally or only in the minibuffer
-      :bind (("M-A" . marginalia-cycle)
-             :map minibuffer-local-map
-             ("M-A" . marginalia-cycle))
-      :init
-      (marginalia-mode))
+  ;;Undo/Redo in Emacs
+  (use-package undo-tree
+    :init (global-undo-tree-mode))
+  ;;notified if the definition of a function you are customizing change
+  (use-package el-patch)
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init (savehist-mode))
+  ;; a better window manager?
+  (use-package ace-window
+    :bind ("C-c o" . 'ace-window)
+    :init
+    (setq aw-dispatch-always t)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+  ;; divides search pattern into space separated components
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless basic))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles basic partial-completion)))))
+  ;; what key should you push next? not needed embark
+  (use-package which-key
+    :init (which-key-mode))
+  ;; Enable rich annotations using the Marginalia package
+  (use-package marginalia
+    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+    :bind (("M-A" . marginalia-cycle)
+           :map minibuffer-local-map
+           ("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode))
   (use-package restart-emacs)
 
 #+end_src
@@ -294,21 +290,19 @@ Manage your projects
 #+begin_src emacs-lisp
   ;; Project management
   (use-package magit)
-  #+end_src
+#+end_src
 
 ** Buffer Management
 
 #+begin_src emacs-lisp
 
   (use-package ibuffer
-    :straight nil
-    :demand t)
-    ;;:bind ("C-x C-b" . ibuffer))
+    :straight nil)
+  ;;:bind ("C-x C-b" . ibuffer))
   ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
-  
+
   (use-package ibuf-ext
-    :straight nil
-    :demand t)
+    :straight nil)
   (setq ibuffer-saved-filter-groups
         (quote (("default"
                  ("Dotfiles" (or (name . "^\\.")))
@@ -326,7 +320,6 @@ Manage your projects
 #+begin_src emacs-lisp
 
   (use-package perspective
-    :demand t
     :bind ("C-x C-b" . persp-ibuffer)
     :custom
     (persp-mode-prefix-key (kbd "C-x C-x"))
@@ -339,29 +332,28 @@ Manage your projects
 Now the looks
 
 #+begin_src emacs-lisp
-;; themes at the end
-(if (display-graphic-p)
-    (progn
-    (use-package all-the-icons)
-    (use-package doom-modeline
-        :init (doom-modeline-mode t))
-    (use-package doom-themes
-        :demand t
-        :config
-        ;; Global settings (defaults)
-        (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-            doom-themes-enable-italic t) ; if nil, italics is universally disabled
-        (load-theme 'doom-moonlight t)
-        ;; Enable flashing mode-line on errors
-        (doom-themes-visual-bell-config)
-        ;; Enable custom neotree theme (all-the-icons must be installed!)
-        ;;(doom-themes-neotree-config)
-        ;; or for treemacs users
-        ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-        ;;(doom-themes-treemacs-config)
-        ;; Corrects (and improves) org-mode's native fontification.
-        (doom-themes-org-config))
-    ))
+  ;; themes at the end
+  (if (display-graphic-p)
+      (progn
+        (use-package all-the-icons)
+        (use-package doom-modeline
+          :init (doom-modeline-mode t))
+        (use-package doom-themes
+          :config
+          ;; Global settings (defaults)
+          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+                doom-themes-enable-italic t) ; if nil, italics is universally disabled
+          (load-theme 'doom-moonlight t)
+          ;; Enable flashing mode-line on errors
+          (doom-themes-visual-bell-config)
+          ;; Enable custom neotree theme (all-the-icons must be installed!)
+          ;;(doom-themes-neotree-config)
+          ;; or for treemacs users
+          ;; (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+          ;;(doom-themes-treemacs-config)
+          ;; Corrects (and improves) org-mode's native fontification.
+          (doom-themes-org-config))
+        ))
 #+end_src
 
 * Mac Os Specific
@@ -374,8 +366,7 @@ Now the looks
         (setq frame-resize-pixelwise t)
         (setq mac-command-modifier 'meta)
 
-        (use-package exec-path-from-shell
-          :demand t)
+        (use-package exec-path-from-shell)
         (dolist (var '("ZSH" "JAVA_HOME" "LANG" "CONDA_SHLVL"
                        "CONDA_PREFIX" "SSH_AUTH_SOCK" "CONDA_PYTHON_EXE"
                        "CONDA_DEFAULT_ENV" "CONDA_PROMPT_MODIFIER" ))
@@ -385,16 +376,14 @@ Now the looks
 #+end_src
 
 * MacOS and Linux
-** TODO Shell Support
+** Shell Support
 #+begin_src emacs-lisp
 
   (if (not (eq system-type 'windows-nt))
       (progn
         (use-package vterm
-          :demand t
           :config (setq vterm-max-scrollback 10000))
-        (use-package multi-vterm
-          :demand t)
+        (use-package multi-vterm)
         (use-package vterm-toggle
           :bind ("C-`" . vterm-toggle))
         (setq vterm-toggle-fullscreen-p nil)
@@ -404,38 +393,35 @@ Now the looks
                            (with-current-buffer buffer
                              (or (equal major-mode 'vterm-mode)
                                  (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-               (display-buffer-reuse-window display-buffer-at-bottom)
-               ;;(display-buffer-reuse-window display-buffer-in-direction)
-               ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-               ;;(direction . bottom)
-               ;;(dedicated . t) ;dedicated is supported in emacs27
-               (reusable-frames . visible)
-               (window-height . 0.3)))
+                       (display-buffer-reuse-window display-buffer-at-bottom)
+                       ;;(display-buffer-reuse-window display-buffer-in-direction)
+                       ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                       ;;(direction . bottom)
+                       ;;(dedicated . t) ;dedicated is supported in emacs27
+                       (reusable-frames . visible)
+                       (window-height . 0.3)))
         ))
 
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
-        (use-package multi-vterm
-          :demand t)
 
-        (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
-        (push (list "find-file-below"
-                    (lambda (pathj)
-                      (if-let* ((buf (find-file-noselect path))
-                                (window (display-buffer-below-selected buf nil)))
-                          (select-window window)
-                        (message "Failed to open file: %s" path))))
-              vterm-eval-cmds)
+  (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+  (push (list "find-file-below"
+              (lambda (pathj)
+                (if-let* ((buf (find-file-noselect path))
+                          (window (display-buffer-below-selected buf nil)))
+                    (select-window window)
+                  (message "Failed to open file: %s" path))))
+        vterm-eval-cmds)
 
-        (defun pmi/named-term (term-name)
-          "Generate a terminal with buffer name TERM-NAME."
-          (interactive "sTerminal purpose: ")
-          (vterm (concat "term-" term-name)))
-        ))
+  (defun pmi/named-term (term-name)
+    "Generate a terminal with buffer name TERM-NAME."
+    (interactive "sTerminal purpose: ")
+    (vterm (concat "term-" term-name)))
+  ))
 
-  (use-package shell-pop
-    :demand t)
+  (use-package shell-pop)
 
   (custom-set-variables
    ;;'(shell-pop-default-directory "/Users/kyagi/git")
@@ -451,17 +437,11 @@ Now the looks
    )
 #+end_src
 
-* TODO Eshell
-Completions
-
-* TODO Powerline/Modeline
-* TODO Experiment
-#+begin_src emacs-lisp :tangle no
+* TODO Jupyter Mode
+#+Begin_src emacs-lisp :tangle no
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-  (use-package zmq
-    :demand t)
+  (use-package zmq)
   (use-package jupyter
-    :demand t
     :after (:all org python))
   ;;(org-babel-jupyter-override-src-block "python")
   (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
@@ -471,7 +451,6 @@ Install Conda
 
 #+begin_src emacs-lisp :tangle no
   (use-package conda
-    :demand t
     :config
     (conda-env-initialize-interactive-shells)
     (conda-env-initialize-eshell)
@@ -499,5 +478,93 @@ Install Conda
 
 #+RESULTS:
 : /Users/monibahmed/miniconda3/bin/python
-* TODO Dired
+* TODO Powerline/Modeline
 * TODO Persistent Emacs like TMUX
+* TODO Project Tree Browser
+* TODO Eshell
+Completions
+
+* Programming
+** General Setup
+** Scala LSP-Mode
+#+begin_src emacs-lisp 
+;; Enable scala-mode for highlighting, indentation and motion commands
+(use-package scala-mode
+  :interpreter ("scala" . scala-mode))
+
+;; Enable sbt mode for executing sbt commands
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+;; Enable nice rendering of diagnostics like compile errors.
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  ;; You could also swap out lsp for lsp-deffered in order to defer loading
+  :hook  (scala-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
+  :config
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  ;; (setq gc-cons-threshold 100000000) ;; 100mb
+  ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; (setq lsp-idle-delay 0.500)
+  ;; (setq lsp-log-io nil)
+  ;; (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil))
+
+;; Add metals backend for lsp-mode
+(use-package lsp-metals)
+
+;; Enable nice rendering of documentation on hover
+;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
+;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
+;;   In that case you have to not only disable this but also remove from the packages since
+;;   lsp-mode can activate it automatically.
+(use-package lsp-ui)
+
+;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
+;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
+;; to avoid odd behavior with snippets and indentation
+(use-package yasnippet)
+
+;; Use company-capf as a completion provider.
+;;
+;; To Company-lsp users:
+;;   Company-lsp is no longer maintained and has been removed from MELPA.
+;;   Please migrate to company-capf.
+(use-package company
+  :hook (scala-mode . company-mode)
+  :config
+  (setq lsp-completion-provider :capf))
+
+;; Posframe is a pop-up tool that must be manually installed for dap-mode
+(use-package posframe)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
+#+end_src
+
+** SystemVerilog
+
+#+begin_src emacs-lisp
+
+  (straight-use-package
+   '(verilog-mode :type git :host github :repo "veripool/verilog-mode"))
+
+#+end_src
+** Python 
