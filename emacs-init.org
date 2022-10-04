@@ -568,3 +568,34 @@ Completions
 
 #+end_src
 ** Python 
+* Windows Setup
+
+#+begin_src emacs-lisp
+
+  (if (eq system-type 'windows-nt)
+      (progn 
+        (message "Emacs Running in Windows")
+        (menu-bar-mode -1)
+        (use-package powershell
+          :config
+          ;; Change default compile command for powershell
+          (add-hook 'powershell-mode-hook
+                    (lambda ()
+                      (set (make-local-variable 'compile-command)
+                           (format "powershell.exe -NoLogo -NonInteractive -Command \"& '%s'\"" (buffer-file-name)))))
+          )
+        (defun run-bash ()
+          "Run Bash"
+          (interactive)
+          (async-shell-command "C:/windows/system32/bash.exe"
+                               nil
+                               nil))
+        (defun run-powershell ()
+          "Run powershell"
+          (interactive)
+          (async-shell-command "C:/Program Files/PowerShell/7/pwsh.exe"
+                               nil
+                               nil))
+        )) 
+
+#+end_src
