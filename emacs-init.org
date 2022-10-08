@@ -571,6 +571,13 @@ Completions
    '(verilog-mode :type git :host github :repo "veripool/verilog-mode"))
 
 #+end_src
+
+** Haskell
+#+begin_src emacs-lisp
+
+  (use-package haskell-mode)
+
+#+end_src
 ** Python 
 * Windows Setup
 
