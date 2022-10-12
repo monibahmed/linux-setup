@@ -389,7 +389,7 @@ Now the looks
           :config (setq vterm-max-scrollback 10000))
         (use-package multi-vterm)
         (use-package vterm-toggle
-          :bind ("C-`" . vterm-toggle))
+          :bind ("<f9>" . vterm-toggle))
         (setq vterm-toggle-fullscreen-p nil)
         (add-to-list 'display-buffer-alist
                      '((lambda (buffer-or-name _)
@@ -521,11 +521,11 @@ Completions
     :config
     ;; Uncomment following section if you would like to tune lsp-mode performance according to
     ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
-    ;; (setq gc-cons-threshold 100000000) ;; 100mb
-    ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
-    ;; (setq lsp-idle-delay 0.500)
-    ;; (setq lsp-log-io nil)
-    ;; (setq lsp-completion-provider :capf)
+    (setq gc-cons-threshold 100000000) ;; 100mb
+    (setq read-process-output-max (* 1024 1024)) ;; 1mb
+    (setq lsp-idle-delay 0.500)
+    (setq lsp-log-io nil)
+    (setq lsp-completion-provider :capf)
     (setq lsp-prefer-flymake nil))
 
   ;; Add metals backend for lsp-mode
@@ -572,6 +572,20 @@ Completions
 
 #+end_src
 ** Python 
+** Haskell
+#+begin_src emacs-lisp
+  (use-package haskell-mode)
+
+  (use-package lsp-haskell
+    :defer t
+    :init
+    (add-hook 'haskell-mode-hook
+              (lambda ()
+                (lsp)
+                (setq evil-shift-width 2)))
+    (add-hook 'haskell-literate-mode-hook #'lsp))
+
+#+end_src
 * Windows Setup
 
 #+begin_src emacs-lisp

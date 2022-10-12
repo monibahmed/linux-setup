@@ -53,26 +53,32 @@ say() {
     vterm_cmd message "%s" "$*"
 }
 
+LS_COLORS=$LS_COLORS:'ow=1;34:' ; export LS_COLORS
+
+# >>> JVM installed by coursier >>>
+export JAVA_HOME="/home/monib/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz/jdk8u292-b10"
+export PATH="$PATH:/home/monib/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz/jdk8u292-b10/bin"
+# <<< JVM installed by coursier <<<
+
+# >>> coursier install directory >>>
+export PATH="$PATH:/home/monib/.local/share/coursier/bin"
+# <<< coursier install directory <<<
+
+
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/monibahmed/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+__conda_setup="$('/home/monib/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/Users/monibahmed/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/Users/monibahmed/miniconda3/etc/profile.d/conda.sh"
+    if [ -f "/home/monib/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/monib/miniconda3/etc/profile.d/conda.sh"
     else
-        export PATH="/Users/monibahmed/miniconda3/bin:$PATH"
+        export PATH="/home/monib/miniconda3/bin:$PATH"
     fi
 fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# >>> JVM installed by coursier >>>
-export JAVA_HOME="/Users/monibahmed/Library/Caches/Coursier/arc/https/github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_mac_hotspot_8u292b10.tar.gz/jdk8u292-b10/Contents/Home"
-# <<< JVM installed by coursier <<<
 
-# >>> coursier install directory >>>
-export PATH="$PATH:/Users/monibahmed/Library/Application Support/Coursier/bin"
-# <<< coursier install directory <<<
-export PATH="/usr/local/sbin:$PATH"
+[ -f "/home/monib/.ghcup/env" ] && source "/home/monib/.ghcup/env" # ghcup-env

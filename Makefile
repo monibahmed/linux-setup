@@ -5,7 +5,7 @@ ubuntu:
 	sudo apt install -y gcc-10 g++-10 libgccjit0 libgccjit-10-dev libjansson4 libjansson-dev \
 				build-essential libgtk-3-dev libgnutls28-dev libtiff5-dev libgif-dev \
 				libjpeg-dev libpng-dev libxpm-dev libncurses-dev libtool-bin texinfo cmake \
-				automake libncurses5-dev g++ unzip 
+				automake autoconf libncurses5-dev g++ unzip 
 conda:
 	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh ;\
         sh Miniconda3-latest-Linux-x86_64.sh -b ;\
