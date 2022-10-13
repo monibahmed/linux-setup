@@ -516,17 +516,23 @@ Completions
   (use-package lsp-mode
     ;; Optional - enable lsp-mode automatically in scala files
     ;; You could also swap out lsp for lsp-deffered in order to defer loading
-    :hook  (scala-mode . lsp)
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :hook
+    (scala-mode . lsp)
+    (haskell-mode . lsp)
     (lsp-mode . lsp-lens-mode)
     :config
     ;; Uncomment following section if you would like to tune lsp-mode performance according to
     ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
-    ;; (setq gc-cons-threshold 100000000) ;; 100mb
-    ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
-    ;; (setq lsp-idle-delay 0.500)
-    ;; (setq lsp-log-io nil)
-    ;; (setq lsp-completion-provider :capf)
-    (setq lsp-prefer-flymake nil))
+    (setq gc-cons-threshold 100000000) ;; 100mb
+    (setq read-process-output-max (* 1024 1024)) ;; 1mb
+    (setq lsp-idle-delay 0.500)
+    (setq lsp-log-io nil)
+    (setq lsp-completion-provider :capf)
+    (setq lsp-prefer-flymake nil)
+    :commands
+    (lsp lsp-deferred))
 
   ;; Add metals backend for lsp-mode
   (use-package lsp-metals)
@@ -576,6 +582,7 @@ Completions
 #+begin_src emacs-lisp
 
   (use-package haskell-mode)
+  (use-package lsp-haskell)
 
 #+end_src
 ** Python 
@@ -595,10 +602,10 @@ Completions
                       (set (make-local-variable 'compile-command)
                            (format "powershell.exe -NoLogo -NonInteractive -Command \"& '%s'\"" (buffer-file-name)))))
           )
-        (defun run-bash ()
+        (defun run-wsl ()
           "Run Bash"
           (interactive)
-          (async-shell-command "C:/windows/system32/bash.exe"
+          (async-shell-command "C:/windows/system32/wsl.exe"
                                nil
                                nil))
         (defun run-powershell ()
@@ -609,4 +616,8 @@ Completions
                                nil))
         )) 
 
+
+(when (string-match "-[Mm]icrosoft" operating-system-release)
+  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+  )
 #+end_src
