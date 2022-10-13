@@ -76,3 +76,5 @@ export JAVA_HOME="/Users/monibahmed/Library/Caches/Coursier/arc/https/github.com
 export PATH="$PATH:/Users/monibahmed/Library/Application Support/Coursier/bin"
 # <<< coursier install directory <<<
 export PATH="/usr/local/sbin:$PATH"
+
+[ -f "/Users/monibahmed/.ghcup/env" ] && source "/Users/monibahmed/.ghcup/env" # ghcup-env

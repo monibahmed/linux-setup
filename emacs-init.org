@@ -83,7 +83,7 @@ Because this is one of the main reasons to use Emacs:
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
-    :hook (visual-line-mode))
+    :init (visual-line-mode))
 
   ;; Org Babel for code blocks
   (use-package ob
@@ -490,25 +490,8 @@ Completions
 
 * Programming
 ** General Setup
-** Scala LSP-Mode
-#+begin_src emacs-lisp 
-  ;; Enable scala-mode for highlighting, indentation and motion commands
-  (use-package scala-mode
-    :interpreter ("scala" . scala-mode))
 
-  ;; Enable sbt mode for executing sbt commands
-  (use-package sbt-mode
-    :commands sbt-start sbt-command
-    :config
-    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
-    ;; allows using SPACE when in the minibuffer
-    (substitute-key-definition
-     'minibuffer-complete-word
-     'self-insert-command
-     minibuffer-local-completion-map)
-    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
-    (setq sbt:program-options '("-Dsbt.supershell=false")))
-
+#+begin_src emacs-lisp
   ;; Enable nice rendering of diagnostics like compile errors.
   (use-package flycheck
     :init (global-flycheck-mode))
@@ -520,7 +503,7 @@ Completions
     (setq lsp-keymap-prefix "C-c l")
     :hook
     (scala-mode . lsp)
-    (haskell-mode . lsp)
+    ;;(haskell-mode . lsp)
     (lsp-mode . lsp-lens-mode)
     :config
     ;; Uncomment following section if you would like to tune lsp-mode performance according to
@@ -533,9 +516,6 @@ Completions
     (setq lsp-prefer-flymake nil)
     :commands
     (lsp lsp-deferred))
-
-  ;; Add metals backend for lsp-mode
-  (use-package lsp-metals)
 
   ;; Enable nice rendering of documentation on hover
   ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
@@ -569,6 +549,29 @@ Completions
     (lsp-mode . dap-ui-mode))
 #+end_src
 
+** Scala LSP-Mode
+#+begin_src emacs-lisp  
+  ;; Enable scala-mode for highlighting, indentation and motion commands
+  (use-package scala-mode
+    :interpreter ("scala" . scala-mode))
+
+  ;; Add metals backend for lsp-mode
+  (use-package lsp-metals)
+
+  ;; Enable sbt mode for executing sbt commands
+  (use-package sbt-mode
+    :commands sbt-start sbt-command
+    :config
+    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+    ;; allows using SPACE when in the minibuffer
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+    (setq sbt:program-options '("-Dsbt.supershell=false")))
+#+end_src
+
 ** SystemVerilog
 
 #+begin_src emacs-lisp
@@ -583,12 +586,29 @@ Completions
 
   (use-package haskell-mode)
   (use-package lsp-haskell)
-
+  (custom-set-variables
+   '(haskell-process-suggest-remove-import-lines t)
+   '(haskell-process-auto-import-loaded-modules t)
+   '(haskell-process-log t))
+  (eval-after-load 'haskell-mode
+    '(progn
+       (define-key haskell-mode-map (kbd "C-c C-c") 'haskell-process-load-or-reload)
+       (define-key haskell-mode-map (kbd "C-c C-z") 'haskell-interactive-switch)
+       (define-key haskell-mode-map (kbd "C-c C-n C-t") 'haskell-process-do-type)
+       (define-key haskell-mode-map (kbd "C-c C-n C-i") 'haskell-process-do-info)
+       (define-key haskell-mode-map (kbd "C-c C-n C-c") 'haskell-process-cabal-build)
+       (define-key haskell-mode-map (kbd "C-c C-n c") 'haskell-process-cabal)))
+  (eval-after-load 'haskell-cabal
+    '(progn
+       (define-key haskell-cabal-mode-map (kbd "C-c C-z") 'haskell-interactive-switch)
+       (define-key haskell-cabal-mode-map (kbd "C-c C-k") 'haskell-interactive-mode-clear)
+       (define-key haskell-cabal-mode-map (kbd "C-c C-c") 'haskell-process-cabal-build)
+       (define-key haskell-cabal-mode-map (kbd "C-c c") 'haskell-process-cabal)))
 #+end_src
 ** Python 
 * Windows Setup
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 
   (if (eq system-type 'windows-nt)
       (progn 
@@ -617,7 +637,7 @@ Completions
         )) 
 
 
-(when (string-match "-[Mm]icrosoft" operating-system-release)
-  ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
-  )
+  (when (string-match "-[Mm]icrosoft" operating-system-release)
+    ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
+    )
 #+end_src
