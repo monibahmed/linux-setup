@@ -55,30 +55,3 @@ say() {
 
 LS_COLORS=$LS_COLORS:'ow=1;34:' ; export LS_COLORS
 
-# >>> JVM installed by coursier >>>
-export JAVA_HOME="/home/monib/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz/jdk8u292-b10"
-export PATH="$PATH:/home/monib/.cache/coursier/arc/https/github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u292-b10/OpenJDK8U-jdk_x64_linux_hotspot_8u292b10.tar.gz/jdk8u292-b10/bin"
-# <<< JVM installed by coursier <<<
-
-# >>> coursier install directory >>>
-export PATH="$PATH:/home/monib/.local/share/coursier/bin"
-# <<< coursier install directory <<<
-
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/monib/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/monib/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/monib/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/monib/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-
-[ -f "/home/monib/.ghcup/env" ] && source "/home/monib/.ghcup/env" # ghcup-env
