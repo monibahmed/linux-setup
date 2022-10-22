@@ -26,8 +26,8 @@ Benchmark Emacs startup time
   (tool-bar-mode     -1)
   (menu-bar-mode     -1)
   (global-auto-revert-mode 1)
-  (if (display-graphic-p)
-      (progn (menu-bar-mode     1)))
+  ;;(if (display-graphic-p)
+  ;;    (progn (menu-bar-mode     -1)))
   (tooltip-mode      -1)
   (setq make-backup-files nil) ; stop creating backup~ files
   (setq auto-save-default nil) ; stop creating #autosave# files
@@ -441,29 +441,48 @@ Now the looks
    )
 #+end_src
 
+* TODO Powerline/Modeline
+* TODO Persistent Emacs like TMUX
+* TODO Project Tree Browser
+* TODO Eshell
+Completions
+
 * TODO Jupyter Mode
-#+Begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
   (use-package zmq)
   (use-package jupyter
     :after (:all org python))
   ;;(org-babel-jupyter-override-src-block "python")
   (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
+
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t) ;; Other languages
+     (shell . t)
+     ;; Python & Jupyter
+     (python . t)
+     (jupyter . t)))
+
 #+end_src
 
 Install Conda
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package conda
     :config
     (conda-env-initialize-interactive-shells)
     (conda-env-initialize-eshell)
     (conda-env-autoactivate-mode t)
-    (setq conda-anaconda-home (expand-file-name "~/miniconda3/"))
-    (setq conda-env-home-directory (expand-file-name "~/miniconda3/"))
+    (setq conda-anaconda-home (expand-file-name "~/mambaforge/"))
+    (setq conda-env-home-directory (expand-file-name "~/mambaforge/"))
     (setq conda-env-subdirectory "envs"))
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package code-cells)
+#+END_src
 
 
 #+BEGIN_SRC python :session  :tangle no
@@ -475,18 +494,25 @@ Install Conda
 #+RESULTS:
 : foo bar
 
-#+BEGIN_SRC python :session :tangle no
+#+BEGIN_SRC jupyter-python :session :tangle no
   import sys
   sys.executable
 #+END_SRC
 
 #+RESULTS:
-: /Users/monibahmed/miniconda3/bin/python
-* TODO Powerline/Modeline
-* TODO Persistent Emacs like TMUX
-* TODO Project Tree Browser
-* TODO Eshell
-Completions
+: /home/monib/mambaforge/bin/python
+
+#+begin_src jupyter-scala :session scala :tangle no
+  println("Hello Scala!")
+  2+2 
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+: Hello Scala!
+: [36mres1_1[39m: [32mInt[39m = [32m4[39m
+:END:
+
 
 * Programming
 ** General Setup
@@ -513,16 +539,13 @@ Completions
     (setq lsp-idle-delay 0.500)
     (setq lsp-log-io nil)
     (setq lsp-completion-provider :capf)
-<<<<<<< HEAD
     (setq lsp-prefer-flymake nil))
 
   ;; Add metals backend for lsp-mode
-  (use-package lsp-metals)
-=======
-    (setq lsp-prefer-flymake nil)
-    :commands
-    (lsp lsp-deferred))
->>>>>>> 6f7887a5255009cd6397ca3e2d701e9e762f4d56
+  ;;(use-package lsp-metals
+  ;;  (setq lsp-prefer-flymake nil)
+  ;;  :commands
+  ;;  (lsp lsp-deferred))
 
   ;; Enable nice rendering of documentation on hover
   ;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
