@@ -447,7 +447,7 @@ Now the looks
 * TODO Eshell
 Completions
 
-* TODO Jupyter Mode
+** TODO Jupyter Mode
 #+begin_src emacs-lisp 
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
   (use-package zmq)
@@ -462,6 +462,7 @@ Completions
    '((emacs-lisp . t) ;; Other languages
      (shell . t)
      ;; Python & Jupyter
+     (haskell . t)
      (python . t)
      (jupyter . t)))
 
@@ -510,9 +511,13 @@ Install Conda
 #+RESULTS:
 :RESULTS:
 : Hello Scala!
-: [36mres1_1[39m: [32mInt[39m = [32m4[39m
+: [36mres2_1[39m: [32mInt[39m = [32m4[39m
 :END:
 
+#+begin_src haskell :session haskell :tangle no
+let x = 1
+    
+#+end_src
 
 * Programming
 ** General Setup
