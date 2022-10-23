@@ -75,12 +75,12 @@ Using Straight.el for package management.
 * Environment Variables
 #+begin_src emacs-lisp
 
-  ;;(if (eq system-type 'darwin)
-  ;;    (progn
-  ;;      (message "Emacs running in Mac OS")
-  ;;(setq frame-resize-pixelwise t)
-  ;;(setq mac-command-modifier 'meta)
-  ;;))
+  (if (eq system-type 'darwin)
+      (progn
+        (message "Emacs running in Mac OS")
+        (setq frame-resize-pixelwise t)
+        (setq mac-command-modifier 'meta)
+        ))
 
   (use-package exec-path-from-shell)
   (dolist (var '("PATH" "ZSH" "JAVA_HOME" "LANG" "CONDA_SHLVL"
@@ -462,7 +462,79 @@ Manage your projects
 #+end_src 
 
 * Programming
-** Scala LSP-Mode
+** LSP
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  ;; You could also swap out lsp for lsp-deffered in order to defer loading
+  :hook  (scala-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
+  :config
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  ;; (setq gc-cons-threshold 100000000) ;; 100mb
+  ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; (setq lsp-idle-delay 0.500)
+  ;; (setq lsp-log-io nil)
+  ;; (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil))
+#+end_src
+** Corfu
+#+begin_src emacs-lisp
+  (use-package corfu
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    (corfu-separator ?\s)          ;; Orderless field separator
+    (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    (corfu-preview-current nil)    ;; Disable current candidate preview
+    (corfu-preselect-first nil)    ;; Disable candidate preselection
+    (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+    (corfu-scroll-margin 5)        ;; Use scroll margin
+   
+    ;; Enable Corfu only for certain modes.
+    :hook ((prog-mode . corfu-mode)
+          (shell-mode . corfu-mode)
+          (eshell-mode . corfu-mode))
+
+    ;; Use TAB for cycling, default is `corfu-complete'.
+    :bind
+    (:map corfu-map
+          ("TAB" . corfu-next)
+          ([tab] . corfu-next)
+          ("S-TAB" . corfu-previous)
+          ([backtab] . corfu-previous))
+
+    ;; Recommended: Enable Corfu globally.
+    ;; This is recommended since Dabbrev can be used globally (M-/).
+    ;; See also `corfu-excluded-modes'.
+    :init
+    (global-corfu-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 3)
+
+    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+    ;; (setq read-extended-command-predicate
+    ;;       #'command-completion-default-include-p)
+
+    ;; Enable indentation+completion using the TAB key.
+    ;; `completion-at-point' is often bound to M-TAB.
+    (setq tab-always-indent 'complete))
+#+end_src
+** Flycheck
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :init (global-flycheck-mode))
+#+end_src
+** Scala 
 #+begin_src emacs-lisp  
   ;; Enable scala-mode for highlighting, indentation and motion commands
   (use-package scala-mode
@@ -472,19 +544,18 @@ Manage your projects
   ;; (use-package lsp-metals)
 
   ;; Enable sbt mode for executing sbt commands
-  ;; (use-package sbt-mode
-  ;;   :commands sbt-start sbt-command
-  ;;   :config
-  ;;   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
-  ;;   ;; allows using SPACE when in the minibuffer
-  ;;   (substitute-key-definition
-  ;;    'minibuffer-complete-word
-  ;;    'self-insert-command
-  ;;    minibuffer-local-completion-map)
-  ;;   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
-  ;;   (setq sbt:program-options '("-Dsbt.supershell=false")))
+  (use-package sbt-mode
+    :commands sbt-start sbt-command
+    :config
+    ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+    ;; allows using SPACE when in the minibuffer
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
+    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+    (setq sbt:program-options '("-Dsbt.supershell=false")))
 #+end_src
-
 ** SystemVerilog
 #+begin_src emacs-lisp
 
@@ -556,10 +627,11 @@ Manage your projects
   (use-package code-cells)
 #+END_src
 
-*** Try out some code
+**** Try out some code
 #+BEGIN_SRC python :session  :tangle no
   x = 'foo'
   y = 'bar'
+  print("Hello World")
   x + ' ' + y
 #+END_SRC
 

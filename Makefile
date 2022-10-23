@@ -51,6 +51,10 @@ sbt:
 	sudo apt-get update ;\
 	sudo apt-get install sbt ;\
 
+ghcup: 
+	curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+
+
 home:
 	ln -s .emacs ~/.emacs
 	ln -s .zshrc ~/.zshrc
