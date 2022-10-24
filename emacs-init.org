@@ -828,6 +828,18 @@ digraph G {
 #+RESULTS:
 [[file:dot_success.png]]
 
+* Make graphics and block diagrams
+#+begin_src emacs-lisp
+  (use-package graphviz-dot-mode
+    :ensure t
+    :config
+    (setq graphviz-dot-indent-width 4))
+
+  (use-package company-graphviz-dot
+    :straight nil)
+
+#+end_src
+
 * MacOS and Linux
 ** Shell Support
 #+begin_src emacs-lisp
@@ -924,7 +936,6 @@ digraph G {
         ))
 #+end_src
 
-* TODO Project Tree Browser
 * Windows Setup
 
 #+begin_src emacs-lisp :tangle no
@@ -960,18 +971,6 @@ digraph G {
     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
     )
 #+end_src
-* TODO Persistent Emacs like TMUX
-* TODO Eshell
-* TODO Powerline/Modeline
 * TODO Publish Website with notes
-* TODO Make graphics and block diagrams
-#+begin_src emacs-lisp
-  (use-package graphviz-dot-mode
-    :ensure t
-    :config
-    (setq graphviz-dot-indent-width 4))
-
-  (use-package company-graphviz-dot
-    )
-#+end_src
-
+* TODO PersiSTEnt Emacs like TMUX
+* TODO Eshell
