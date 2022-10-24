@@ -1,6 +1,7 @@
 #+TITLE: My .emacs file
 #+STARTUP: content
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
+#+STARTUP: inlineimages
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
@@ -102,6 +103,8 @@ Because this is one of the main reasons to use Emacs:
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
+    :hook
+    (org-babel-after-execute . org-redisplay-inline-images)
     :init (visual-line-mode))
 
   ;; Org Babel for code blocks
@@ -122,6 +125,7 @@ Because this is one of the main reasons to use Emacs:
      'org-babel-load-languages
      '((shell      . t)
        (emacs-lisp . t)
+       (dot        . t)
        (python     . t)
        (haskell    . t)
        (scheme     . t)
@@ -790,6 +794,40 @@ Manage your projects
 #+RESULTS:
 : 9
 
+#+BEGIN_SRC dot :file dot_success.png :cmdline -Kdot -Tpng
+digraph G {
+  { rank=same;HTML;PDF; }
+  { rank=same;Orgexport;Nikola; }
+  Orgbabel [color=lightblue,style=filled,label="org-babel (ob)"];
+  Orgmode [color=limegreen,style=filled];
+  Graphviz [color=lightblue,style=filled];
+  PlantUML [color=lightblue,style=filled];
+  others [color=lightblue,style=filled,label="..."];
+  Orgexport [color=gold,style=filled,label="org-export (ox)"];
+  LaTeX [color=gold,style=filled];
+  Beamer [color=gold,style=filled];
+  PDF [color=gold,style=filled];
+  HTML [color=gold,style=filled];
+  Orgnikola [color=orange,style=filled,label="org-nikola"];
+  Nikola [color=orange,style=filled,label="Nikola (blog)"];
+  Orgbabel -> Orgmode -> Orgbabel;
+  Orgbabel -> Graphviz -> Orgbabel;
+  Orgbabel -> PlantUML -> Orgbabel;
+  Orgbabel -> others -> Orgbabel;
+  Orgmode -> Orgexport [weight=2];
+  Orgexport -> HTML;
+  Nikola -> Orgnikola -> Orgexport;
+  Nikola -> HTML;
+  Orgexport -> LaTeX;
+  Orgexport -> Beamer;
+  LaTeX -> PDF;
+  Beamer -> PDF;
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:dot_success.png]]
+
 * MacOS and Linux
 ** Shell Support
 #+begin_src emacs-lisp
@@ -886,6 +924,7 @@ Manage your projects
         ))
 #+end_src
 
+* TODO Project Tree Browser
 * Windows Setup
 
 #+begin_src emacs-lisp :tangle no
@@ -922,9 +961,17 @@ Manage your projects
     )
 #+end_src
 * TODO Persistent Emacs like TMUX
-* TODO Project Tree Browser
 * TODO Eshell
 * TODO Powerline/Modeline
 * TODO Publish Website with notes
 * TODO Make graphics and block diagrams
+#+begin_src emacs-lisp
+  (use-package graphviz-dot-mode
+    :ensure t
+    :config
+    (setq graphviz-dot-indent-width 4))
+
+  (use-package company-graphviz-dot
+    )
+#+end_src
 
