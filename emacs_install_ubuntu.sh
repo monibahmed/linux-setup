@@ -5,7 +5,7 @@
 # 1. WSL 2 with Ubuntu 20.04.2 LTS (Focal Fossa)
 #
 
-git clone git://git.savannah.gnu.org/emacs.git ~/git/emacs
+git clone --depth 1 git://git.savannah.gnu.org/emacs.git ~/git/emacs
 
 cd ~/git/emacs
 

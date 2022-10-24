@@ -107,7 +107,7 @@ Because this is one of the main reasons to use Emacs:
   ;; Org Babel for code blocks
   (use-package ob
     :straight nil
-    :after (:all jupyter)
+    :after (:all org conda jupyter)
     :init
     (require 'org-tempo)
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
@@ -120,12 +120,12 @@ Because this is one of the main reasons to use Emacs:
     ;; load more languages for org-babel
     (org-babel-do-load-languages
      'org-babel-load-languages
-     '((shell . t)
+     '((shell      . t)
        (emacs-lisp . t)
-       (python . t)
-       (haskell . t)
-       (scheme . t)
-       (jupyter . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       (jupyter    . t)
        )))
 #+end_src
  
@@ -487,6 +487,78 @@ Manage your projects
 
   (use-package yasnippet)
 #+end_src
+** INSTRUCTIONS FROM METALS SITE
+#+begin_src emacs-lisp
+;; Enable scala-mode for highlighting, indentation and motion commands
+(use-package scala-mode
+  :interpreter ("scala" . scala-mode))
+
+;; Enable sbt mode for executing sbt commands
+(use-package sbt-mode
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false")))
+
+;; Enable nice rendering of diagnostics like compile errors.
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+(use-package lsp-mode
+  ;; Optional - enable lsp-mode automatically in scala files
+  ;; You could also swap out lsp for lsp-deffered in order to defer loading
+  :hook  (scala-mode . lsp)
+         (lsp-mode . lsp-lens-mode)
+  :config
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+  ;; (setq gc-cons-threshold 100000000) ;; 100mb
+  ;; (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;; (setq lsp-idle-delay 0.500)
+  ;; (setq lsp-log-io nil)
+  ;; (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil))
+
+;; Add metals backend for lsp-mode
+(use-package lsp-metals)
+
+;; Enable nice rendering of documentation on hover
+;;   Warning: on some systems this package can reduce your emacs responsiveness significally.
+;;   (See: https://emacs-lsp.github.io/lsp-mode/page/performance/)
+;;   In that case you have to not only disable this but also remove from the packages since
+;;   lsp-mode can activate it automatically.
+(use-package lsp-ui)
+
+;; lsp-mode supports snippets, but in order for them to work you need to use yasnippet
+;; If you don't want to use snippets set lsp-enable-snippet to nil in your lsp-mode settings
+;; to avoid odd behavior with snippets and indentation
+(use-package yasnippet)
+
+;; Use company-capf as a completion provider.
+;;
+;; To Company-lsp users:
+;;   Company-lsp is no longer maintained and has been removed from MELPA.
+;;   Please migrate to company-capf.
+(use-package company
+  :hook (scala-mode . company-mode)
+  :config
+  (setq lsp-completion-provider :capf))
+
+;; Posframe is a pop-up tool that must be manually installed for dap-mode
+(use-package posframe)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package dap-mode
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
+#+end_src
 ** Eglot
 #+begin_src emacs-lisp :tangle no
 
@@ -647,7 +719,7 @@ Manage your projects
 #+begin_src emacs-lisp 
   (use-package zmq)
   (use-package jupyter
-    :after (:all org python))
+    :after (:all conda python))
   ;;(org-babel-jupyter-override-src-block "python")
   (setq ob-async-no-async-languages-alist '("jupyter-python" "jupyter-julia"))
 #+end_src
@@ -668,7 +740,7 @@ Manage your projects
   (use-package code-cells)
 #+END_src
 
-**** Try out some code
+*** Try out some code
 #+BEGIN_SRC python :session  :tangle no
   x = 'foo'
   y = 'bar'
@@ -682,10 +754,11 @@ Manage your projects
 #+BEGIN_SRC jupyter-python :session python :tangle no
   import sys
   sys.executable
+  print("Hello World")
 #+END_SRC
 
 #+RESULTS:
-: /home/monib/mambaforge/envs/jupyter/bin/python
+: Hello World
 
 
 #+begin_src jupyter-scala :session scala :tangle no
@@ -718,7 +791,6 @@ Manage your projects
 #+begin_src haskell :tangle no
   x + 4 * y
 #+end_src
-
 #+RESULTS:
 : 9
 
@@ -747,20 +819,19 @@ Manage your projects
                        ;;(dedicated . t) ;dedicated is supported in emacs27
                        (reusable-frames . visible)
                        (window-height . 0.3)))
+        (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+        (push (list "find-file-below"
+                    (lambda (pathj)
+                      (if-let* ((buf (find-file-noselect path))
+                                (window (display-buffer-below-selected buf nil)))
+                          (select-window window)
+                        (message "Failed to open file: %s" path))))
+              vterm-eval-cmds)
         ))
-
+  
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
-
-  (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
-  (push (list "find-file-below"
-              (lambda (pathj)
-                (if-let* ((buf (find-file-noselect path))
-                          (window (display-buffer-below-selected buf nil)))
-                    (select-window window)
-                  (message "Failed to open file: %s" path))))
-        vterm-eval-cmds)
 
   (defun pmi/named-term (term-name)
     "Generate a terminal with buffer name TERM-NAME."
@@ -784,10 +855,6 @@ Manage your projects
    )
 #+end_src
 
-* TODO Powerline/Modeline
-* TODO Persistent Emacs like TMUX
-* TODO Project Tree Browser
-* TODO Eshell
 * Themes
 #+begin_src emacs-lisp 
   ;; themes at the end
@@ -811,7 +878,7 @@ Manage your projects
           (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
                 doom-themes-enable-italic t) ; if nil, italics is universally disabled
           (load-theme 'doom-moonlight t)
-          ;; Enable flashing mode-line on errors
+         ;; Enable flashing mode-line on errors
           (doom-themes-visual-bell-config)
           ;; Enable custom neotree theme (all-the-icons must be installed!)
           ;;(doom-themes-neotree-config)
@@ -858,3 +925,7 @@ Manage your projects
     ;; WSL: WSL1 has "-Microsoft", WSL2 has "-microsoft-standard"
     )
 #+end_src
+* TODO Persistent Emacs like TMUX
+* TODO Project Tree Browser
+* TODO Eshell
+* TODO Powerline/Modeline

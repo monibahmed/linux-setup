@@ -7,14 +7,12 @@ ubuntu:
 				libjpeg-dev libpng-dev libxpm-dev libncurses-dev libtool-bin texinfo cmake \
 				automake autoconf libncurses5-dev g++ unzip 
 conda:
-	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh ;\
-        sh Miniconda3-latest-Linux-x86_64.sh -b ;\
-        $(HOME)/miniconda3/bin/conda init $(SHELL);\
-        $(HOME)/miniconda3/bin/conda config --add channels conda-forge ;\
-        $(HOME)/miniconda3/bin/conda config --add channels litex-hub ;\
+	wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh ;\
+        sh Mambaforge-Linux-x86_64.sh -b ;\
+        $(HOME)/mambaforge/bin/conda init $(SHELL);\
+        $(HOME)/mambaforge/bin/conda config --add channels conda-forge ;\
+        $(HOME)/mambaforge/bin/conda config --add channels litex-hub ;\
 
-conda-base:
-	conda install -y mamba ;\
 
 emacs:
 	git clone --depth 1 git://git.savannah.gnu.org/emacs.git ;\
