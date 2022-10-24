@@ -78,7 +78,7 @@ Using Straight.el for package management.
   (if (eq system-type 'darwin)
       (progn
         (message "Emacs running in Mac OS")
-        (setq frame-resize-pixelwise t)
+        ;;(setq frame-resize-pixelwise t)
         (setq mac-command-modifier 'meta)
         ))
 
@@ -681,10 +681,6 @@ Manage your projects
 ** Haskell
 #+begin_src emacs-lisp 
   (use-package haskell-mode)
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-  (use-package haskell-mode)
 
   (use-package lsp-haskell
     :defer t
@@ -786,7 +782,7 @@ Manage your projects
 #+end_src
 
 #+RESULTS:
-: 5
+: <interactive>:6:1: error: Variable not in scope: x
 
 #+begin_src haskell :tangle no
   x + 4 * y
@@ -929,3 +925,6 @@ Manage your projects
 * TODO Project Tree Browser
 * TODO Eshell
 * TODO Powerline/Modeline
+* TODO Publish Website with notes
+* TODO Make graphics and block diagrams
+
