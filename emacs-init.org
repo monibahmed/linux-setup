@@ -492,7 +492,7 @@ Manage your projects
   (use-package yasnippet)
 #+end_src
 ** INSTRUCTIONS FROM METALS SITE
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; Enable scala-mode for highlighting, indentation and motion commands
 (use-package scala-mode
   :interpreter ("scala" . scala-mode))
@@ -570,23 +570,6 @@ Manage your projects
   ;; (optional) Automatically start metals for Scala files.
   :hook (scala-mode . eglot-ensure))
 #+end_src
-** Company Mode
-#+begin_src emacs-lisp 
-  (use-package company
-    :hook (scala-mode . company-mode)
-    :config
-    (setq lsp-completion-provider :capf))
-
-  ;; Posframe is a pop-up tool that must be manually installed for dap-mode
-  (use-package posframe)
-
-  ;; Use the Debug Adapter Protocol for running tests and debugging
-  (use-package dap-mode
-    :hook
-    (lsp-mode . dap-mode)
-    (lsp-mode . dap-ui-mode))
-#+end_src
-
 ** Corfu
 #+begin_src emacs-lisp :tangle no 
     (use-package corfu
@@ -646,6 +629,23 @@ Manage your projects
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
   #+end_src
+** Company Mode
+#+begin_src emacs-lisp 
+  (use-package company
+    :hook (scala-mode . company-mode)
+    :config
+    (setq lsp-completion-provider :capf))
+
+  ;; Posframe is a pop-up tool that must be manually installed for dap-mode
+  (use-package posframe)
+
+  ;; Use the Debug Adapter Protocol for running tests and debugging
+  (use-package dap-mode
+    :hook
+    (lsp-mode . dap-mode)
+    (lsp-mode . dap-ui-mode))
+#+end_src
+
 ** Flymake
 #+begin_src emacs-lisp :tangle no
   (use-package flymake)
