@@ -488,7 +488,7 @@ Manage your projects
   (use-package yasnippet)
 #+end_src
 ** INSTRUCTIONS FROM METALS SITE
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; Enable scala-mode for highlighting, indentation and motion commands
 (use-package scala-mode
   :interpreter ("scala" . scala-mode))
