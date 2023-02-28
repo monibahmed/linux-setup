@@ -15,12 +15,12 @@ conda:
 
 
 emacs:
-	git clone --depth 1 git://git.savannah.gnu.org/emacs.git ;\
-	cd emacs ;\
-#	git checkout emacs-28 ;\
-	./autogen ;\
-	./configure --with-pgtk --with-mail-utils --with-native-compilation ;\
-
+	git clone git://git.sv.gnu.org/emacs.git
+	sudo apt install build-essential libgtk-3-dev libgnutls28-dev libtiff5-dev libgif-dev libjpeg-dev libpng-dev libxpm-dev libncurses-dev texinfo
+	cd emacs
+	./autogen.sh
+	./configure --with-pgtk
+	make -j8
 
 neovim: 
 	git clone https://github.com/neovim/neovim.git ;\
