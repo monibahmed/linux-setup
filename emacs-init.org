@@ -219,7 +219,7 @@ For extending Emacs functionality
   (use-package undo-tree
     ;; Prevent undo tree files from polluting your git repo
     :init
-    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")
+    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
     (global-undo-tree-mode))
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
