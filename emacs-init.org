@@ -275,10 +275,9 @@ For extending Emacs functionality
       "tt" '(load-theme :which-key "Choose Theme")
       "ts" '(hydra-text-scale/body :which-key "Scale Text")
       "tl" '(lambda() (interactive)(load-theme 'doom-one-light t) :which-key "Light Theme")
-      "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme") "xb" '(ibuffer :which-key "ibuffer")
-      "xv" '(multi-vterm-project :which-key "multi-vterm-project")
-      ;;"vn" '(multi-vterm :which-key 'pmi/named-term)
-      "xn" '(treemacs :which-key "Tree Browser")
+      "td" '(lambda() (interactive)(load-theme 'doom-moonlight t) :which-key "Dark Theme")
+      "xb" '(ibuffer :which-key "ibuffer")
+      "xv" '(multi-vterm :which-key "multi-vterm")
       "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
       "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org") :which-key "zsh-init.org")
       )
@@ -320,111 +319,7 @@ For extending Emacs functionality
 
 #+end_src
 
-** Browse Files
-#+begin_src emacs-lisp
-  (use-package treemacs
-    :init
-    (with-eval-after-load 'winum
-      (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-    :config
-    (progn
-      (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
-            treemacs-deferred-git-apply-delay        0.5
-            treemacs-directory-name-transformer      #'identity
-            treemacs-display-in-side-window          t
-            treemacs-eldoc-display                   'simple
-            treemacs-file-event-delay                2000
-            treemacs-file-extension-regex            treemacs-last-period-regex-value
-            treemacs-file-follow-delay               0.2
-            treemacs-file-name-transformer           #'identity
-            treemacs-follow-after-init               t
-            treemacs-expand-after-init               t
-            treemacs-find-workspace-method           'find-for-file-or-pick-first
-            treemacs-git-command-pipe                ""
-            treemacs-goto-tag-strategy               'refetch-index
-            treemacs-header-scroll-indicators        '(nil . "^^^^^^")
-            treemacs-hide-dot-git-directory          t
-            treemacs-indentation                     2
-            treemacs-indentation-string              " "
-            treemacs-is-never-other-window           nil
-            treemacs-max-git-entries                 5000
-            treemacs-missing-project-action          'ask
-            treemacs-move-forward-on-expand          nil
-            treemacs-no-png-images                   nil
-            treemacs-no-delete-other-windows         t
-            treemacs-project-follow-cleanup          nil
-            treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-            treemacs-position                        'left
-            treemacs-read-string-input               'from-child-frame
-            treemacs-recenter-distance               0.1
-            treemacs-recenter-after-file-follow      nil
-            treemacs-recenter-after-tag-follow       nil
-            treemacs-recenter-after-project-jump     'always
-            treemacs-recenter-after-project-expand   'on-distance
-            treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
-            treemacs-show-cursor                     nil
-            treemacs-show-hidden-files               t
-            treemacs-silent-filewatch                nil
-            treemacs-silent-refresh                  nil
-            treemacs-sorting                         'alphabetic-asc
-            treemacs-select-when-already-in-treemacs 'move-back
-            treemacs-space-between-root-nodes        t
-            treemacs-tag-follow-cleanup              t
-            treemacs-tag-follow-delay                1.5
-            treemacs-text-scale                      nil
-            treemacs-user-mode-line-format           nil
-            treemacs-user-header-line-format         nil
-            treemacs-wide-toggle-width               70
-            treemacs-width                           35
-            treemacs-width-increment                 1
-            treemacs-width-is-initially-locked       t
-            treemacs-workspace-switch-cleanup        nil)
-
-      ;; The default width and height of the icons is 22 pixels. If you are
-      ;; using a Hi-DPI display, uncomment this to double the icon size.
-      ;;(treemacs-resize-icons 44)
-
-      (treemacs-follow-mode t)
-      (treemacs-filewatch-mode t)
-      (treemacs-fringe-indicator-mode 'always)
-      (when treemacs-python-executable
-        (treemacs-git-commit-diff-mode t))
-
-      (pcase (cons (not (null (executable-find "git")))
-                   (not (null treemacs-python-executable)))
-        (`(t . t)
-         (treemacs-git-mode 'deferred))
-        (`(t . _)
-         (treemacs-git-mode 'simple)))
-
-      (treemacs-hide-gitignored-files-mode nil))
-    :bind
-    (:map global-map
-          ("M-0"       . treemacs-select-window)
-          ("C-x t 1"   . treemacs-delete-other-windows)
-          ("C-x t t"   . treemacs)
-          ("C-x t d"   . treemacs-select-directory)
-          ("C-x t B"   . treemacs-bookmark)
-          ("C-x t C-t" . treemacs-find-file)
-          ("C-x t M-t" . treemacs-find-tag)))
-
-  (use-package treemacs-evil
-    :after (treemacs evil))
-
-  (use-package treemacs-icons-dired
-    :hook (dired-mode . treemacs-icons-dired-enable-once))
-
-  (use-package treemacs-magit
-    :after (treemacs magit))
-
-  (use-package treemacs-perspective ;;treemacs-perspective if you use perspective.el vs. persp-mode
-    :after (treemacs perspective) ;;or perspective vs. persp-mode
-    :config (treemacs-set-scope-type 'Perspectives))
-
-  (use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
-    :after (treemacs)
-    :config (treemacs-set-scope-type 'Tabs))
-#+end_src
+** TODO Browse Files
 * Project Management
 Manage your projects
 
@@ -497,30 +392,6 @@ Manage your projects
               vterm-eval-cmds)
         ))
 
-#+end_src
-
-#+begin_src emacs-lisp :tangle no
-
-  (defun pmi/named-term (term-name)
-    "Generate a terminal with buffer name TERM-NAME."
-    (interactive "sTerminal purpose: ")
-    (vterm (concat "term-" term-name)))
-  ))
-
-  (use-package shell-pop)
-
-  (custom-set-variables
-   ;;'(shell-pop-default-directory "/Users/kyagi/git")
-   '(shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
-   '(shell-pop-term-shell "/bin/zsh")
-   '(shell-pop-universal-key "C-`")
-   '(shell-pop-window-size 30)
-   '(shell-pop-full-span t)
-   '(shell-pop-window-position "bottom")
-   ;;'(shell-pop-autocd-to-working-dir t)
-   ;;'(shell-pop-restore-window-configuration t)
-   ;;'(shell-pop-cleanup-buffer-at-process-exit t))
-   )
 #+end_src
 
 * Themes
