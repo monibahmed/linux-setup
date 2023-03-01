@@ -217,7 +217,10 @@ For extending Emacs functionality
   ;;some helper packages
   ;;Undo/Redo in Emacs
   (use-package undo-tree
-    :init (global-undo-tree-mode))
+    ;; Prevent undo tree files from polluting your git repo
+    :init
+    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")
+    (global-undo-tree-mode))
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -247,7 +250,8 @@ For extending Emacs functionality
     :init
     (marginalia-mode))
   (use-package restart-emacs)
-
+  (use-package disable-mouse
+    :init (global-disable-mouse-mode)) 
 #+end_src
 ** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
