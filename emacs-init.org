@@ -95,13 +95,12 @@ Because this is one of the main reasons to use Emacs:
   ;; Org Babel for code blocks
   (use-package ob
     :straight nil
-    :after (:all org conda jupyter)
+    :after (:all org)
     :init
     (require 'org-tempo)
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
     (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
     (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-    (add-to-list 'org-structure-template-alist '("sc" . "src jupyter-scala"))
     (setq org-confirm-babel-evaluate nil)
     :config
 
@@ -114,10 +113,8 @@ Because this is one of the main reasons to use Emacs:
        (python     . t)
        (haskell    . t)
        (scheme     . t)
-       (jupyter    . t)
        )))
 #+end_src
- 
 #+begin_src emacs-lisp
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun efs/org-babel-tangle-config ()
@@ -137,8 +134,7 @@ Because this is one of the main reasons to use Emacs:
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
-
-* Evil Muwwaaahhhahahahaa!
+* Evil Mode
 Evil mode for keybinding and most of efficiency goodness
 
 #+begin_src emacs-lisp
@@ -429,6 +425,51 @@ Manage your projects
         ))
 #+end_src
 
+* Programming
+#+begin_src emacs-lisp
+  (use-package lsp-mode)
+  (use-package haskell-mode)
+(use-package corfu
+  ;; Optional customizations
+  ;; :custom
+  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  ;; (corfu-auto t)                 ;; Enable auto completion
+  ;; (corfu-separator ?\s)          ;; Orderless field separator
+  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+  ;; Enable Corfu only for certain modes.
+  ;; :hook ((prog-mode . corfu-mode)
+  ;;        (shell-mode . corfu-mode)
+  ;;        (eshell-mode . corfu-mode))
+
+  ;; Recommended: Enable Corfu globally.
+  ;; This is recommended since Dabbrev can be used globally (M-/).
+  ;; See also `corfu-excluded-modes'.
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
+#+end_src
+
 * TODO Publish Website with notes
+
 * TODO PersiSTEnt Emacs like TMUX
 * TODO Eshell
