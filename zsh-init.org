@@ -17,7 +17,7 @@
   source $HOME/.zprofile
 #+end_src
 
- 
+
 * Emacs/Vterm Setup
 #+begin_src sh
   ## Emacs / Vterm integration

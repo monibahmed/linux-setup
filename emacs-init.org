@@ -81,43 +81,43 @@ Using Straight.el for package management.
 Because this is one of the main reasons to use Emacs:
 
 #+begin_src emacs-lisp
-    ;; Organize your notes and maybe part of your life
+  ;; Organize your notes and maybe part of your life
 
-    (use-package org
-      :init
-      (setq org-confirm-babel-evaluate nil)
-      (setq org-startup-indented  t)
-      (setq org-startup-numerated t)
-      :hook
-      (org-babel-after-execute . org-redisplay-inline-images)
-      :init (visual-line-mode))
+  (use-package org
+    :init
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    :hook
+    (org-babel-after-execute . org-redisplay-inline-images)
+    :init (visual-line-mode))
 
 
   (use-package ox-publish
     :straight nil)
 
-    ;; Org Babel for code blocks
-    (use-package ob
-      :straight nil
-      :after (:all org)
-      :init
-      (require 'org-tempo)
-      (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-      (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
-      (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-      (setq org-confirm-babel-evaluate nil)
-      :config
+  ;; Org Babel for code blocks
+  (use-package ob
+    :straight nil
+    :after (:all org)
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+    (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
 
-      ;; load more languages for org-babel
-      (org-babel-do-load-languages
-       'org-babel-load-languages
-       '((shell      . t)
-         (emacs-lisp . t)
-         (dot        . t)
-         (python     . t)
-         (haskell    . t)
-         (scheme     . t)
-         )))
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell      . t)
+       (emacs-lisp . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
 #+end_src
 #+begin_src emacs-lisp
   ;; Automatically tangle our Emacs.org config file when we save it
@@ -431,48 +431,13 @@ Manage your projects
 
 * Programming
 #+begin_src emacs-lisp
-  (use-package lsp-mode)
-  (use-package haskell-mode)
-(use-package corfu
-  ;; Optional customizations
-  ;; :custom
-  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  ;; (corfu-auto t)                 ;; Enable auto completion
-  ;; (corfu-separator ?\s)          ;; Orderless field separator
-  ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-  ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-  ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-  ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-  ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-  ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-  ;; Enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
-
-  ;; Recommended: Enable Corfu globally.
-  ;; This is recommended since Dabbrev can be used globally (M-/).
-  ;; See also `corfu-excluded-modes'.
-  :init
-  (global-corfu-mode))
-
-;; A few more useful configurations...
-(use-package emacs
-  :init
-  ;; TAB cycle if there are only few candidates
-  (setq completion-cycle-threshold 3)
-
-  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-  ;; (setq read-extended-command-predicate
-  ;;       #'command-completion-default-include-p)
-
-  ;; Enable indentation+completion using the TAB key.
-  ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  (use-package eglot
+    :hook ((python-mode . 'eglot-ensure))
+    )
+  (use-package corfu
+    :init (global-corfu-mode))
+  (use-package python-mode)
 #+end_src
-
 * Mac OS X Paths
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
@@ -483,22 +448,68 @@ Manage your projects
 * TODO Publish Website with notes
 #+begin_src emacs-lisp
 
-(setq org-publish-project-alist
-      `(("pages"
-         :base-directory "~/taingram.org/org/"
-         :base-extension "org"
-         :recursive t
-         :publishing-directory "~/taingram.or/html/"
-         :publishing-function org-html-publish-to-html)
+  (setq org-publish-project-alist
+        `(("pages"
+           :base-directory "~/taingram.org/org/"
+           :base-extension "org"
+           :recursive t
+           :publishing-directory "~/taingram.or/html/"
+           :publishing-function org-html-publish-to-html)
 
-        ("static"
-         :base-directory "~/taingram.org/org/"
-         :base-extension "css\\|txt\\|jpg\\|gif\\|png"
-         :recursive t
-         :publishing-directory  "~/taingram.org/html/"
-         :publishing-function org-publish-attachment)
+          ("static"
+           :base-directory "~/taingram.org/org/"
+           :base-extension "css\\|txt\\|jpg\\|gif\\|png"
+           :recursive t
+           :publishing-directory  "~/taingram.org/html/"
+           :publishing-function org-publish-attachment)
 
-        ("taingram.org" :components ("pages" "static"))))
+          ("taingram.org" :components ("pages" "static"))))
 #+end_src
 * TODO PersiSTEnt Emacs like TMUX
 * TODO Eshell
+* TODO Try it out
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :config
+    (setq lsp-idle-delay 0.5
+          lsp-enable-symbol-highlighting t
+          lsp-enable-snippet nil  ;; Not supported by company capf, which is the recommended company backend
+          lsp-pyls-plugins-flake8-enabled t)
+    (lsp-register-custom-settings
+     '(("pyls.plugins.pyls_mypy.enabled" t t)
+       ("pyls.plugins.pyls_mypy.live_mode" nil t)
+       ("pyls.plugins.pyls_black.enabled" t t)
+       ("pyls.plugins.pyls_isort.enabled" t t)
+
+       ;; Disable these as they're duplicated by flake8
+       ("pyls.plugins.pycodestyle.enabled" nil t)
+       ("pyls.plugins.mccabe.enabled" nil t)
+       ("pyls.plugins.pyflakes.enabled" nil t)))
+    :hook
+    ((python-mode . lsp)
+     (lsp-mode . lsp-enable-which-key-integration))
+    )
+
+  (use-package lsp-ui
+    :config (setq lsp-ui-sideline-show-hover t
+                  lsp-ui-sideline-delay 0.5
+                  lsp-ui-doc-delay 5
+                  lsp-ui-sideline-ignore-duplicates t
+                  lsp-ui-doc-position 'bottom
+                  lsp-ui-doc-alignment 'frame
+                  lsp-ui-doc-header nil
+                  lsp-ui-doc-include-signature t
+                  lsp-ui-doc-use-childframe t)
+    :commands lsp-ui-mode
+    :bind (:map evil-normal-state-map
+                ("gd" . lsp-ui-peek-find-definitions)
+                ("gr" . lsp-ui-peek-find-references)
+                :map md/leader-map
+                ("Ni" . lsp-ui-imenu)))
+
+  (use-package pyvenv
+    :demand t
+    :config
+    (setq pyvenv-workon "emacs")  ; Default venv
+    (pyvenv-tracking-mode 1))  ; Automatically use pyvenv-workon via dir-locals
+#+end_src
