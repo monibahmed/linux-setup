@@ -435,7 +435,6 @@ Manage your projects
     :init (global-corfu-mode))
   (use-package eglot
     :hook (python-mode . 'eglot-ensure))
-    )
   (use-package python-mode)
 #+end_src
 * Mac OS X Paths
