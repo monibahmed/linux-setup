@@ -433,9 +433,39 @@ Manage your projects
 #+begin_src emacs-lisp
   (use-package corfu
     :init (global-corfu-mode))
-  (use-package eglot
-    :hook (python-mode . 'eglot-ensure))
   (use-package python-mode)
+  (use-package haskell-mode)
+  (use-package eglot
+    :ensure t
+    :config
+    (add-hook 'haskell-mode-hook 'eglot-ensure)
+    :config
+    (setq-default eglot-workspace-configuration
+                  '((haskell
+                     (plugin
+                      (stan
+                       (globalOn . :json-false))))))  ;; disable stan
+    :custom
+    (eglot-autoshutdown t)  ;; shutdown language server after closing last file
+    (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
+    )
+
+  ;; (use-package eglot
+  ;;      :ensure t
+  ;;      :config
+  ;;      :hook
+  ;;      (python-mode . 'eglot-ensure)
+  ;;      (haskell-mode . 'eglot-ensure)
+  ;;      :config
+  ;;      (setq-default eglot-workspace-configuration
+  ;;                    '((haskell
+  ;;                       (plugin
+  ;;                        (stan
+  ;;                         (globalOn . :json-false))))))  ;; disable stan
+  ;;      :custom
+  ;;      (eglot-autoshutdown t)  ;; shutdown language server after closing last file
+  ;;      (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
+  ;;      )
 #+end_src
 * Mac OS X Specifics 
 #+begin_src emacs-lisp
