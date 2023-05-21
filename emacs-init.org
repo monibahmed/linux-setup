@@ -73,24 +73,20 @@ Using Straight.el for package management.
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
 #+end_src
-** use-package
-#+begin_src emacs-lisp :tangle no
-  (require 'use-package)
-#+end_src 
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   ;; Organize your notes and maybe part of your life
 
-  (use-package org
+  (use-package org 
     :init
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
     :hook
-    (org-babel-after-execute . org-redisplay-inline-images)
-    :init (visual-line-mode))
+    (org-babel-after-execute . org-redisplay-inline-images) 
+   :init (visual-line-mode))
 
 
   (use-package ox-publish
@@ -496,4 +492,3 @@ Manage your projects
 #+end_src
 * TODO Persistent Emacs like TMUX
 * TODO Eshell
-* TODO Try it out

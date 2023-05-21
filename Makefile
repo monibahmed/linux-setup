@@ -6,7 +6,7 @@ ubuntu:
 				build-essential libgtk-3-dev libgnutls28-dev libtiff5-dev libgif-dev \
 				libjpeg-dev libpng-dev libxpm-dev libncurses-dev libtool-bin texinfo cmake \
 				automake autoconf libncurses5-dev g++ unzip 
-conda:
+mamba:
 	wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh ;\
         sh Mambaforge-Linux-x86_64.sh -b ;\
         $(HOME)/mambaforge/bin/conda init $(SHELL);\
