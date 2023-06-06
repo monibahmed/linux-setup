@@ -22,11 +22,6 @@ emacs:
 	./configure --with-pgtk
 	make -j8
 
-neovim: 
-	git clone https://github.com/neovim/neovim.git ;\
-	cd neovim ;\
-	make cmake && make test 
-
 gh-cli:
 	curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |  sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg ;\
         sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg ;\
