@@ -101,6 +101,7 @@ Because this is one of the main reasons to use Emacs:
     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
     (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
     (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py" . "src python"))
     (setq org-confirm-babel-evaluate nil)
     :config
 
@@ -463,6 +464,16 @@ Manage your projects
   ;;      (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
   ;;      )
 #+end_src
+* Literate Programming
+#+begin_src python :results output
+  import random, sys
+  random.seed(1)
+  print(sys.version)
+  print("Hello world!!! Here is a random number: %f" % random.random())
+#+end_src
+
+#+RESULTS:
+
 * Mac OS X Specifics 
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
