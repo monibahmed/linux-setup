@@ -252,6 +252,7 @@ For extending Emacs functionality
   (use-package restart-emacs)
   (use-package disable-mouse
     :init (global-disable-mouse-mode)) 
+  (use-package default-text-scale)
 #+end_src
 ** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
