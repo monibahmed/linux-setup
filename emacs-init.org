@@ -77,7 +77,7 @@ Using Straight.el for package management.
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   ;; Organize your notes and maybe part of your life
 
   (use-package org 
@@ -250,8 +250,8 @@ For extending Emacs functionality
     :init
     (marginalia-mode))
   (use-package restart-emacs)
-  (use-package disable-mouse
-    :init (global-disable-mouse-mode)) 
+  ;; (use-package disable-mouse
+  ;;   :init (global-disable-mouse-mode)) 
   (use-package default-text-scale)
 #+end_src
 ** Customize Keyboard Shortcuts
