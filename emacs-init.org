@@ -77,7 +77,7 @@ Using Straight.el for package management.
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp :tangle no
   ;; Organize your notes and maybe part of your life
 
   (use-package org 
@@ -368,7 +368,7 @@ Manage your projects
 	  :config (setq vterm-max-scrollback 10000))
 	(use-package multi-vterm)
 	(use-package vterm-toggle
-	  :bind ("C-`" . vterm-toggle))
+	  :bind ("C-x x" . vterm-toggle))
 	(setq vterm-toggle-fullscreen-p nil)
 	(add-to-list 'display-buffer-alist
 		     '((lambda (buffer-or-name _)
@@ -431,35 +431,53 @@ Manage your projects
 #+end_src
 
 * Programming
-#+begin_src emacs-lisp
-  (use-package lsp-mode)
-  (use-package corfu
-    :init (global-corfu-mode))
-  (use-package python-mode)
-  (use-package haskell-mode)
-  (use-package rust-mode)
-  (use-package eglot
+#+begin_src emacs-lisp :tangle no
+    (use-package lsp-mode)
+    (use-package corfu
+      :init (global-corfu-mode))
+    (use-package python-mode)
+    (use-package haskell-mode)
+    ;; (use-package rust-mode)
+    (use-package eglot
+      :ensure t
+      ;; :hook ((rust-mode nix-mode) . eglot-ensure)
+      :config
+      (add-to-list 'eglot-server-programs
+    		 `(rust-mode . ("rust-analyzer" :initializationOptions
+    				( :procMacro (:enable t)
+    				  :cargo ( :buildScripts (:enable t)
+    					   :features "all")))))
+    (add-hook 'haskell-mode-hook 'eglot-ensure)
+    (setq-default eglot-workspace-configuration
+    		'((haskell
+    		   (plugin
+    		    (stan
+    		     (globalOn . :json-false))))))  ;; disable stan
+    :custom
+    (eglot-autoshutdown t)  ;; shutdown language server after closing last file
+    (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
+    )
+
+
+    ;;  (use-package rustic) 
+#+end_src
+#+begin_src emacs-lisp 
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
     :ensure t
-    :hook ((rust-mode nix-mode) . eglot-ensure)
-    :config
-    (add-to-list 'eglot-server-programs
-		 `(rust-mode . ("rust-analyzer" :initializationOptions
-				( :procMacro (:enable t)
-				  :cargo ( :buildScripts (:enable t)
-					   :features "all")))))
-  (add-hook 'haskell-mode-hook 'eglot-ensure)
-  (setq-default eglot-workspace-configuration
-		'((haskell
-		   (plugin
-		    (stan
-		     (globalOn . :json-false))))))  ;; disable stan
-  :custom
-  (eglot-autoshutdown t)  ;; shutdown language server after closing last file
-  (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
-  )
+    :hook (prog-mode . copilot-mode)
+    :bind (:map copilot-completion-map
+                ("<tab>" . 'copilot-accept-completion)
+                ("TAB" . 'copilot-accept-completion)
+                ("C-TAB" . 'copilot-accept-completion-by-word)
+                ("C-<tab>" . 'copilot-accept-completion-by-word)))
+(use-package gptel) 
+;; (use-package shell-maker
+;;   :straight (:host github :repo "xenodium/chatgpt-shell" :files ("shell-maker.el")))
 
-
-  ;;  (use-package rustic) 
+;; (use-package chatgpt-shell
+;;   :requires shell-maker
+;;   :straight (:host github :repo "xenodium/chatgpt-shell" :files ("chatgpt-shell.el")))
 #+end_src
 * Literate Programming
 #+begin_src python :results output
