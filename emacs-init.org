@@ -50,8 +50,6 @@ Benchmark Emacs startup time
   (customize-set-variable 'scroll-bar-mode nil)
   (customize-set-variable 'horizontal-scroll-bar-mode nil)
 
-  (set-face-attribute 'default nil :font "Hack" :height 120)
-  (set-face-attribute 'default nil :font "Roboto Mono" :height 120)
   (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 
   ;;doesn't work as expected
@@ -259,8 +257,6 @@ For extending Emacs functionality
     :init
     (marginalia-mode))
   (use-package restart-emacs)
-  ;; (use-package disable-mouse
-  ;;   :init (global-disable-mouse-mode)) 
   (use-package default-text-scale)
 #+end_src
 ** Customize Keyboard Shortcuts
@@ -481,7 +477,10 @@ Manage your projects
   			  ("TAB" . 'copilot-accept-completion)
   			  ("C-TAB" . 'copilot-accept-completion-by-word)
   			  ("C-<tab>" . 'copilot-accept-completion-by-word)))
-  (use-package gptel) 
+  (use-package gptel
+    :custom
+    (gptel-model "gpt-4")
+  ) 
   ;; (use-package shell-maker
   ;;   :straight (:host github :repo "xenodium/chatgpt-shell" :files ("shell-maker.el")))
 
