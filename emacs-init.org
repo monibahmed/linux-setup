@@ -477,16 +477,13 @@ Manage your projects
   			  ("TAB" . 'copilot-accept-completion)
   			  ("C-TAB" . 'copilot-accept-completion-by-word)
   			  ("C-<tab>" . 'copilot-accept-completion-by-word)))
+
   (use-package gptel
     :custom
     (gptel-model "gpt-4")
-  ) 
-  ;; (use-package shell-maker
-  ;;   :straight (:host github :repo "xenodium/chatgpt-shell" :files ("shell-maker.el")))
-
-  ;; (use-package chatgpt-shell
-  ;;   :requires shell-maker
-  ;;   :straight (:host github :repo "xenodium/chatgpt-shell" :files ("chatgpt-shell.el")))
+    :config
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response)) 
 #+end_src
 * Literate Programming
 #+begin_src python :results output
