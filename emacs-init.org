@@ -271,68 +271,68 @@ For extending Emacs functionality
            (theme (completing-read "Load custom theme: " all-themes nil t)))
       (when theme
         (load-theme (intern theme) t))))
-  (use-package general
-    :config
-    (general-create-definer rune/leader-keys
+    (use-package general
+      :config
+      (general-create-definer rune/leader-keys
     	:keymaps '(normal insert visual emacs)
     	:prefix "SPC"
     	:global-prefix "C-SPC")
 
-    (rune/leader-keys
+      (rune/leader-keys
     	"t"  '(:ignore t :which-key "Toggles")
     	"gc" '(copilot-mode :which-key "GPT-4")
     	"gp" '(gptel :which-key "GPT-4")
     	"ts" '(hydra-text-scale/body :which-key "Scale Text")
     	"tt" '(lambda () (interactive)
-    					(mapc #'disable-theme custom-enabled-themes)
-    					(choose-theme)
-    					:which-key "Choose Theme")
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(choose-theme)
+    			:which-key "Choose Theme")
     	"tl" '(lambda () (interactive)
-    					(mapc #'disable-theme custom-enabled-themes)
-    					(load-theme 'doom-one-light t)
-    					:which-key "Light Theme")
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(load-theme 'doom-one-light t)
+    			:which-key "Light Theme")
     	"td" '(lambda () (interactive)
-    					(mapc #'disable-theme custom-enabled-themes)
-    					(load-theme 'doom-moonlight t)
-    					:which-key "Dark Theme")
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(load-theme 'doom-moonlight t)
+    			:which-key "Dark Theme")
     	"xb" '(ibuffer :which-key "ibuffer")
     	"xv" '(multi-vterm :which-key "multi-vterm")
     	"fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
     	"fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org") :which-key "zsh-init.org")
     	))
-  ;;(global-set-key (kbd "C-e") 'end-of-line)
+    ;;(global-set-key (kbd "C-e") 'end-of-line)
 #+end_src
 
 ** Do Stuff in Emacs Easily
 #+begin_src emacs-lisp
 
-  ;; Completion frameworks and doing stuff
-  (use-package vertico
-    :bind (:map
-    			 vertico-map
-    			 ("C-j" . vertico-next)
-    			 ("C-k" . vertico-previous)
-    			 ("C-f" . vertico-exit)
-    			 :map minibuffer-local-map
-    			 ("M-h" . backward-kill-word))
-    :custom (vertico-cycle t)
-    :init (vertico-mode))
+    ;; Completion frameworks and doing stuff
+    (use-package vertico
+      :bind (:map
+    		 vertico-map
+    		 ("C-j" . vertico-next)
+    		 ("C-k" . vertico-previous)
+    		 ("C-f" . vertico-exit)
+    		 :map minibuffer-local-map
+    		 ("M-h" . backward-kill-word))
+      :custom (vertico-cycle t)
+      :init (vertico-mode))
 
-  (use-package consult
-    :bind (("C-c s" . consult-line)
-    			 ("C-M-l" . consult-imenu)
-    			 ("C-r" . consult-history)
-    			 ))
+    (use-package consult
+      :bind (("C-c s" . consult-line)
+    		 ("C-M-l" . consult-imenu)
+    		 ("C-r" . consult-history)
+    		 ))
 
-  ;;Do commands and operatioms on buffers or synbols
-  (use-package embark
-    :bind (("C-c e" . embark-act)
-    			 ("M-." . embark-dwim)
-    			 ("C-h B" . embark-bindings))
-    :init (setq prefix-help-command #'embark-prefix-help-command))
-  (use-package embark-consult
-    :after (embark consult)
-    :hook (embark-collect-mode . consult-preview-at-point-mode))
+    ;;Do commands and operatioms on buffers or synbols
+    (use-package embark
+      :bind (("C-c e" . embark-act)
+    		 ("M-." . embark-dwim)
+    		 ("C-h B" . embark-bindings))
+      :init (setq prefix-help-command #'embark-prefix-help-command))
+    (use-package embark-consult
+      :after (embark consult)
+      :hook (embark-collect-mode . consult-preview-at-point-mode))
 
   (use-package popper
     :bind (("C-`"   . popper-toggle)
@@ -395,143 +395,73 @@ Manage your projects
 #+begin_src emacs-lisp 
 
   (if (not (eq system-type 'windows-nt))
-  		(progn
-  			(use-package vterm
-  				:config (setq vterm-max-scrollback 10000))
-  			(use-package multi-vterm)
-  			(use-package vterm-toggle
-  				:bind ("C-x x" . vterm-toggle))
-  			(setq vterm-toggle-fullscreen-p nil)
-  			(add-to-list 'display-buffer-alist
-  									 '((lambda (buffer-or-name _)
-  											 (let ((buffer (get-buffer buffer-or-name)))
-  												 (with-current-buffer buffer
-  													 (or (equal major-mode 'vterm-mode)
-  															 (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-  										 (display-buffer-reuse-window display-buffer-at-bottom)
-  										 ;;(display-buffer-reuse-window display-buffer-in-direction)
-  										 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-  										 ;;(direction . bottom)
-  										 ;;(dedicated . t) ;dedicated is supported in emacs27
-  										 (reusable-frames . visible)
-  										 (window-height . 0.3)))
-  			(define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
-  			(push (list "find-file-below"
-  									(lambda (pathj)
-  										(if-let* ((buf (find-file-noselect path))
-  															(window (display-buffer-below-selected buf nil)))
-  												(select-window window)
-  											(message "Failed to open file: %s" path))))
-  						vterm-eval-cmds)
-  			))
+  	(progn
+  	  (use-package vterm
+  		:config (setq vterm-max-scrollback 10000))
+  	  (use-package multi-vterm)
+  	  (use-package vterm-toggle
+  		:bind ("C-x x" . vterm-toggle))
+  	  (setq vterm-toggle-fullscreen-p nil)
+  	  (add-to-list 'display-buffer-alist
+  				   '((lambda (buffer-or-name _)
+  					   (let ((buffer (get-buffer buffer-or-name)))
+  						 (with-current-buffer buffer
+  						   (or (equal major-mode 'vterm-mode)
+  							   (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+  					 (display-buffer-reuse-window display-buffer-at-bottom)
+  					 ;;(display-buffer-reuse-window display-buffer-in-direction)
+  					 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+  					 ;;(direction . bottom)
+  					 ;;(dedicated . t) ;dedicated is supported in emacs27
+  					 (reusable-frames . visible)
+  					 (window-height . 0.3)))
+  	  (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+  	  (push (list "find-file-below"
+  				  (lambda (pathj)
+  					(if-let* ((buf (find-file-noselect path))
+  							  (window (display-buffer-below-selected buf nil)))
+  						(select-window window)
+  					  (message "Failed to open file: %s" path))))
+  			vterm-eval-cmds)
+  	  ))
 
 #+end_src
 
 * Themes
 #+begin_src emacs-lisp 
-      ;; themes at the end
-      (if (display-graphic-p)
-          (progn
-            (use-package all-the-icons)
-            ;; (use-package doom-modeline
-            ;; 	:init (doom-modeline-mode nil))
-
-    
-  (defcustom tl-telephone-line-cpu-stat-segment
-    '(:eval 
-      (let* ((cpu-stats (split-string 
-                         (shell-command-to-string "iostat -c 2 -w 1 | awk 'NR==4 {print 100 - $6}'") "\n"))
-             (cpu-load (car cpu-stats)))
-        (if (> (length cpu-load) 0)
-            (format " CPU: %s%%" cpu-load)
-          " CPU info N/A")))
-    "Segment for the current CPU load."
-    :group 'telephone-line)
-
-  (use-package telephone-line
-    :init
-    (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-          telephone-line-primary-right-separator 'telephone-line-cubed-right
-          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right
-          telephone-line-height 24
-          telephone-line-evil-use-short-tag t)
-
-    :config
-  	(defun telephone-line-cpu-usage-segment ()
-  		tl-telephone-line-cpu-stat-segment)
-    ;; add the new segment to your line
-  	(setq telephone-line-lhs '((evil . (telephone-line-evil-tag-segment))
-  														 (accent . (telephone-line-buffer-segment))
-  														 (nil . (telephone-line-cpu-usage-segment))))
-    (setq telephone-line-rhs '((nil    . (telephone-line-misc-info-segment))
-                               (accent . (telephone-line-process-segment))))
-    (telephone-line-mode t))
-  
-          (use-package doom-themes
-            	:config
-            	;; Global settings (defaults)
-            	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-            				doom-themes-enable-italic t) ; if nil, italics is universally disabled
-            	(load-theme 'doom-moonlight t)
-            	;; Enable flashing mode-line on errors
-            	(doom-themes-visual-bell-config)
-            	;; Enable custom neotree theme (all-the-icons must be installed!)
-            	;;(doom-themes-neotree-config)
-            	;; or for treemacs users
-            	(setq doom-themes-treemacs-theme "doom-colors") ; use "doom-colors" for less minimal icon theme
-            	;;(doom-themes-treemacs-config)
-            	;; Corrects (and improves) org-mode's native fontification.
-            	(doom-themes-org-config))
-            
-          	(use-package solaire-mode
-          		:hook (after-init . solaire-global-mode))
-        		(use-package vertico-posframe
-        			:after vertico
-        			:config
-        			(add-hook 'vertico-mode-hook #'vertico-posframe-mode))
-
-        		(setq vertico-multiform-commands
-        					'((consult-line
-        						 posframe
-        						 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-        						 (vertico-posframe-border-width . 10)
-        						 ;; NOTE: This is useful when emacs is used in both in X and
-        						 ;; terminal, for posframe do not work well in terminal, so
-        						 ;; vertico-buffer-mode will be used as fallback at the
-        						 ;; moment.
-        						 (vertico-posframe-fallback-mode . vertico-buffer-mode))
-        						(t posframe)))
-        		(vertico-multiform-mode 1)
-
-
-        		(setq vertico-posframe-parameters
-        					'((left-fringe . 8)
-        						(right-fringe . 8)))
-          	))
-
+  ;; themes at the end
+  (if (display-graphic-p)
+  	(progn
+  	  (use-package all-the-icons)
+  	  (use-package doom-modeline
+  		:init (doom-modeline-mode nil))
+  	  (use-package telephone-line
+  		:init
+  		(setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+  			  telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+  			  telephone-line-primary-right-separator 'telephone-line-cubed-right
+  			  telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+  		(setq telephone-line-height 24
+  			  telephone-line-evil-use-short-tag t)
+  		(telephone-line-mode t))
+  	  (use-package doom-themes
+  		:config
+  		;; Global settings (defaults)
+  		(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+  			  doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  		(load-theme 'doom-moonlight t)
+  		;; Enable flashing mode-line on errors
+  		(doom-themes-visual-bell-config)
+  		;; Enable custom neotree theme (all-the-icons must be installed!)
+  		;;(doom-themes-neotree-config)
+  		;; or for treemacs users
+  		(setq doom-themes-treemacs-theme "doom-colors") ; use "doom-colors" for less minimal icon theme
+  		;;(doom-themes-treemacs-config)
+  		;; Corrects (and improves) org-mode's native fontification.
+  		(doom-themes-org-config))
+  	  ))
 #+end_src
 
-** Dealing with Parentheses
-#+begin_src emacs-lisp
-  (use-package rainbow-delimiters
-    :hook (prog-mode . rainbow-delimiters-mode))
-
-  (use-package smartparens
-    :straight t
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode 1))
-
-  (use-package highlight-parentheses
-    :config
-    (define-globalized-minor-mode global-highlight-parentheses-mode
-      highlight-parentheses-mode
-      (lambda () (highlight-parentheses-mode t)))
-    (global-highlight-parentheses-mode t))
-
-  (setq blink-matching-paren t)
-#+end_src 
 * Programming
 #+begin_src emacs-lisp :tangle no
   (use-package lsp-mode)
