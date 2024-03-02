@@ -14,8 +14,8 @@ Benchmark Emacs startup time
    'emacs-startup-hook
    (lambda ()
      (message "*** Emacs loaded in %s seconds with %d garbage collections."
-  			(emacs-init-time "%.2f")
-  			gcs-done)))
+  						(emacs-init-time "%.2f")
+  						gcs-done)))
 #+end_src
 
 * Basic Emacs Settings
@@ -66,15 +66,15 @@ Using Straight.el for package management.
   (setq straight-vc-git-default-clone-depth 1)
   (defvar bootstrap-version)
   (let ((bootstrap-file
-  	   (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-  	  (bootstrap-version 6))
+  			 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+  			(bootstrap-version 6))
     (unless (file-exists-p bootstrap-file)
-  	(with-current-buffer
-  		(url-retrieve-synchronously
-  		 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-  		 'silent 'inhibit-cookies)
-  	  (goto-char (point-max))
-  	  (eval-print-last-sexp)))
+  		(with-current-buffer
+  				(url-retrieve-synchronously
+  				 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+  				 'silent 'inhibit-cookies)
+  			(goto-char (point-max))
+  			(eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
 
   (straight-use-package 'use-package)
@@ -117,29 +117,29 @@ Because this is one of the main reasons to use Emacs:
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((shell      . t)
-  	 (emacs-lisp . t)
-  	 (dot        . t)
-  	 (python     . t)
-  	 (haskell    . t)
-  	 (scheme     . t)
-  	 )))
+  		 (emacs-lisp . t)
+  		 (dot        . t)
+  		 (python     . t)
+  		 (haskell    . t)
+  		 (scheme     . t)
+  		 )))
 #+end_src
 
 #+begin_src emacs-lisp
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun efs/org-babel-tangle-config ()
     (when (string-equal (buffer-file-name)
-  					  (expand-file-name "~/linux-setup/emacs-init.org"))
-  	;; Dynamic scoping to the rescue
-  	(let ((org-confirm-babel-evaluate nil))
-  	  (message "Tangling new .emacs")
-  	  (org-babel-tangle)))
+  											(expand-file-name "~/linux-setup/emacs-init.org"))
+  		;; Dynamic scoping to the rescue
+  		(let ((org-confirm-babel-evaluate nil))
+  			(message "Tangling new .emacs")
+  			(org-babel-tangle)))
     (when (string-equal (buffer-file-name)
-  					  (expand-file-name "~/linux-setup/zsh-init.org"))
-  	;; Dynamic scoping to the rescue
-  	(let ((org-confirm-babel-evaluate nil))
-  	  (message "Tangling new .zsh")
-  	  (org-babel-tangle))))
+  											(expand-file-name "~/linux-setup/zsh-init.org"))
+  		;; Dynamic scoping to the rescue
+  		(let ((org-confirm-babel-evaluate nil))
+  			(message "Tangling new .zsh")
+  			(org-babel-tangle))))
 
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
@@ -222,7 +222,7 @@ For extending Emacs functionality
 #+begin_src emacs-lisp
 
   ;;some helper packages
-  ;Undo/Redo in Emacs
+  																				;Undo/Redo in Emacs
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -247,8 +247,8 @@ For extending Emacs functionality
   (use-package marginalia
     ;; Either bind `marginalia-cycle' globally or only in the minibuffer
     :bind (("M-A" . marginalia-cycle)
-  		 :map minibuffer-local-map
-  		 ("M-A" . marginalia-cycle))
+  				 :map minibuffer-local-map
+  				 ("M-A" . marginalia-cycle))
     :init
     (marginalia-mode))
   (use-package restart-emacs)
@@ -257,12 +257,12 @@ For extending Emacs functionality
 ** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
   ;; Customize your keyboard shortcuts
-    (use-package hydra)
-    (defhydra hydra-text-scale (:timeout 4)
-      "scale text"
-      ("j" text-scale-increase "in")
-      ("k" text-scale-decrease "out")
-      ("f" nil "finished" :exit t))
+  (use-package hydra)
+  (defhydra hydra-text-scale (:timeout 4)
+    "scale text"
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finished" :exit t))
 
   (defun choose-theme ()
     "Interactively choose a theme"
@@ -271,68 +271,68 @@ For extending Emacs functionality
            (theme (completing-read "Load custom theme: " all-themes nil t)))
       (when theme
         (load-theme (intern theme) t))))
-    (use-package general
-      :config
-      (general-create-definer rune/leader-keys
+  (use-package general
+    :config
+    (general-create-definer rune/leader-keys
     	:keymaps '(normal insert visual emacs)
     	:prefix "SPC"
     	:global-prefix "C-SPC")
 
-      (rune/leader-keys
+    (rune/leader-keys
     	"t"  '(:ignore t :which-key "Toggles")
     	"gc" '(copilot-mode :which-key "GPT-4")
     	"gp" '(gptel :which-key "GPT-4")
     	"ts" '(hydra-text-scale/body :which-key "Scale Text")
     	"tt" '(lambda () (interactive)
-    			(mapc #'disable-theme custom-enabled-themes)
-    			(choose-theme)
-    			:which-key "Choose Theme")
+    					(mapc #'disable-theme custom-enabled-themes)
+    					(choose-theme)
+    					:which-key "Choose Theme")
     	"tl" '(lambda () (interactive)
-    			(mapc #'disable-theme custom-enabled-themes)
-    			(load-theme 'doom-one-light t)
-    			:which-key "Light Theme")
+    					(mapc #'disable-theme custom-enabled-themes)
+    					(load-theme 'doom-one-light t)
+    					:which-key "Light Theme")
     	"td" '(lambda () (interactive)
-    			(mapc #'disable-theme custom-enabled-themes)
-    			(load-theme 'doom-moonlight t)
-    			:which-key "Dark Theme")
+    					(mapc #'disable-theme custom-enabled-themes)
+    					(load-theme 'doom-moonlight t)
+    					:which-key "Dark Theme")
     	"xb" '(ibuffer :which-key "ibuffer")
     	"xv" '(multi-vterm :which-key "multi-vterm")
     	"fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
     	"fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org") :which-key "zsh-init.org")
     	))
-    ;;(global-set-key (kbd "C-e") 'end-of-line)
+  ;;(global-set-key (kbd "C-e") 'end-of-line)
 #+end_src
 
 ** Do Stuff in Emacs Easily
 #+begin_src emacs-lisp
 
-    ;; Completion frameworks and doing stuff
-    (use-package vertico
-      :bind (:map
-    		 vertico-map
-    		 ("C-j" . vertico-next)
-    		 ("C-k" . vertico-previous)
-    		 ("C-f" . vertico-exit)
-    		 :map minibuffer-local-map
-    		 ("M-h" . backward-kill-word))
-      :custom (vertico-cycle t)
-      :init (vertico-mode))
+  ;; Completion frameworks and doing stuff
+  (use-package vertico
+    :bind (:map
+    			 vertico-map
+    			 ("C-j" . vertico-next)
+    			 ("C-k" . vertico-previous)
+    			 ("C-f" . vertico-exit)
+    			 :map minibuffer-local-map
+    			 ("M-h" . backward-kill-word))
+    :custom (vertico-cycle t)
+    :init (vertico-mode))
 
-    (use-package consult
-      :bind (("C-c s" . consult-line)
-    		 ("C-M-l" . consult-imenu)
-    		 ("C-r" . consult-history)
-    		 ))
+  (use-package consult
+    :bind (("C-c s" . consult-line)
+    			 ("C-M-l" . consult-imenu)
+    			 ("C-r" . consult-history)
+    			 ))
 
-    ;;Do commands and operatioms on buffers or synbols
-    (use-package embark
-      :bind (("C-c e" . embark-act)
-    		 ("M-." . embark-dwim)
-    		 ("C-h B" . embark-bindings))
-      :init (setq prefix-help-command #'embark-prefix-help-command))
-    (use-package embark-consult
-      :after (embark consult)
-      :hook (embark-collect-mode . consult-preview-at-point-mode))
+  ;;Do commands and operatioms on buffers or synbols
+  (use-package embark
+    :bind (("C-c e" . embark-act)
+    			 ("M-." . embark-dwim)
+    			 ("C-h B" . embark-bindings))
+    :init (setq prefix-help-command #'embark-prefix-help-command))
+  (use-package embark-consult
+    :after (embark consult)
+    :hook (embark-collect-mode . consult-preview-at-point-mode))
 
   (use-package popper
     :bind (("C-`"   . popper-toggle)
@@ -342,7 +342,7 @@ For extending Emacs functionality
     (setq popper-reference-buffers
           '("\\*Messages\\*"
             "Output\\*$"
-  		  "*ChatGPT*"
+  					"*ChatGPT*"
             "\\*Async Shell Command\\*"
             help-mode
             compilation-mode))
@@ -371,15 +371,15 @@ Manage your projects
   (use-package ibuf-ext
     :straight nil)
   (setq ibuffer-saved-filter-groups
-  	  (quote (("default"
-  			   ("Dotfiles" (or (name . "^\\.")))
-  			   ("Messages" (or (name . "^\\*")))
-  			   ("Magit" (or (name . "^\\magit*")))
-  			   ))))
+  			(quote (("default"
+  							 ("Dotfiles" (or (name . "^\\.")))
+  							 ("Messages" (or (name . "^\\*")))
+  							 ("Magit" (or (name . "^\\magit*")))
+  							 ))))
 
   (add-hook 'ibuffer-mode-hook
-  		  (lambda ()
-  			(ibuffer-switch-to-saved-filter-groups "default")))
+  					(lambda ()
+  						(ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -395,73 +395,143 @@ Manage your projects
 #+begin_src emacs-lisp 
 
   (if (not (eq system-type 'windows-nt))
-  	(progn
-  	  (use-package vterm
-  		:config (setq vterm-max-scrollback 10000))
-  	  (use-package multi-vterm)
-  	  (use-package vterm-toggle
-  		:bind ("C-x x" . vterm-toggle))
-  	  (setq vterm-toggle-fullscreen-p nil)
-  	  (add-to-list 'display-buffer-alist
-  				   '((lambda (buffer-or-name _)
-  					   (let ((buffer (get-buffer buffer-or-name)))
-  						 (with-current-buffer buffer
-  						   (or (equal major-mode 'vterm-mode)
-  							   (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-  					 (display-buffer-reuse-window display-buffer-at-bottom)
-  					 ;;(display-buffer-reuse-window display-buffer-in-direction)
-  					 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-  					 ;;(direction . bottom)
-  					 ;;(dedicated . t) ;dedicated is supported in emacs27
-  					 (reusable-frames . visible)
-  					 (window-height . 0.3)))
-  	  (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
-  	  (push (list "find-file-below"
-  				  (lambda (pathj)
-  					(if-let* ((buf (find-file-noselect path))
-  							  (window (display-buffer-below-selected buf nil)))
-  						(select-window window)
-  					  (message "Failed to open file: %s" path))))
-  			vterm-eval-cmds)
-  	  ))
+  		(progn
+  			(use-package vterm
+  				:config (setq vterm-max-scrollback 10000))
+  			(use-package multi-vterm)
+  			(use-package vterm-toggle
+  				:bind ("C-x x" . vterm-toggle))
+  			(setq vterm-toggle-fullscreen-p nil)
+  			(add-to-list 'display-buffer-alist
+  									 '((lambda (buffer-or-name _)
+  											 (let ((buffer (get-buffer buffer-or-name)))
+  												 (with-current-buffer buffer
+  													 (or (equal major-mode 'vterm-mode)
+  															 (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+  										 (display-buffer-reuse-window display-buffer-at-bottom)
+  										 ;;(display-buffer-reuse-window display-buffer-in-direction)
+  										 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+  										 ;;(direction . bottom)
+  										 ;;(dedicated . t) ;dedicated is supported in emacs27
+  										 (reusable-frames . visible)
+  										 (window-height . 0.3)))
+  			(define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
+  			(push (list "find-file-below"
+  									(lambda (pathj)
+  										(if-let* ((buf (find-file-noselect path))
+  															(window (display-buffer-below-selected buf nil)))
+  												(select-window window)
+  											(message "Failed to open file: %s" path))))
+  						vterm-eval-cmds)
+  			))
 
 #+end_src
 
 * Themes
 #+begin_src emacs-lisp 
-  ;; themes at the end
-  (if (display-graphic-p)
-  	(progn
-  	  (use-package all-the-icons)
-  	  (use-package doom-modeline
-  		:init (doom-modeline-mode nil))
-  	  (use-package telephone-line
-  		:init
-  		(setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-  			  telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-  			  telephone-line-primary-right-separator 'telephone-line-cubed-right
-  			  telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
-  		(setq telephone-line-height 24
-  			  telephone-line-evil-use-short-tag t)
-  		(telephone-line-mode t))
-  	  (use-package doom-themes
-  		:config
-  		;; Global settings (defaults)
-  		(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-  			  doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  		(load-theme 'doom-moonlight t)
-  		;; Enable flashing mode-line on errors
-  		(doom-themes-visual-bell-config)
-  		;; Enable custom neotree theme (all-the-icons must be installed!)
-  		;;(doom-themes-neotree-config)
-  		;; or for treemacs users
-  		(setq doom-themes-treemacs-theme "doom-colors") ; use "doom-colors" for less minimal icon theme
-  		;;(doom-themes-treemacs-config)
-  		;; Corrects (and improves) org-mode's native fontification.
-  		(doom-themes-org-config))
-  	  ))
+      ;; themes at the end
+      (if (display-graphic-p)
+          (progn
+            (use-package all-the-icons)
+            ;; (use-package doom-modeline
+            ;; 	:init (doom-modeline-mode nil))
+
+    
+  (defcustom tl-telephone-line-cpu-stat-segment
+    '(:eval 
+      (let* ((cpu-stats (split-string 
+                         (shell-command-to-string "iostat -c 2 -w 1 | awk 'NR==4 {print 100 - $6}'") "\n"))
+             (cpu-load (car cpu-stats)))
+        (if (> (length cpu-load) 0)
+            (format " CPU: %s%%" cpu-load)
+          " CPU info N/A")))
+    "Segment for the current CPU load."
+    :group 'telephone-line)
+
+  (use-package telephone-line
+    :init
+    (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+          telephone-line-primary-right-separator 'telephone-line-cubed-right
+          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right
+          telephone-line-height 24
+          telephone-line-evil-use-short-tag t)
+
+    :config
+  	(defun telephone-line-cpu-usage-segment ()
+  		tl-telephone-line-cpu-stat-segment)
+    ;; add the new segment to your line
+  	(setq telephone-line-lhs '((evil . (telephone-line-evil-tag-segment))
+  														 (accent . (telephone-line-buffer-segment))
+  														 (nil . (telephone-line-cpu-usage-segment))))
+    (setq telephone-line-rhs '((nil    . (telephone-line-misc-info-segment))
+                               (accent . (telephone-line-process-segment))))
+    (telephone-line-mode t))
+  
+          (use-package doom-themes
+            	:config
+            	;; Global settings (defaults)
+            	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+            				doom-themes-enable-italic t) ; if nil, italics is universally disabled
+            	(load-theme 'doom-moonlight t)
+            	;; Enable flashing mode-line on errors
+            	(doom-themes-visual-bell-config)
+            	;; Enable custom neotree theme (all-the-icons must be installed!)
+            	;;(doom-themes-neotree-config)
+            	;; or for treemacs users
+            	(setq doom-themes-treemacs-theme "doom-colors") ; use "doom-colors" for less minimal icon theme
+            	;;(doom-themes-treemacs-config)
+            	;; Corrects (and improves) org-mode's native fontification.
+            	(doom-themes-org-config))
+            
+          	(use-package solaire-mode
+          		:hook (after-init . solaire-global-mode))
+        		(use-package vertico-posframe
+        			:after vertico
+        			:config
+        			(add-hook 'vertico-mode-hook #'vertico-posframe-mode))
+
+        		(setq vertico-multiform-commands
+        					'((consult-line
+        						 posframe
+        						 (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+        						 (vertico-posframe-border-width . 10)
+        						 ;; NOTE: This is useful when emacs is used in both in X and
+        						 ;; terminal, for posframe do not work well in terminal, so
+        						 ;; vertico-buffer-mode will be used as fallback at the
+        						 ;; moment.
+        						 (vertico-posframe-fallback-mode . vertico-buffer-mode))
+        						(t posframe)))
+        		(vertico-multiform-mode 1)
+
+
+        		(setq vertico-posframe-parameters
+        					'((left-fringe . 8)
+        						(right-fringe . 8)))
+          	))
+
 #+end_src
 
+** Dealing with Parentheses
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+  (use-package smartparens
+    :straight t
+    :config
+    (require 'smartparens-config)
+    (smartparens-global-mode 1))
+
+  (use-package highlight-parentheses
+    :config
+    (define-globalized-minor-mode global-highlight-parentheses-mode
+      highlight-parentheses-mode
+      (lambda () (highlight-parentheses-mode t)))
+    (global-highlight-parentheses-mode t))
+
+  (setq blink-matching-paren t)
+#+end_src 
 * Programming
 #+begin_src emacs-lisp :tangle no
   (use-package lsp-mode)
@@ -475,16 +545,16 @@ Manage your projects
     ;; :hook ((rust-mode nix-mode) . eglot-ensure)
     :config
     (add-to-list 'eglot-server-programs
-  			   `(rust-mode . ("rust-analyzer" :initializationOptions
-  							  ( :procMacro (:enable t)
-  								:cargo ( :buildScripts (:enable t)
-  										 :features "all")))))
+  							 `(rust-mode . ("rust-analyzer" :initializationOptions
+  															( :procMacro (:enable t)
+  																:cargo ( :buildScripts (:enable t)
+  																				 :features "all")))))
     (add-hook 'haskell-mode-hook 'eglot-ensure)
     (setq-default eglot-workspace-configuration
-  				'((haskell
-  				   (plugin
-  					(stan
-  					 (globalOn . :json-false))))))  ;; disable stan
+  								'((haskell
+  									 (plugin
+  										(stan
+  										 (globalOn . :json-false))))))  ;; disable stan
     :custom
     (eglot-autoshutdown t)  ;; shutdown language server after closing last file
     (eglot-confirm-server-initiated-edits nil)  ;; allow edits without confirmation
@@ -498,19 +568,22 @@ Manage your projects
   (use-package copilot
     :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
     :ensure t
-    :hook (prog-mode . copilot-mode)
+    :hook
+  	(prog-mode . copilot-mode)
+  	:init
+  	(setq copilot-indent-offset-warning-disable t)
     :bind (:map copilot-completion-map
-  			  ("<tab>" . 'copilot-accept-completion)
-  			  ("TAB" . 'copilot-accept-completion)
-  			  ("C-TAB" . 'copilot-accept-completion-by-word)
-  			  ("C-<tab>" . 'copilot-accept-completion-by-word)))
+  							("M-<tab>" . 'copilot-accept-completion)
+  							("M-TAB" . 'copilot-accept-completion)
+  							("TAB" . 'copilot-accept-completion-by-word)
+  							("<tab>" . 'copilot-accept-completion-by-word)))
 
   (use-package gptel
     :custom
     (gptel-model "gpt-4")
     :config
     (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response)) 
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
 #+end_src
 * Literate Programming
 #+begin_src python :results output
@@ -521,12 +594,14 @@ Manage your projects
 #+end_src
 
 #+RESULTS:
+: 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:41:52) [Clang 15.0.7 ]
+: Hello world!!! Here is a random number: 0.134364
 
 * Mac OS X Specifics 
 #+begIn_src emacs-lisp
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
-  	:init (exec-path-from-shell-initialize))
+  		:init (exec-path-from-shell-initialize))
     (setq mac-command-modifier 'control))
   ;;(setq mac-command-modifier 'meta))
 #+end_src
@@ -534,26 +609,27 @@ Manage your projects
 #+begin_src emacs-lisp
 
   (setq org-publish-project-alist
-  	  `(("pages"
-  		 :base-directory "~/taingram.org/org/"
-  		 :base-extension "org"
-  		 :recursive t
-  		 :publishing-directory "~/taingram.or/html/"
-  		 :publishing-function org-html-publish-to-html)
+  			`(("pages"
+  				 :base-directory "~/taingram.org/org/"
+  				 :base-extension "org"
+  				 :recursive t
+  				 :publishing-directory "~/taingram.or/html/"
+  				 :publishing-function org-html-publish-to-html)
 
-  		("static"
-  		 :base-directory "~/taingram.org/org/"
-  		 :base-extension "css\\|txt\\|jpg\\|gif\\|png"
-  		 :recursive t
-  		 :publishing-directory  "~/taingram.org/html/"
-  		 :publishing-function org-publish-attachment)
+  				("static"
+  				 :base-directory "~/taingram.org/org/"
+  				 :base-extension "css\\|txt\\|jpg\\|gif\\|png"
+  				 :recursive t
+  				 :publishing-directory  "~/taingram.org/html/"
+  				 :publishing-function org-publish-attachment)
 
-  		("taingram.org" :components ("pages" "static"))))
+  				("taingram.org" :components ("pages" "static"))))
 #+end_src
 * TODO Persistent Emacs like TMUX
 * TODO Eshell
 * TODO Web Browsing
 #+begin_src emacs-lisp :tangle no
   (use-package xwidget-webkit 
+  	:ensure nil ; Ensure nil because xwidget is not a installable package
     :bind ("C-c w" . xwidget-webkit-browse-url))
 #+end_src
