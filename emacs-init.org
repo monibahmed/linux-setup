@@ -280,7 +280,7 @@ For extending Emacs functionality
 
     (rune/leader-keys
     	"t"  '(:ignore t :which-key "Toggles")
-  		"cc" '(centered-window-mode :which-key "Center Buffer")
+  		"cc" '(writeroom-mode :which-key "Center Buffer")
     	"gc" '(copilot-mode :which-key "GPT-4")
     	"gp" '(gptel :which-key "GPT-4")
     	"ts" '(hydra-text-scale/body :which-key "Scale Text")
