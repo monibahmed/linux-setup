@@ -22,8 +22,8 @@ Benchmark Emacs startup time
 #+begin_src emacs-lisp 
   ;; Emacs options for different things
 
-  (setq-default tab-width 4) ;; Sets the width for a tab character
-  (setq-default standard-indent 4) ;; Sets the number of spaces for a basic indentation step
+  (setq-default tab-width 2) ;; Sets the width for a tab character
+  (setq-default standard-indent 2) ;; Sets the number of spaces for a basic indentation step
 
   (setq inhibit-splash-screen t)
   (setq make-backup-files nil)
@@ -157,7 +157,7 @@ Evil mode for keybinding and most of efficiency goodness
     (setq evil-want-C-u-scroll t)
     (setq evil-want-C-d-scroll t)
     (setq evil-want-C-i-jump nil)
-    (setq evil-undo-system 'undo-tree)
+    ;; (setq evil-undo-system 'undo-tree)
     (setq evil-insert-state-cursor '(bar))
     (setq evil-normal-state-cursor '(box))
     ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
@@ -222,12 +222,7 @@ For extending Emacs functionality
 #+begin_src emacs-lisp
 
   ;;some helper packages
-  ;;Undo/Redo in Emacs
-  (use-package undo-tree
-    ;; Prevent undo tree files from polluting your git repo
-    :init
-    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo")))
-    (global-undo-tree-mode))
+  ;Undo/Redo in Emacs
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -262,71 +257,97 @@ For extending Emacs functionality
 ** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
   ;; Customize your keyboard shortcuts
-  (use-package hydra)
-  (defhydra hydra-text-scale (:timeout 4)
-    "scale text"
-    ("j" text-scale-increase "in")
-    ("k" text-scale-decrease "out")
-    ("f" nil "finished" :exit t))
+    (use-package hydra)
+    (defhydra hydra-text-scale (:timeout 4)
+      "scale text"
+      ("j" text-scale-increase "in")
+      ("k" text-scale-decrease "out")
+      ("f" nil "finished" :exit t))
 
-  (use-package general
-    :config
-    (general-create-definer rune/leader-keys
-  	:keymaps '(normal insert visual emacs)
-  	:prefix "SPC"
-  	:global-prefix "C-SPC")
+  (defun choose-theme ()
+    "Interactively choose a theme"
+    (interactive)
+    (let* ((all-themes (mapcar 'symbol-name (custom-available-themes)))
+           (theme (completing-read "Load custom theme: " all-themes nil t)))
+      (when theme
+        (load-theme (intern theme) t))))
+    (use-package general
+      :config
+      (general-create-definer rune/leader-keys
+    	:keymaps '(normal insert visual emacs)
+    	:prefix "SPC"
+    	:global-prefix "C-SPC")
 
-    (rune/leader-keys
-  	"t"  '(:ignore t :which-key "Toggles")
-  	"gp" '(gptel :which-key "GPT-3")
-  	"tt" '(load-theme :which-key "Choose Theme")
-  	"ts" '(hydra-text-scale/body :which-key "Scale Text")
-  	"tl" '(lambda () (interactive)
-  			(mapc #'disable-theme custom-enabled-themes)
-  			(load-theme 'doom-one-light t)
-  			:which-key "Light Theme")
-  	"td" '(lambda () (interactive)
-  			(mapc #'disable-theme custom-enabled-themes)
-  			(load-theme 'doom-moonlight t)
-  			:which-key "Dark Theme")
-  	"xb" '(ibuffer :which-key "ibuffer")
-  	"xv" '(multi-vterm :which-key "multi-vterm")
-  	"fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
-  	"fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org") :which-key "zsh-init.org")
-  	))
-  ;;(global-set-key (kbd "C-e") 'end-of-line)
+      (rune/leader-keys
+    	"t"  '(:ignore t :which-key "Toggles")
+    	"gc" '(copilot-mode :which-key "GPT-4")
+    	"gp" '(gptel :which-key "GPT-4")
+    	"ts" '(hydra-text-scale/body :which-key "Scale Text")
+    	"tt" '(lambda () (interactive)
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(choose-theme)
+    			:which-key "Choose Theme")
+    	"tl" '(lambda () (interactive)
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(load-theme 'doom-one-light t)
+    			:which-key "Light Theme")
+    	"td" '(lambda () (interactive)
+    			(mapc #'disable-theme custom-enabled-themes)
+    			(load-theme 'doom-moonlight t)
+    			:which-key "Dark Theme")
+    	"xb" '(ibuffer :which-key "ibuffer")
+    	"xv" '(multi-vterm :which-key "multi-vterm")
+    	"fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
+    	"fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org") :which-key "zsh-init.org")
+    	))
+    ;;(global-set-key (kbd "C-e") 'end-of-line)
 #+end_src
 
 ** Do Stuff in Emacs Easily
 #+begin_src emacs-lisp
 
-  ;; Completion frameworks and doing stuff
-  (use-package vertico
-    :bind (:map
-  		 vertico-map
-  		 ("C-j" . vertico-next)
-  		 ("C-k" . vertico-previous)
-  		 ("C-f" . vertico-exit)
-  		 :map minibuffer-local-map
-  		 ("M-h" . backward-kill-word))
-    :custom (vertico-cycle t)
-    :init (vertico-mode))
+    ;; Completion frameworks and doing stuff
+    (use-package vertico
+      :bind (:map
+    		 vertico-map
+    		 ("C-j" . vertico-next)
+    		 ("C-k" . vertico-previous)
+    		 ("C-f" . vertico-exit)
+    		 :map minibuffer-local-map
+    		 ("M-h" . backward-kill-word))
+      :custom (vertico-cycle t)
+      :init (vertico-mode))
 
-  (use-package consult
-    :bind (("C-c s" . consult-line)
-  		 ("C-M-l" . consult-imenu)
-  		 ("C-r" . consult-history)
-  		 ))
+    (use-package consult
+      :bind (("C-c s" . consult-line)
+    		 ("C-M-l" . consult-imenu)
+    		 ("C-r" . consult-history)
+    		 ))
 
-  ;;Do commands and operatioms on buffers or synbols
-  (use-package embark
-    :bind (("C-c e" . embark-act)
-  		 ("M-." . embark-dwim)
-  		 ("C-h B" . embark-bindings))
-    :init (setq prefix-help-command #'embark-prefix-help-command))
-  (use-package embark-consult
-    :after (embark consult)
-    :hook (embark-collect-mode . consult-preview-at-point-mode))
+    ;;Do commands and operatioms on buffers or synbols
+    (use-package embark
+      :bind (("C-c e" . embark-act)
+    		 ("M-." . embark-dwim)
+    		 ("C-h B" . embark-bindings))
+      :init (setq prefix-help-command #'embark-prefix-help-command))
+    (use-package embark-consult
+      :after (embark consult)
+      :hook (embark-collect-mode . consult-preview-at-point-mode))
+
+  (use-package popper
+    :bind (("C-`"   . popper-toggle)
+           ("M-`"   . popper-cycle)
+           ("C-M-`" . popper-toggle-type))
+    :init
+    (setq popper-reference-buffers
+          '("\\*Messages\\*"
+            "Output\\*$"
+  		  "*ChatGPT*"
+            "\\*Async Shell Command\\*"
+            help-mode
+            compilation-mode))
+    (popper-mode +1)
+    (popper-echo-mode +1))                ; For echo area hints
 
 
 #+end_src
