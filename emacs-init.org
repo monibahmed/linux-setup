@@ -48,7 +48,7 @@ Benchmark Emacs startup time
   (setq jit-lock-stealth-load 200)
   (setq indent-tabs-mode nil)
   (setq custom-file (concat user-emacs-directory "custom.el"))
-
+  (setq switch-to-buffer-obey-display-actions t)
   ;; disable scrollbars
   (customize-set-variable 'scroll-bar-mode nil)
   (customize-set-variable 'horizontal-scroll-bar-mode nil)
@@ -83,14 +83,6 @@ Using Straight.el for package management.
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
-#+end_src
-* Mac OS X Specifics 
-#+begIn_src emacs-lisp
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control))
-  ;;(setq mac-command-modifier 'meta))
 #+end_src
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
@@ -173,7 +165,6 @@ Evil mode for keybinding and most of efficiency goodness
     (setq evil-normal-state-cursor '(box))
     ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
     ;;(setq evil-emacs-state-modes nil)
-    ;;(setq evil-want-minibuffer t)
     :config
     (evil-mode 1)
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
@@ -183,7 +174,7 @@ Evil mode for keybinding and most of efficiency goodness
     )
 
   (use-package evil-collection
-    ;;:custom (evil-collection-setup-minibuffer t)
+    ;; :custom (evil-collection-setup-minibuffer t)
     :after evil
     :config
     (evil-collection-init))
@@ -232,20 +223,20 @@ For using getting around and understanding Emacs
 For extending Emacs functionality
 #+begin_src emacs-lisp
 
-    ;;some helper packages
+  ;;some helper packages
     					;Undo/Redo in Emacs
-    ;;notified if the definition of a function you are customizing change
-    (use-package el-patch)
-    ;; Persist history over Emacs restarts. Vertico sorts by history position.
-    (use-package savehist
-      :init (savehist-mode))
-    ;; a better window manager?
-    (use-package ace-window
-      :bind ("C-c o" . 'ace-window)
-      :init
-      (setq aw-dispatch-always t)
-      (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-    ;; divides search pattern into space separated components
+  ;;notified if the definition of a function you are customizing change
+  (use-package el-patch)
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init (savehist-mode))
+  ;; a better window manager?
+  (use-package ace-window
+    :bind ("C-c o" . 'ace-window)
+    :init
+    (setq aw-dispatch-always t)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+  ;; divides search pattern into space separated components
   ;; Optionally use the `orderless' completion style.
   (use-package orderless
     :init
@@ -255,19 +246,19 @@ For extending Emacs functionality
     (setq completion-styles '(orderless basic)
           completion-category-defaults nil
           completion-category-overrides '((file (styles partial-completion)))))
-    ;; what key should you push next? not needed embark
-    (use-package which-key
-      :init (which-key-mode))
-    ;; Enable rich annotations using the Marginalia package
-    (use-package marginalia
-      ;; Either bind `marginalia-cycle' globally or only in the minibuffer
-      :bind (("M-A" . marginalia-cycle)
+  ;; what key should you push next? not needed embark
+  (use-package which-key
+    :init (which-key-mode))
+  ;; Enable rich annotations using the Marginalia package
+  (use-package marginalia
+    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
+    :bind (("M-A" . marginalia-cycle)
     	 :map minibuffer-local-map
     	 ("M-A" . marginalia-cycle))
-      :init
-      (marginalia-mode))
-    (use-package restart-emacs)
-    (use-package default-text-scale)
+    :init
+    (marginalia-mode))
+  (use-package restart-emacs)
+  (use-package default-text-scale)
 #+end_src
 ** Customize Keyboard Shortcuts
 #+begin_src emacs-lisp
@@ -389,32 +380,8 @@ For extending Emacs functionality
   (use-package embark-consult
     :after (embark consult)
     :hook (embark-collect-mode . consult-preview-at-point-mode))
-
-  (use-package popper
-    :bind (("C-`"   . popper-toggle)
-           ("M-`"   . popper-cycle)
-           ("C-M-`" . popper-toggle-type))
-    :init
-    (setq popper-reference-buffers
-          '("\\*ChatGPT\\*"
-  	  "\\*scratch\\*"
-  	  "\\*vterm"
-  	  "emacs-init.org"
-            help-mode
-            compilation-mode))
-    (popper-mode +1)
-    (popper-echo-mode +1))                ; For echo area hints
-
   (use-package solaire-mode
     :hook (after-init . solaire-global-mode))
-
-  (use-package writeroom-mode
-    :straight t
-    :config
-    (setq writeroom-width 120)       ;; Adjust this value according to your preference
-    ;; Global effect to all buffers when writeroom-mode is activated:
-    (setq writeroom-global-effects nil))  ;; Disable global effects. So, it will not hide other windows.
-
 #+end_src
 
 ** TODO Browse Files
@@ -426,33 +393,37 @@ Manage your projects
   (use-package magit)
 #+end_src
 
-** Buffer Management
+* Buffer Management
 #+begin_src emacs-lisp
-  ;; (use-package ibuffer
-  ;;   :straight nil)
-  (use-package bufler
-    :straight (:host github :repo "alphapapa/bufler.el"
-                     :files (:defaults (:exclude "helm-bufler.el")))
-    :bind ("C-x C-b" . bufler-sidebar)
-    )
-  ;;:bind ("C-x C-b" . ibuffer))
+  (use-package ibuffer
+    :straight nil
+    :bind ("C-x C-b" . ibuffer))
   ;; (add-to-list 'ibuffer-never-show-predicates "^\\*")
 
   (use-package ibuf-ext
     :straight nil)
   (setq ibuffer-saved-filter-groups
         (quote (("default"
-    	       ("Dotfiles" (or (name . "^\\.")))
-    	       ("Messages" (or (name . "^\\*")))
-    	       ("Magit" (or (name . "^\\magit*")))
-    	       ))))
+         	       ("Dotfiles" (or (name . "^\\.")))
+         	       ("Messages" (or (name . "^\\*")))
+         	       ("Magit" (or (name . "^\\magit*")))
+  	       ("Dired" (mode . dired-mode))
+  	       ("Org" (mode . org-mode))
+  	       ("Planner" (or
+  			   (name . "^\\*Calendar\\*$")
+  			   (name . "^\\*Org Agenda\\*")))
+  	       ("Emacs" (or
+  			 (name . "^\\*scratch\\*$")
+  			 (name . "^\\*Messages\\*$")))))))
 
   (add-hook 'ibuffer-mode-hook
-    	  (lambda ()
-    	    (ibuffer-switch-to-saved-filter-groups "default")))
+         	  (lambda ()
+         	    (ibuffer-switch-to-saved-filter-groups "default")))
+
+
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package perspective
     :bind ("C-x C-b" . persp-ibuffer)
     :custom
@@ -461,7 +432,32 @@ Manage your projects
     (persp-mode))
 #+end_src 
 
-** Shell Support
+#+begin_src emacs-lisp
+  (use-package popper
+    :bind (("C-`"   . popper-toggle)
+           ("M-`"   . popper-cycle)
+           ("C-M-`" . popper-toggle-type))
+    :init
+    ;; have popper respect display-buffer-alist rules
+    ;; (setq popper-display-control nil)
+    ;; enable actions in echo area (k to kill buffer)
+    ;; (setq popper-echo-dispatch-actions t)
+    ;; how to group popups
+    ;; (setq popper-display-function #'popper-select-popup-at-bottom)
+    (setq popper-group-function #'popper-group-by-perspective)
+    ;; which buffers should be considered popups
+    (setq popper-window-height 0.33)
+    (setq popper-reference-buffers
+  	'("\\*ChatGPT\\*"
+  	  "\\*scratch\\*"
+  	  "\\*vterm"
+            help-mode
+            compilation-mode))
+    (popper-mode +1)
+    (popper-echo-mode +1))                ; For echo area hints
+#+end_src
+
+* Shell Support
 #+begin_src emacs-lisp 
 
   (if (not (eq system-type 'windows-nt))
@@ -469,32 +465,120 @@ Manage your projects
         (use-package vterm
   	:config (setq vterm-max-scrollback 10000))
         (use-package multi-vterm)
-        (setq vterm-toggle-fullscreen-p nil)
-        (add-to-list 'display-buffer-alist
-  		   '((lambda (buffer-or-name _)
-  		       (let ((buffer (get-buffer buffer-or-name)))
-  			 (with-current-buffer buffer
-  			   (or (equal major-mode 'vterm-mode)
-  			       (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-  		     (display-buffer-reuse-window display-buffer-at-bottom)
-  		     ;;(display-buffer-reuse-window display-buffer-in-direction)
-  		     ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-  		     ;;(direction . bottom)
-  		     ;;(dedicated . t) ;dedicated is supported in emacs27
-  		     (reusable-frames . visible)
-  		     (window-height . 0.3)))
-        (define-key vterm-mode-map (kbd "C-q") #'vterm-send-next-key)
-        (push (list "find-file-below"
-  		  (lambda (pathj)
-  		    (if-let* ((buf (find-file-noselect path))
-  			      (window (display-buffer-below-selected buf nil)))
-  			(select-window window)
-  		      (message "Failed to open file: %s" path))))
-  	    vterm-eval-cmds)
         ))
 
 #+end_src
 
+* Programming
+#+begin_src emacs-lisp 
+  (use-package corfu
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    (corfu-separator ?\s)          ;; Orderless field separator
+    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+    :hook (prog-mode . corfu-mode)
+    ;; Enable Corfu only for certain modes.
+    ;; :hook ((prog-mode . corfu-mode)
+    ;;        (shell-mode . corfu-mode)
+    ;;        (eshell-mode . corfu-mode))
+
+    ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
+    ;; be used globally (M-/).  See also the customization variable
+    ;; `global-corfu-modes' to exclude certain modes.
+    :init
+    (global-corfu-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 3)
+
+    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+    ;; (setq read-extended-command-predicate
+    ;;       #'command-completion-default-include-p)
+
+    ;; Enable indentation+completion using the TAB key.
+    ;; `completion-at-point' is often bound to M-TAB.
+    (setq tab-always-indent 'complete))      (use-package corfu
+    :straight t
+    :config
+    ;; Optionally use TAB for cycling, default is `corfu-complete'.
+    (setq corfu-cycle t)
+    ;; Optionally enable `corfu-mode' in all buffers.
+    (global-set-key (kbd "M-RET") #'corfu-complete)
+    (setq corfu-quit-at-boundary nil)
+    (setq corfu-quit-no-match t))
+
+  ;; Use Dabbrev with Corfu!
+  (use-package dabbrev
+    ;; Swap M-/ and C-M-/
+    :bind (("M-/" . dabbrev-completion)
+           ("C-M-/" . dabbrev-expand))
+    :config
+    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+    ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+    (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+    (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
+
+  (use-package eglot
+    :config
+    (setq eglot-autoshutdown t)
+    (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
+
+  (use-package nix-mode
+    :mode "\\.nix\\'")
+  (use-package haskell-mode
+    :mode "\\.hs\\'")
+
+#+end_src
+ 
+#+begin_src emacs-lisp 
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+    :init (setq copilot-indent-offset-warning-disable t)
+    :bind (:map copilot-completion-map
+  	      ("M-<tab>" . 'copilot-accept-completion)
+  	      ("M-TAB" . 'copilot-accept-completion)
+  	      ("TAB" . 'copilot-accept-completion-by-word)
+  	      ("<tab>" . 'copilot-accept-completion-by-word)))
+
+  (use-package gptel
+    :custom
+    (gptel-model "gpt-4")
+    :config
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
+#+end_src
+* Literate Programming
+#+begin_src python :results output
+  import random, sys
+  random.seed(1)
+  print(sys.version)
+  print("Hello world!!! Here is a random number: %f" % random.random())
+#+end_src
+
+#+RESULTS:
+: 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:41:52) [Clang 15.0.7 ]
+: Hello world!!! Here is a random number: 0.134364
+
+* Mac OS X Specifics 
+#+begIn_src emacs-lisp
+  (when (memq window-system '(mac ns x))
+    (use-package exec-path-from-shell
+      :init (exec-path-from-shell-initialize))
+    (setq mac-command-modifier 'control))
+  ;;(setq mac-command-modifier 'meta))
+#+end_src
 * Themes
 #+begin_src emacs-lisp 
   ;; themes at the end
@@ -549,108 +633,6 @@ Manage your projects
 
   (setq blink-matching-paren t)
 #+end_src 
-
-* Programming
-#+begin_src emacs-lisp 
-    (use-package corfu
-      ;; Optional customizations
-      :custom
-      (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-      (corfu-auto t)                 ;; Enable auto completion
-      (corfu-separator ?\s)          ;; Orderless field separator
-      ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-      ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-      ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-      ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-      ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-      ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-      :hook (prog-mode . corfu-mode)
-      ;; Enable Corfu only for certain modes.
-      ;; :hook ((prog-mode . corfu-mode)
-      ;;        (shell-mode . corfu-mode)
-      ;;        (eshell-mode . corfu-mode))
-
-      ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
-      ;; be used globally (M-/).  See also the customization variable
-      ;; `global-corfu-modes' to exclude certain modes.
-      :init
-      (global-corfu-mode))
-
-    ;; A few more useful configurations...
-    (use-package emacs
-      :init
-      ;; TAB cycle if there are only few candidates
-      (setq completion-cycle-threshold 3)
-
-      ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-      ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-      ;; (setq read-extended-command-predicate
-      ;;       #'command-completion-default-include-p)
-
-      ;; Enable indentation+completion using the TAB key.
-      ;; `completion-at-point' is often bound to M-TAB.
-      (setq tab-always-indent 'complete))      (use-package corfu
-      :straight t
-      :config
-      ;; Optionally use TAB for cycling, default is `corfu-complete'.
-      (setq corfu-cycle t)
-      ;; Optionally enable `corfu-mode' in all buffers.
-      (global-set-key (kbd "M-RET") #'corfu-complete)
-      (setq corfu-quit-at-boundary nil)
-      (setq corfu-quit-no-match t))
-
-  ;; Use Dabbrev with Corfu!
-  (use-package dabbrev
-    ;; Swap M-/ and C-M-/
-    :bind (("M-/" . dabbrev-completion)
-           ("C-M-/" . dabbrev-expand))
-    :config
-    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
-    ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
-    (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-    (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
-
-    (use-package eglot
-      :config
-      (setq eglot-autoshutdown t)
-      (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
-
-    (use-package nix-mode
-      :mode "\\.nix\\'")
-    (use-package haskell-mode
-      :mode "\\.hs\\'")
-
-#+end_src
- 
-#+begin_src emacs-lisp 
-  (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-    :init (setq copilot-indent-offset-warning-disable t)
-    :bind (:map copilot-completion-map
-  	      ("M-<tab>" . 'copilot-accept-completion)
-  	      ("M-TAB" . 'copilot-accept-completion)
-  	      ("TAB" . 'copilot-accept-completion-by-word)
-  	      ("<tab>" . 'copilot-accept-completion-by-word)))
-
-  (use-package gptel
-    :custom
-    (gptel-model "gpt-4")
-    :config
-    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
-#+end_src
-* Literate Programming
-#+begin_src python :results output
-  import random, sys
-  random.seed(1)
-  print(sys.version)
-  print("Hello world!!! Here is a random number: %f" % random.random())
-#+end_src
-
-#+RESULTS:
-: 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:41:52) [Clang 15.0.7 ]
-: Hello world!!! Here is a random number: 0.134364
 
 * TODO Publish Website with notes
 #+begin_src emacs-lisp
