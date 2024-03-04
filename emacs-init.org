@@ -84,6 +84,14 @@ Using Straight.el for package management.
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
 #+end_src
+* Mac OS X Specifics 
+#+begIn_src emacs-lisp
+  (when (memq window-system '(mac ns x))
+    (use-package exec-path-from-shell
+      :init (exec-path-from-shell-initialize))
+    (setq mac-command-modifier 'control))
+  ;;(setq mac-command-modifier 'meta))
+#+end_src
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 
@@ -290,8 +298,8 @@ For extending Emacs functionality
     (end-of-line))
 
   ;; Define the keybinding
-  (global-set-key (kbd "C-c a") 'beginning-of-file-and-line)
-  (global-set-key (kbd "C-c e") 'end-of-file-and-line)
+  (global-set-key (kbd "C-c C-a") 'beginning-of-file-and-line)
+  (global-set-key (kbd "C-c C-e") 'end-of-file-and-line)
 
   (defun choose-theme ()
     "Interactively choose a theme"
@@ -372,7 +380,7 @@ For extending Emacs functionality
 
   ;;Do commands and operatioms on buffers or synbols
   (use-package embark
-    :bind (("C-c b" . embark-act)
+    :bind (("C-c e" . embark-act)
         	 ("M-." . embark-dwim)
         	 ("C-h B" . embark-bindings))
     :init (setq prefix-help-command #'embark-prefix-help-command))
@@ -571,14 +579,6 @@ Manage your projects
 : 3.10.12 | packaged by conda-forge | (main, Jun 23 2023, 22:41:52) [Clang 15.0.7 ]
 : Hello world!!! Here is a random number: 0.134364
 
-* Mac OS X Specifics 
-#+begIn_src emacs-lisp
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control))
-  ;;(setq mac-command-modifier 'meta))
-#+end_src
 * Themes
 #+begin_src emacs-lisp 
   ;; themes at the end
