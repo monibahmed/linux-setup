@@ -667,12 +667,34 @@ Manage your projects
 
 * Scratch Area
 #+begin_src emacs-lisp :tangle no
-  (use-package pdf-tools
-    :pin manual 
-    :config
-    (pdf-tools-install)
-    (setq-default pdf-view-display-size 'fit-page)
-    (setq pdf-annot-activate-created-annotations t)
-    :custom
-    (pdf-view-resize-factor 1.1))
+    (use-package pdf-tools
+      :pin manual 
+      :config
+      (pdf-tools-install)
+      (setq-default pdf-view-display-size 'fit-page)
+      (setq pdf-annot-activate-created-annotations t)
+      :custom
+      (pdf-view-resize-factor 1.1))
+
+  ;; Some fancy project/perspective stuff.
+  (defun my-project-vterm ()
+    "Open a `vterm` in the current project's root directory."
+    (interactive)
+    (let ((project-root (project-root (project-current t))))
+      (if project-root
+          (let ((default-directory project-root))
+            (vterm (format "vterm: %s" project-root)))
+        (message "Not in a project!"))))
+  (global-set-key (kbd "C-c p v") #'my-project-vterm)
+  (defun project-switch-to-perspective ()
+    "Switch to a perspective with the name of the current project."
+    (interactive)
+    (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current t))))))
+      (if (not (persp-switch project-name))
+          (progn
+            (persp-switch project-name)
+            (dired (project-root (project-current t)))))))
+  (global-set-key (kbd "C-x p p") 'project-switch-to-perspective)
+  (advice-add 'project-switch-project :after #'project-switch-to-perspective)
+
 #+end_src
