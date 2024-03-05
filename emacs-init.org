@@ -1,7 +1,6 @@
 #+Title: Emac's Setup
-#+STARTUP: content
+#+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
-#+STARTUP: inlineimages
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
