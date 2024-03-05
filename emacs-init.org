@@ -431,12 +431,15 @@ Manage your projects
 #+end_src
 
 #+begin_src emacs-lisp 
-  (use-package perspective
-    :bind ("C-x C-b" . persp-ibuffer)
-    :custom
-    (persp-mode-prefix-key (kbd "C-x C-x"))
-    :init
-    (persp-mode))
+    (use-package perspective
+      :bind (
+    	     ("C-x C-b" . persp-ibuffer)
+    	     ("C-x k" . persp-kill-buffer* ))
+      :custom
+      (persp-mode-prefix-key (kbd "C-x C-x"))
+      :init
+      (setq persp-initial-frame-name "Main")
+      (persp-mode))
 #+end_src 
 
 #+begin_src emacs-lisp
@@ -451,7 +454,7 @@ Manage your projects
     ;; (setq popper-echo-dispatch-actions t)
     ;; how to group popups
     ;; (setq popper-display-function #'popper-select-popup-at-bottom)
-    (setq popper-group-function #'popper-group-by-perspective)
+    (setq popper-group-function #'popper-group-by-project)
     ;; which buffers should be considered popups
     (setq popper-window-height 0.33)
     (setq popper-reference-buffers
