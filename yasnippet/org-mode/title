@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Title
+# key: <ot
+# --
+
+#+TITLE: ${1:Enter a Title}
+#+AUTHOR: ${2:Enter an Author}
+
+$0
