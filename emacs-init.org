@@ -52,7 +52,7 @@ Benchmark Emacs startup time
   (customize-set-variable 'scroll-bar-mode nil)
   (customize-set-variable 'horizontal-scroll-bar-mode nil)
 
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 140)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 
   ;;doesn't work as expected
   ;;(add-to-list 'default-frame-alist '(undecorated . t))
