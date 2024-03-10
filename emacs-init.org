@@ -254,7 +254,7 @@ For extending Emacs functionality
       "t"  '(:ignore t :which-key "Toggles")
       "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
       "gp" '(gptel                                                            :which-key "GPT-4")
-      "gP" '(gptel-send                                                        :which-key "Send to GPT")
+      "gP" '(gptel-send                                                       :which-key "Send to GPT")
       "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
       "tt" '(lambda () (interactive)
     	    (mapc #'disable-theme custom-enabled-themes)
@@ -528,6 +528,10 @@ Because this is one of the main reasons to use Emacs:
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
+#+begin_src emacs-lisp :tangle no
+  (use-package markdown-mode)
+  (use-package auctex)
+#+end_src
 
 * Project Management
 Manage your projects
@@ -711,30 +715,58 @@ Manage your projects
     :mode "\\.hs\\'")
 
 #+end_src
- 
+** Copilot 
 #+begin_src emacs-lisp 
-  (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-    :init (setq copilot-indent-offset-warning-disable t)
-    :bind (:map copilot-completion-map
-  	      ("M-<tab>" . 'copilot-accept-completion)
-  	      ("M-TAB" . 'copilot-accept-completion)
-  	      ("TAB" . 'copilot-accept-completion-by-word)
-  	      ("<tab>" . 'copilot-accept-completion-by-word)))
+    (use-package copilot
+      :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+      :init (setq copilot-indent-offset-warning-disable t)
+      :bind (:map copilot-completion-map
+    	      ("M-<tab>" . 'copilot-accept-completion)
+    	      ("M-TAB" . 'copilot-accept-completion)
+    	      ("TAB" . 'copilot-accept-completion-by-word)
+    	      ("<tab>" . 'copilot-accept-completion-by-word)))
 
-  (use-package gptel
-    :custom
-    (gptel-model "gpt-4")
-    (gptel-default-mode 'org-mode)
-    (gptel-prompt-prefix-alist
-     '((markdown-mode . "# ")
-       (org-mode . "* ")
-       (text-mode . "# ")))
-    :config
-    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
+  #+end_src
+** GPTEL 
+  #+begin_src emacs-lisp
+    (use-package gptel
+        :custom
+        (gptel-model "gpt-3.5-turbo")
+        (gptel-default-mode 'org-mode)
+        (gptel-prompt-prefix-alist
+         '((markdown-mode . "# ")
+           (org-mode . "* ")
+           (text-mode . "# ")))
+        :config
+        (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+        (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
+ 
 #+end_src
 
+* PDFs
+#+begin_src emacs-lisp
+
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+     
+    ;; enable midnight mode for dark theme
+    (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
+    
+    ;; disable blinking
+    (add-hook 'pdf-view-mode-hook (lambda ()
+      (set (make-local-variable 'blink-cursor-mode) nil)))
+
+    ;; unbind q key
+    ;; (define-key pdf-view-mode-map (kbd "q") nil)
+    
+    (setq-default pdf-view-display-size 'fit-page)
+    (setq pdf-annot-activate-created-annotations t)
+    :bind
+    ("q" . nil)
+    :custom
+    (pdf-view-resize-factor 1.0))
+#+end_src
 * Themes
 #+begin_src emacs-lisp 
   ;; themes at the end
@@ -838,16 +870,37 @@ Manage your projects
 
 * Scratch Area
 #+begin_src emacs-lisp :tangle no
-   (use-package pdf-tools
-     ;; :pin manual 
-     :config
-     (pdf-tools-install)
-     (setq-default pdf-view-display-size 'fit-page)
-     (setq pdf-annot-activate-created-annotations t)
-     :custom
-     (pdf-view-resize-factor 1.1))
 
-  (use-package markdown-mode)
-  (use-package auctex)
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+    :bind ("q" . nil)
+    :custom
+     (pdf-view-resize-factor 1.2)
+     (color-theme "onedark")
+     (font-face "courier")
+     (blink-cursor-mode nil)
+     (midnight-mode t))
+
+(use-package pdf-tools
+  :config (pdf-tools-install))
+
+(defun pdf-view-mode-hook ()
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-annot-activate-created-annotations t)
+  (bind ("q" . nil)))
 #+end_src
 
+#+begin_src emacs-lisp :tangle no
+    (gptel-make-ollama "Ollama"             ;Any name of your choosing
+      :host "localhost:11434"               ;Where it's running
+      :stream t                             ;Stream responses
+      :models '("mistral:latest"))          ;List of models
+  ;; OPTIONAL configuration
+  (setq-default
+   gptel-model "llama2"
+   gptel-backend (gptel-make-ollama "Ollama"
+                   :host "127.0.0.1:11434"
+                   :stream t
+                   :models '("mistral:latest")))
+#+end_src
