@@ -1,9 +1,8 @@
 # -*- mode: snippet -*-
 # name: Title
 # key: <ot
+#expand-env: ((yas/triggers-in-field #t))
 # --
 
-#+TITLE: ${1:Enter a Title}
-#+AUTHOR: ${2:Enter an Author}
-
-$0
+#+TITLE: ${1:Category}: ${2:Enter a Title}
+#+AUTHOR: Monib Ahmed	    

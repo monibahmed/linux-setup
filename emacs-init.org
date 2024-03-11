@@ -82,6 +82,7 @@ Using Straight.el for package management.
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
 #+end_src
+
 * Mac OS X Specifics 
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
@@ -90,6 +91,7 @@ Using Straight.el for package management.
     (setq mac-command-modifier 'control))
   ;;(setq mac-command-modifier 'meta))
 #+end_src
+
 * Evil Mode
 Evil mode for keybinding and most of efficiency goodness
 
@@ -145,7 +147,6 @@ Evil mode for keybinding and most of efficiency goodness
   (use-package evil-vimish-fold
     :after vimish-fold
     :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
-
   (define-key evil-normal-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
   (define-key evil-visual-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
   (define-key evil-normal-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
@@ -276,9 +277,10 @@ For extending Emacs functionality
       "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
       "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
       "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
+      "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
       ))
   ;;(global-set-key (kbd "C-e") 'end-of-line)
-#+end_src
+#+end_src 
 
 #+begin_src elisp
   (defun beginning-of-file-and-line ()
@@ -297,11 +299,21 @@ For extending Emacs functionality
 
 ** You Snip It
 #+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :init 
-    (yas-global-mode 1)
-    :config
-    (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir)))
+    (use-package yasnippet
+      :config
+      (setq yas-triggers-in-field t)
+      ;; (setq yas-next-field-or-maybe-expand t)
+      (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
+
+      :init 
+      (yas-global-mode 1)
+      )
+
+  ;; (defun my-yas-try-expanding-auto-snippets ()
+  ;;   (when yas-minor-mode
+  ;;     (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+  ;;       (yas-expand))))
+  ;; (add-hook 'post-command-hook #'my-yas-try-expanding-auto-snippets)
 #+END_SRC
 
 ** Do Stuff in Emacs Easily
@@ -383,56 +395,67 @@ For extending Emacs functionality
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
-(use-package dired
-  :straight nil)
+  (use-package dired
+    :straight nil)
 
-(use-package all-the-icons-dired
-  :after dired-sidebar
-  :hook (dired-mode . all-the-icons-dired-mode))
+  (use-package all-the-icons-dired
+    :after dired-sidebar
+    :hook (dired-mode . all-the-icons-dired-mode))
 
-(use-package dired-sidebar
-  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-  :commands (dired-sidebar-toggle-sidebar)
-  :init
-  (add-hook 'dired-sidebar-mode-hook
-            (lambda ()
-              (unless (file-remote-p default-directory)
-                (auto-revert-mode))))
-  :config
-  (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
-  (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
-  (setq dired-sidebar-use-term-integration t))
+  (use-package dired-sidebar
+    :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+    :commands (dired-sidebar-toggle-sidebar)
+    :init
+    (add-hook 'dired-sidebar-mode-hook
+              (lambda ()
+                (unless (file-remote-p default-directory)
+                  (auto-revert-mode))))
+    :config
+    (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
+    (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+    (setq dired-sidebar-use-term-integration t))
 
-;; Close the dired-sidebar when file opens
-(with-eval-after-load 'dired
-  (defun close-dired-sidebar-find-file ()
-    "Close the dired-sidebar when opening a file."
-    (interactive)
-    (let ((buffer (dired-get-file-for-visit)))
-      (dired-sidebar-toggle-sidebar)
-      (find-file buffer)))
-  (advice-add 'dired-find-file :override #'close-dired-sidebar-find-file))
+  ;; Close the dired-sidebar when file opens
+  (with-eval-after-load 'dired
+    (defun close-dired-sidebar-find-file ()
+      "Close the dired-sidebar when opening a file."
+      (interactive)
+      (let ((buffer (dired-get-file-for-visit)))
+        (dired-sidebar-toggle-sidebar)
+        (find-file buffer)))
+    (advice-add 'dired-find-file :override #'close-dired-sidebar-find-file))
 #+end_src
 
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 #+begin_src emacs-lisp
-(use-package org 
-  :init
-  (setq org-confirm-babel-evaluate nil)
-  (setq org-startup-indented  t)
-  (setq org-startup-numerated t)
-  :hook
-  ((org-mode . visual-line-mode)  ; Added this line
-   (org-babel-after-execute . org-redisplay-inline-images)))
+      (use-package org 
+        :init
+        (setq org-confirm-babel-evaluate nil)
+        (setq org-startup-indented  t)
+        (setq org-startup-numerated t)
+        (setq org-startup-with-inline-images t)
+        (setq org-blank-before-new-entry nil)
+        (setq org-todo-keywords
+  	    '((sequence "TODO(t)" "FEEDBACK(w@)" "VERIFY" "|" "DONE" "DELEGATED")))
+        ;; (setq org-todo-keywords
+        ;; 	'((sequence "GENERATE" "IMITATE" "EXECUTE" "|" "IDEA" "REFLECT" "REVISE")))
+    ;; (setq org-todo-keywords
+    ;;       '((sequence "TODO(t)" "|" "DONE(d)")
+    ;;         (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f)")))
+        (setq org-log-done 'time)
+        (setq org-log-done 'note)
+        :hook
+        ((org-mode . visual-line-mode)  ; Added this line
+         (org-babel-after-execute . org-redisplay-inline-images)))
 
-(use-package visual-fill-column
-  :custom
-  (visual-fill-column-center-text t)
-  (visual-fill-column-width 140)
-  :hook (org-mode . visual-fill-column-mode)
-)
+      (use-package visual-fill-column
+        :custom
+        (visual-fill-column-center-text t)
+        (visual-fill-column-width 140)
+        :hook (org-mode . visual-fill-column-mode))
 #+end_src
+
 #+begin_src emacs-lisp 
   ;; Organize your notes and maybe part of your life
 
@@ -501,12 +524,12 @@ Because this is one of the main reasons to use Emacs:
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((shell      . t)
-  	 (emacs-lisp . t)
-  	 (dot        . t)
-  	 (python     . t)
-  	 (haskell    . t)
-  	 (scheme     . t)
-  	 )))
+       (emacs-lisp . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -544,30 +567,30 @@ Manage your projects
 * Buffer Management
 
 #+begin_src emacs-lisp
-(use-package ibuffer
- :straight nil)
+  (use-package ibuffer
+    :straight nil)
 
-(use-package ibuf-ext
- :straight nil)
+  (use-package ibuf-ext
+    :straight nil)
 
-(add-to-list 'ibuffer-never-show-predicates "^/dired")
-(add-to-list 'ibuffer-never-show-predicates "magit") ; hide Magit buffers
+  (add-to-list 'ibuffer-never-show-predicates "^/dired")
+  (add-to-list 'ibuffer-never-show-predicates "magit") ; hide Magit buffers
 
-(setq ibuffer-saved-filter-groups
-      (quote (("default"
-	       ("Dotfiles" (filename . "^\\."))
-	       ("Messages"  (name . "^\\/"))
-	       ("Org"       (mode . org-mode))
-	       ("Planner"   (or
-			     (name . "^\\/Calendar\\*$")
-			     (name . "^\\/Org Agenda\\*$")))
-	       ("Emacs"     (or
-			     (name . "^\\/scratch\\*$")
-			     (name . "^\\/Messages\\*$")))))))
+  (setq ibuffer-saved-filter-groups
+        (quote (("default"
+  	       ("Dotfiles" (filename . "^\\."))
+  	       ("Messages"  (name . "^\\/"))
+  	       ("Org"       (mode . org-mode))
+  	       ("Planner"   (or
+  			     (name . "^\\/Calendar\\*$")
+  			     (name . "^\\/Org Agenda\\*$")))
+  	       ("Emacs"     (or
+  			     (name . "^\\/scratch\\*$")
+  			     (name . "^\\/Messages\\*$")))))))
 
-(add-hook 'ibuffer-mode-hook
-	  (lambda ()
-	    (ibuffer-switch-to-saved-filter-groups "default")))
+  (add-hook 'ibuffer-mode-hook
+  	  (lambda ()
+  	    (ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
 
 #+begin_src emacs-lisp 
@@ -717,45 +740,45 @@ Manage your projects
 #+end_src
 ** Copilot 
 #+begin_src emacs-lisp 
-    (use-package copilot
-      :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-      :init (setq copilot-indent-offset-warning-disable t)
-      :bind (:map copilot-completion-map
-    	      ("M-<tab>" . 'copilot-accept-completion)
-    	      ("M-TAB" . 'copilot-accept-completion)
-    	      ("TAB" . 'copilot-accept-completion-by-word)
-    	      ("<tab>" . 'copilot-accept-completion-by-word)))
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+    :init (setq copilot-indent-offset-warning-disable t)
+    :bind (:map copilot-completion-map
+  	      ("M-<tab>" . 'copilot-accept-completion)
+  	      ("M-TAB" . 'copilot-accept-completion)
+  	      ("TAB" . 'copilot-accept-completion-by-word)
+  	      ("<tab>" . 'copilot-accept-completion-by-word)))
 
-  #+end_src
+#+end_src
 ** GPTEL 
-  #+begin_src emacs-lisp
-    (use-package gptel
-        :custom
-        (gptel-model "gpt-3.5-turbo")
-        (gptel-default-mode 'org-mode)
-        (gptel-prompt-prefix-alist
-         '((markdown-mode . "# ")
-           (org-mode . "* ")
-           (text-mode . "# ")))
-        :config
-        (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-        (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
- 
+#+begin_src emacs-lisp
+  (use-package gptel
+    :custom
+    (gptel-model "gpt-3.5-turbo")
+    (gptel-default-mode 'org-mode)
+    (gptel-prompt-prefix-alist
+     '((markdown-mode . "# ")
+       (org-mode . "* ")
+       (text-mode . "# ")))
+    :config
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
+
 #+end_src
 
 * PDFs
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 
   (use-package pdf-tools
     :config
     (pdf-tools-install)
-     
+    
     ;; enable midnight mode for dark theme
     (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
     
     ;; disable blinking
     (add-hook 'pdf-view-mode-hook (lambda ()
-      (set (make-local-variable 'blink-cursor-mode) nil)))
+  				  (set (make-local-variable 'blink-cursor-mode) nil)))
 
     ;; unbind q key
     ;; (define-key pdf-view-mode-map (kbd "q") nil)
@@ -763,10 +786,10 @@ Manage your projects
     (setq-default pdf-view-display-size 'fit-page)
     (setq pdf-annot-activate-created-annotations t)
     :bind
-    ("q" . nil)
     :custom
     (pdf-view-resize-factor 1.0))
 #+end_src
+
 * Themes
 #+begin_src emacs-lisp 
   ;; themes at the end
@@ -861,6 +884,7 @@ Manage your projects
 
   	("taingram.org" :components ("pages" "static"))))
 #+end_src
+
 * TODO Web Browsing
 #+begin_src emacs-lisp :tangle no
   (use-package xwidget-webkit 
@@ -876,26 +900,26 @@ Manage your projects
     (pdf-tools-install)
     :bind ("q" . nil)
     :custom
-     (pdf-view-resize-factor 1.2)
-     (color-theme "onedark")
-     (font-face "courier")
-     (blink-cursor-mode nil)
-     (midnight-mode t))
+    (pdf-view-resize-factor 1.2)
+    (color-theme "onedark")
+    (font-face "courier")
+    (blink-cursor-mode nil)
+    (midnight-mode t))
 
-(use-package pdf-tools
-  :config (pdf-tools-install))
+  (use-package pdf-tools
+    :config (pdf-tools-install))
 
-(defun pdf-view-mode-hook ()
-  (setq-default pdf-view-display-size 'fit-page)
-  (setq pdf-annot-activate-created-annotations t)
-  (bind ("q" . nil)))
+  (defun pdf-view-mode-hook ()
+    (setq-default pdf-view-display-size 'fit-page)
+    (setq pdf-annot-activate-created-annotations t)
+    (bind ("q" . nil)))
 #+end_src
 
 #+begin_src emacs-lisp :tangle no
-    (gptel-make-ollama "Ollama"             ;Any name of your choosing
-      :host "localhost:11434"               ;Where it's running
-      :stream t                             ;Stream responses
-      :models '("mistral:latest"))          ;List of models
+  (gptel-make-ollama "Ollama"             ;Any name of your choosing
+    :host "localhost:11434"               ;Where it's running
+    :stream t                             ;Stream responses
+    :models '("mistral:latest"))          ;List of models
   ;; OPTIONAL configuration
   (setq-default
    gptel-model "llama2"
@@ -904,3 +928,5 @@ Manage your projects
                    :stream t
                    :models '("mistral:latest")))
 #+end_src
+
+

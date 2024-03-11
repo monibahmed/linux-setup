@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: Music Composition Workflow 
+# key: <mc
+#expand-env: ((yas/triggers-in-field #t))
+# --
+  
+${1:<ot}
+
+* Idea
+  ${2: What's the idea?}
+* Chord Progression
+  ${3: Enter a chord progression}
+
+$0
