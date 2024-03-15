@@ -19,44 +19,45 @@ Benchmark Emacs startup time
 
 * Basic Emacs Settings
 #+begin_src emacs-lisp 
-  ;; Emacs options for different things
+    ;; Emacs options for different things
 
-  ;; (setq-default tab-width 2) 
-  ;; (setq-default standard-indent 2) 
+    ;; (setq-default tab-width 2) 
+    ;; (setq-default standard-indent 2) 
 
-  (setq inhibit-splash-screen t)
-  (add-to-list 'default-frame-alist '(fullscreen . fullboth))
-  ;; (custom-set-variables
-  ;;  '(initial-frame-alist (quote ((fullscreen . fullboth)))))
-  (setq make-backup-files nil)
-  (toggle-scroll-bar -1)
-  (tool-bar-mode     -1)
-  (menu-bar-mode     -1)
-  (global-auto-revert-mode 1)
-  ;;(if (display-graphic-p)
-  ;;    (progn (menu-bar-mode     -1)))
-  (tooltip-mode      -1)
-  (setq make-backup-files nil) ; stop creating backup~ files
-  (setq auto-save-default nil) ; stop creating #autosave# files
-  (setq package-enable-at-startup nil)
-  (setq vc-follow-symlinks nil)
-  ;; Trying to speed up emacs load
-  (setq jit-lock-stealth-time nil)
-  (setq jit-lock-defer-time nil)
-  (setq jit-lock-defer-time 0.05)
-  (setq jit-lock-stealth-load 200)
-  (setq indent-tabs-mode nil)
-  (setq custom-file (concat user-emacs-directory "custom.el"))
-  (setq switch-to-buffer-obey-display-actions t)
-  ;; disable scrollbars
-  (customize-set-variable 'scroll-bar-mode nil)
-  (customize-set-variable 'horizontal-scroll-bar-mode nil)
+    (setq inhibit-splash-screen t)
+    (add-to-list 'default-frame-alist '(fullscreen . fullboth))
+    ;; (custom-set-variables
+    ;;  '(initial-frame-alist (quote ((fullscreen . fullboth)))))
+    (setq make-backup-files nil)
+    (toggle-scroll-bar -1)
+    (tool-bar-mode     -1)
+    (menu-bar-mode     -1)
+    (global-auto-revert-mode 1)
+    ;;(if (display-graphic-p)
+    ;;    (progn (menu-bar-mode     -1)))
+    (tooltip-mode      -1)
+    (setq make-backup-files nil) ; stop creating backup~ files
+    (setq auto-save-default nil) ; stop creating #autosave# files
+    (setq package-enable-at-startup nil)
+    (setq vc-follow-symlinks nil)
+    ;; Trying to speed up emacs load
+    (setq jit-lock-stealth-time nil)
+    (setq jit-lock-defer-time nil)
+    (setq jit-lock-defer-time 0.05)
+    (setq jit-lock-stealth-load 200)
+    (setq indent-tabs-mode nil)
+    (setq custom-file (concat user-emacs-directory "custom.el"))
+    (setq switch-to-buffer-obey-display-actions t)
+    ;; disable scrollbars
+    (customize-set-variable 'scroll-bar-mode nil)
+    (customize-set-variable 'horizontal-scroll-bar-mode nil)
+  (setq browse-url-browser-function 'browse-url-default-browser)
 
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+    (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 
-  ;;doesn't work as expected
-  ;;(add-to-list 'default-frame-alist '(undecorated . t))
-  (defalias 'yes-or-no-p 'y-or-n-p)
+    ;;doesn't work as expected
+    ;;(add-to-list 'default-frame-alist '(undecorated . t))
+    (defalias 'yes-or-no-p 'y-or-n-p)
 
 #+end_src
 
@@ -77,7 +78,7 @@ Using Straight.el for package management.
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
-
+  
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
@@ -122,9 +123,9 @@ Evil mode for keybinding and most of efficiency goodness
     :after evil
     :config
     (evil-collection-init))
+  (use-package evil-org)
   (use-package evil-nerd-commenter
     :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
-
   (use-package evil-surround
     :after evil
     :config
@@ -299,15 +300,15 @@ For extending Emacs functionality
 
 ** You Snip It
 #+BEGIN_SRC emacs-lisp
-    (use-package yasnippet
-      :config
-      (setq yas-triggers-in-field t)
-      ;; (setq yas-next-field-or-maybe-expand t)
-      (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
+  (use-package yasnippet
+    :config
+    (setq yas-triggers-in-field t)
+    ;; (setq yas-next-field-or-maybe-expand nil)
+    (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
 
-      :init 
-      (yas-global-mode 1)
-      )
+    :init 
+    (yas-global-mode 1)
+    )
 
   ;; (defun my-yas-try-expanding-auto-snippets ()
   ;;   (when yas-minor-mode
@@ -429,81 +430,40 @@ For extending Emacs functionality
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 #+begin_src emacs-lisp
-      (use-package org 
-        :init
-        (setq org-confirm-babel-evaluate nil)
-        (setq org-startup-indented  t)
-        (setq org-startup-numerated t)
-        (setq org-startup-with-inline-images t)
-        (setq org-blank-before-new-entry nil)
-        (setq org-todo-keywords
-  	    '((sequence "TODO(t)" "FEEDBACK(w@)" "VERIFY" "|" "DONE" "DELEGATED")))
-        ;; (setq org-todo-keywords
-        ;; 	'((sequence "GENERATE" "IMITATE" "EXECUTE" "|" "IDEA" "REFLECT" "REVISE")))
-    ;; (setq org-todo-keywords
-    ;;       '((sequence "TODO(t)" "|" "DONE(d)")
-    ;;         (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f)")))
-        (setq org-log-done 'time)
-        (setq org-log-done 'note)
-        :hook
-        ((org-mode . visual-line-mode)  ; Added this line
-         (org-babel-after-execute . org-redisplay-inline-images)))
+    ;; Organize your notes and maybe part of your life
+    (use-package org 
+      :init
+      (setq org-confirm-babel-evaluate nil)
+      (setq org-startup-indented  t)
+      (setq org-startup-numerated t)
+      (setq org-startup-with-inline-images t)
+      (setq org-blank-before-new-entry nil)
+      (setq org-hide-emphasis-markers nil)
+      (setq org-ellipsis " ▼")
+      (setq org-agenda-files
+  	  '("~/linux-setup/org-setup/org-try.org"))
+      ;; (setq org-todo-keywords
 
-      (use-package visual-fill-column
-        :custom
-        (visual-fill-column-center-text t)
-        (visual-fill-column-width 140)
-        :hook (org-mode . visual-fill-column-mode))
+      ;; 	'((sequence "TODO(t)" "FEEDBACK(w@)" "VERIFY" "|" "DONE" "DELEGATED")))
+      ;; (setq org-todo-keywords
+      ;; 	'((sequence "GENERATE" "IMITATE" "EXECUTE" "|" "IDEA" "REFLECT" "REVISE")))
+      ;; (setq org-todo-keywords
+      ;;       '((sequence "TODO(t)" "|" "DONE(d)")
+      ;;         (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f)")))
+      ;; (setq org-log-done 'time)
+      ;; (setq org-log-done 'note)
+      :hook
+      ((org-mode . visual-line-mode)  ; Added this line
+       (org-babel-after-execute . org-redisplay-inline-images)))
+
+    (use-package visual-fill-column
+      :custom
+      (visual-fill-column-center-text t)
+      (visual-fill-column-width 140)
+      :hook (org-mode . visual-fill-column-mode))
 #+end_src
 
 #+begin_src emacs-lisp 
-  ;; Organize your notes and maybe part of your life
-
-  ;; (use-package org 
-  ;;   :init
-  ;;   (setq org-confirm-babel-evaluate nil)
-  ;;   (setq org-startup-indented  t)
-  ;;   (setq org-startup-numerated t)
-  ;;   :hook
-  ;;   (org-babel-after-execute . org-redisplay-inline-images) 
-  ;;   :init (org-mode))
-
-
-
-  ;; (use-package visual-fill-column
-  ;;   :custom
-  ;;   (visual-fill-column-center-text t)
-  ;;   (visual-fill-column-width 140)
-  ;;   :hook (org-mode . visual-fill-column-mode)
-  ;;   )
-
-  (use-package org-modern
-    :after (org)
-    :init
-    (setq
-     ;; Edit settings
-     org-auto-align-tags nil
-     org-tags-column 0
-     org-catch-invisible-edits 'show-and-error
-     org-special-ctrl-a/e t
-     org-insert-heading-respect-content t
-
-     ;; Org styling, hide markup etc.
-     org-hide-emphasis-markers t
-     org-pretty-entities t
-     org-ellipsis "…"
-
-     ;; Agenda styling
-     org-agenda-tags-column 0
-     org-agenda-block-separator ?─
-     org-agenda-time-grid
-     '((daily today require-timed)
-       (800 1000 1200 1400 1600 1800 2000)
-       " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-     org-agenda-current-time-string
-     "◀── now ─────────────────────────────────────────────────")
-    (global-org-modern-mode))
-
   ;; (use-package ox-publish
   ;;   :straight nil)
 
@@ -665,8 +625,8 @@ Manage your projects
         ))
 
 #+end_src
-
 * Programming
+** Corfu
 #+begin_src emacs-lisp 
   (use-package corfu
     ;; Optional customizations
@@ -750,6 +710,7 @@ Manage your projects
   	      ("<tab>" . 'copilot-accept-completion-by-word)))
 
 #+end_src
+** TODO Cape
 ** GPTEL 
 #+begin_src emacs-lisp
   (use-package gptel
@@ -765,7 +726,6 @@ Manage your projects
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
 
 #+end_src
-
 * PDFs
 #+begin_src emacs-lisp :tangle no
 
@@ -891,6 +851,8 @@ Manage your projects
     :ensure nil ; Ensure nil because xwidget is not a installable package
     :bind ("C-c w" . xwidget-webkit-browse-url))
 #+end_src
+
+
 
 * Scratch Area
 #+begin_src emacs-lisp :tangle no

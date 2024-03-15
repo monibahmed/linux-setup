@@ -1,0 +1,31 @@
+#+TITLE: Notes: Trying to Setup Org-Mode
+#+AUTHOR: Monib Ahmed
+
+
+* TODO What are the different Flows you'll be implementing? 
+** TODO Learning Work Flow
+** TODO Music Work Flow
+** TODO Idea Work Flow
+** TODO Writing Work Flow
+** TODO Equipment Work Flow
+** TODO Music Work Flow
+* Keyboard Shortcuts
+- Consult Mode
+- AI Enabling
+- Embark
+- Org-Mode Agenda .. etc
+* trying stuff out
+let inset a [[eww:www.google.com][link]]
+
+ - [ ] Higher level tasks
+ - [ ] Another todo 
+ - [ ] A cool feature
+ - [ ] ending of list
+   
+ tish is a look, a property drawer???
+*this is bold* /this is in italics/ this is normal
+* What are the states?
+- Todo/Task/Idea
+- Next
+- In Progress
+- 
