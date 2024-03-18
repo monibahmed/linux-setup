@@ -5,7 +5,6 @@
 * TODO What are the different Flows you'll be implementing? 
 ** TODO Learning Work Flow
 ** TODO Music Work Flow
-** TODO Idea Work Flow
 ** TODO Writing Work Flow
 ** TODO Equipment Work Flow
 ** TODO Music Work Flow
@@ -29,3 +28,4 @@ let inset a [[eww:www.google.com][link]]
 - Next
 - In Progress
 - 
+* 

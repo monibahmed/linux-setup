@@ -168,7 +168,7 @@ For extending Emacs functionality
 #+begin_src emacs-lisp
 
   ;;some helper packages
-    					;Undo/Redo in Emacs
+  ;;Undo/Redo in Emacs
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -197,8 +197,8 @@ For extending Emacs functionality
   (use-package marginalia
     ;; Either bind `marginalia-cycle' globally or only in the minibuffer
     :bind (("M-A" . marginalia-cycle)
-    	 :map minibuffer-local-map
-    	 ("M-A" . marginalia-cycle))
+         :map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
     :init
     (marginalia-mode))
   (use-package restart-emacs)
@@ -473,7 +473,7 @@ Because this is one of the main reasons to use Emacs:
     :after (:all org)
     :init
     (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp :tangle no"))
     (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
     (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
     (add-to-list 'org-structure-template-alist '("py" . "src python"))
@@ -491,7 +491,6 @@ Because this is one of the main reasons to use Emacs:
        (scheme     . t)
        )))
 #+end_src
-
 #+begin_src emacs-lisp
   ;; Automatically tangle our Emacs.org config file when we save it
   (defun efs/org-babel-tangle-config ()
@@ -727,8 +726,7 @@ Manage your projects
 
 #+end_src
 * PDFs
-#+begin_src emacs-lisp :tangle no
-
+#+begin_src emacs-lisp 
   (use-package pdf-tools
     :config
     (pdf-tools-install)
@@ -891,4 +889,13 @@ Manage your projects
                    :models '("mistral:latest")))
 #+end_src
 
-
+#+begin_src emacs-lisp :tangle no :tangle no
+(defun get-buffer-path ()
+  "Get the path of the current buffer and copy it to the clipboard"
+  (interactive)
+  (let ((path (buffer-file-name)))
+    (when path
+      (kill-new path)
+      (message "Path '%s' copied to the clipboard" path)))
+)  
+#+end_src
