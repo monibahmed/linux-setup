@@ -19,45 +19,45 @@ Benchmark Emacs startup time
 
 * Basic Emacs Settings
 #+begin_src emacs-lisp 
-    ;; Emacs options for different things
+  ;; Emacs options for different things
 
-    ;; (setq-default tab-width 2) 
-    ;; (setq-default standard-indent 2) 
+  ;; (setq-default tab-width 2) 
+  ;; (setq-default standard-indent 2) 
 
-    (setq inhibit-splash-screen t)
-    (add-to-list 'default-frame-alist '(fullscreen . fullboth))
-    ;; (custom-set-variables
-    ;;  '(initial-frame-alist (quote ((fullscreen . fullboth)))))
-    (setq make-backup-files nil)
-    (toggle-scroll-bar -1)
-    (tool-bar-mode     -1)
-    (menu-bar-mode     -1)
-    (global-auto-revert-mode 1)
-    ;;(if (display-graphic-p)
-    ;;    (progn (menu-bar-mode     -1)))
-    (tooltip-mode      -1)
-    (setq make-backup-files nil) ; stop creating backup~ files
-    (setq auto-save-default nil) ; stop creating #autosave# files
-    (setq package-enable-at-startup nil)
-    (setq vc-follow-symlinks nil)
-    ;; Trying to speed up emacs load
-    (setq jit-lock-stealth-time nil)
-    (setq jit-lock-defer-time nil)
-    (setq jit-lock-defer-time 0.05)
-    (setq jit-lock-stealth-load 200)
-    (setq indent-tabs-mode nil)
-    (setq custom-file (concat user-emacs-directory "custom.el"))
-    (setq switch-to-buffer-obey-display-actions t)
-    ;; disable scrollbars
-    (customize-set-variable 'scroll-bar-mode nil)
-    (customize-set-variable 'horizontal-scroll-bar-mode nil)
+  (setq inhibit-splash-screen t)
+  (add-to-list 'default-frame-alist '(fullscreen . fullboth))
+  ;; (custom-set-variables
+  ;;  '(initial-frame-alist (quote ((fullscreen . fullboth)))))
+  (setq make-backup-files nil)
+  (toggle-scroll-bar -1)
+  (tool-bar-mode     -1)
+  (menu-bar-mode     -1)
+  (global-auto-revert-mode 1)
+  ;;(if (display-graphic-p)
+  ;;    (progn (menu-bar-mode     -1)))
+  (tooltip-mode      -1)
+  (setq make-backup-files nil) ; stop creating backup~ files
+  (setq auto-save-default nil) ; stop creating #autosave# files
+  (setq package-enable-at-startup nil)
+  (setq vc-follow-symlinks nil)
+  ;; Trying to speed up emacs load
+  (setq jit-lock-stealth-time nil)
+  (setq jit-lock-defer-time nil)
+  (setq jit-lock-defer-time 0.05)
+  (setq jit-lock-stealth-load 200)
+  (setq indent-tabs-mode nil)
+  (setq custom-file (concat user-emacs-directory "custom.el"))
+  (setq switch-to-buffer-obey-display-actions t)
+  ;; disable scrollbars
+  (customize-set-variable 'scroll-bar-mode nil)
+  (customize-set-variable 'horizontal-scroll-bar-mode nil)
   (setq browse-url-browser-function 'browse-url-default-browser)
 
-    (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 
-    ;;doesn't work as expected
-    ;;(add-to-list 'default-frame-alist '(undecorated . t))
-    (defalias 'yes-or-no-p 'y-or-n-p)
+  ;;doesn't work as expected
+  ;;(add-to-list 'default-frame-alist '(undecorated . t))
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
 #+end_src
 
@@ -78,7 +78,7 @@ Using Straight.el for package management.
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
-  
+
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
@@ -122,7 +122,11 @@ Evil mode for keybinding and most of efficiency goodness
     ;; :custom (evil-collection-setup-minibuffer t)
     :after evil
     :config
-    (evil-collection-init))
+    (evil-collection-init)
+    (with-eval-after-load 'org-agenda
+      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
+      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+
   (use-package evil-org)
   (use-package evil-nerd-commenter
     :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
@@ -197,8 +201,8 @@ For extending Emacs functionality
   (use-package marginalia
     ;; Either bind `marginalia-cycle' globally or only in the minibuffer
     :bind (("M-A" . marginalia-cycle)
-         :map minibuffer-local-map
-         ("M-A" . marginalia-cycle))
+  	 :map minibuffer-local-map
+  	 ("M-A" . marginalia-cycle))
     :init
     (marginalia-mode))
   (use-package restart-emacs)
@@ -430,37 +434,51 @@ For extending Emacs functionality
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs:
 #+begin_src emacs-lisp
-    ;; Organize your notes and maybe part of your life
-    (use-package org 
-      :init
-      (setq org-confirm-babel-evaluate nil)
-      (setq org-startup-indented  t)
-      (setq org-startup-numerated t)
-      (setq org-startup-with-inline-images t)
-      (setq org-blank-before-new-entry nil)
-      (setq org-hide-emphasis-markers nil)
-      (setq org-ellipsis " ▼")
-      (setq org-agenda-files
-  	  '("~/linux-setup/org-setup/org-try.org"))
-      ;; (setq org-todo-keywords
+  ;; Organize your notes and maybe part of your life
+  (use-package org 
+    :config
+    ;; Define custom SEQ_TODO keywords
+    (setq org-todo-keywords
+    	'((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
+    ;; Specify your org files directory and agenda files
+    (setq org-directory "~/org")
+    (setq org-agenda-files (list org-directory))
+    ;; Setup for org-capture
+    (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
+    (setq org-capture-templates
+    	'(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
+    	   "* CLARIFY %?\n ")))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    (setq org-startup-with-inline-images t)
+    (setq org-blank-before-new-entry nil)
+    (setq org-hide-emphasis-markers nil)
+    (setq org-ellipsis " ▼")
+    :hook
+    ((org-mode . visual-line-mode)  ; Added this line
+     (org-babel-after-execute . org-redisplay-inline-images)))
 
-      ;; 	'((sequence "TODO(t)" "FEEDBACK(w@)" "VERIFY" "|" "DONE" "DELEGATED")))
-      ;; (setq org-todo-keywords
-      ;; 	'((sequence "GENERATE" "IMITATE" "EXECUTE" "|" "IDEA" "REFLECT" "REVISE")))
-      ;; (setq org-todo-keywords
-      ;;       '((sequence "TODO(t)" "|" "DONE(d)")
-      ;;         (sequence "REPORT(r)" "BUG(b)" "KNOWNCAUSE(k)" "|" "FIXED(f)")))
-      ;; (setq org-log-done 'time)
-      ;; (setq org-log-done 'note)
-      :hook
-      ((org-mode . visual-line-mode)  ; Added this line
-       (org-babel-after-execute . org-redisplay-inline-images)))
+  (use-package org-roam
+    :custom
+    (org-roam-directory (file-truename "~/org/roam"))
+    :config
+    (org-roam-setup))
 
-    (use-package visual-fill-column
-      :custom
-      (visual-fill-column-center-text t)
-      (visual-fill-column-width 140)
-      :hook (org-mode . visual-fill-column-mode))
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
 #+end_src
 
 #+begin_src emacs-lisp 
@@ -850,11 +868,8 @@ Manage your projects
     :bind ("C-c w" . xwidget-webkit-browse-url))
 #+end_src
 
-
-
 * Scratch Area
 #+begin_src emacs-lisp :tangle no
-
   (use-package pdf-tools
     :config
     (pdf-tools-install)
@@ -890,12 +905,78 @@ Manage your projects
 #+end_src
 
 #+begin_src emacs-lisp :tangle no :tangle no
-(defun get-buffer-path ()
-  "Get the path of the current buffer and copy it to the clipboard"
-  (interactive)
-  (let ((path (buffer-file-name)))
-    (when path
-      (kill-new path)
-      (message "Path '%s' copied to the clipboard" path)))
-)  
+  (defun get-buffer-path ()
+    "Get the path of the current buffer and copy it to the clipboard"
+    (interactive)
+    (let ((path (buffer-file-name)))
+      (when path
+        (kill-new path)
+        (message "Path '%s' copied to the clipboard" path)))
+    )  
 #+end_src
+
+#+begin_src emacs-lisp 
+  (defun my-org-get-sanitized-file-name (heading-text)
+    "Return a sanitized, title-cased file name from HEADING-TEXT."
+    (let* ((title-case-heading (s-titleize heading-text))
+           (sanitized-heading (replace-regexp-in-string "[^[:alnum:]]" "" title-case-heading)))
+      (concat org-directory "/" sanitized-heading ".org")))
+
+  (defun my-org-create-file (file-name heading-text)
+    "Create an Org file named FILE-NAME with initial content from HEADING-TEXT."
+    (when (not (file-exists-p file-name))
+      (with-temp-buffer
+        (insert (concat "* " heading-text "\n\n"))
+        (write-file file-name))
+      (message "Created file: %s" file-name)))
+
+  (defun my-org-add-link-property (file-name)
+    "Add a property to the current heading with a link to FILE-NAME."
+    (let ((file-link (format "file:%s" file-name)))
+      ;; (org-set-property "FILE_LINK" file-link)
+      ;; Optionally, insert a clickable link below the heading
+      (let ((link-text (format "[[%s][%s file]]\n" file-link "View")))
+        (org-back-to-heading t)
+        (forward-line 1)
+        (insert link-text))))
+
+  (defun my-org-move-heading-to-status ()
+    "Prompt user to move the current heading to a 'Project Status' or 'Research Status' section."
+    (let ((choice (completing-read "Move to: " '("Project Status" "Research Status"))))
+      (org-cut-subtree)
+      (save-excursion
+        (goto-char (point-min))
+        (if (search-forward-regexp (concat "^\\* " choice) nil t)
+            (progn
+              (goto-char (match-end 0))
+              (org-paste-subtree))
+          (message "Status section not found.")))))
+
+  (defun my-org-process-heading ()
+    "Process the current heading based on its TODO state."
+    (when (equal org-state "ORGANIZE")
+      (let* ((heading-text (nth 4 (org-heading-components)))
+             (file-name (my-org-get-sanitized-file-name heading-text)))
+        (my-org-create-file file-name heading-text)
+        (my-org-add-link-property file-name)
+        (my-org-move-heading-to-status))))
+
+  (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading)
+#+end_src
+
+#+BEGIN_SRC emacs-lisp 
+  (use-package s)
+  (defun my-org-open-at-point-same-window (orig-fun &rest args)
+    "Advise `org-open-at-point' to open links in the same window."
+    (let ((org-link-frame-setup (cons '(file . find-file) org-link-frame-setup)))
+      (apply orig-fun args)))
+  (advice-add 'org-open-at-point :around #'my-org-open-at-point-same-window)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp 
+  (use-package lorem-ipsum
+    :ensure t
+    :config
+    (lorem-ipsum-use-default-bindings))
+#+END_SRC
