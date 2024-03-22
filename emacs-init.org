@@ -76,7 +76,7 @@ Using Straight.el for package management.
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
 #+end_src
-* Mac OS X Specifics 
+* Mac OS X Specifics
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
@@ -87,19 +87,6 @@ Using Straight.el for package management.
 * Org Mode Setup
 Because this is one of the main reasons to use Emacs
 #+begin_src emacs-lisp
-  (defun my/org-mode-setup ()
-    (define-key evil-normal-state-map (kbd "o")
-                (lambda ()
-                  (interactive)
-                  (end-of-line) ; Move to the end of the line
-                  (org-open-line 1))) ; Open a line below
-    (define-key evil-normal-state-map (kbd "O")
-                (lambda ()
-                  (interactive)
-                  (beginning-of-line)
-                  (org-open-line 1))))
-  (add-hook 'org-mode-hook 'my/org-mode-setup) ; Open a line below
-
   (use-package org 
     :config
     ;; Define custom SEQ_TODO keywords
@@ -122,7 +109,6 @@ Because this is one of the main reasons to use Emacs
     (setq org-ellipsis " ▼")
     :hook
     (org-mode . visual-line-mode)
-    (org-mode-hook . my/org-mode-setup)
     (org-babel-after-execute . org-redisplay-inline-images))
 
   (use-package org-roam
@@ -345,32 +331,6 @@ For extending Emacs functionality
      (switch-to-buffer
       (other-buffer (current-buffer) 1))))
 
-  (defun beginning-of-file-and-line ()
-    "Go to the beginning of the file and then to the beginning of the line."
-    (interactive)
-    (beginning-of-buffer) ;; or use (goto-char (point-min)) for strictly beginning of buffer
-    (beginning-of-line))
-
-  (defun end-of-file-and-line ()
-    "Go to the end of the file and then to the end of the line."
-    (interactive)
-    (end-of-buffer) ;; or use (goto-char (point-max)) for strictly end of buffer
-    (end-of-line))
-
-  ;; Define the keybinding
-  (global-set-key (kbd "C-c C-a") 'beginning-of-file-and-line)
-  (global-set-key (kbd "C-c C-e") 'end-of-file-and-line)
-
-  (define-key evil-normal-state-map (kbd "gg") 'evil-goto-first-line)
-  (define-key evil-normal-state-map (kbd "G") 'evil-goto-line)
-  (defun choose-theme ()
-    "Interactively choose a theme"
-    (interactive)
-    (let* ((all-themes (mapcar 'symbol-name (custom-available-themes)))
-    	 (theme (completing-read "Load custom theme: " all-themes nil t)))
-      (when theme
-        (load-theme (intern theme) t))))
-
   (use-package general
     :config
     (general-create-definer rune/leader-keys
@@ -383,20 +343,6 @@ For extending Emacs functionality
       "gp" '(gptel                                                            :which-key "GPT-4")
       "gP" '(gptel-send                                                       :which-key "Send to GPT")
       "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
-      "tt" '(lambda () (interactive)
-    	    (mapc #'disable-theme custom-enabled-themes)
-    	    (choose-theme)
-              :which-key "Choose Theme")
-      "tl" '(lambda () (interactive)
-    	    (mapc #'disable-theme custom-enabled-themes)
-    	    (load-theme 'doom-one-light t)
-              :which-key "Light Theme")
-      "td" '(lambda () (interactive)
-    	    (mapc #'disable-theme custom-enabled-themes)
-    	    (load-theme 'doom-moonlight t)
-              :which-key "Dark Theme")
-      "xb" '(ibuffer                                                          :which-key "ibuffer")
-      
       "xv" '(my-project-vterm :which-key "Vterm") 
       "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
       "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
@@ -405,10 +351,7 @@ For extending Emacs functionality
       "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
       "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
       ))
-  ;;(global-set-key (kbd "C-e") 'end-of-line)
-#+end_src 
 
-#+begin_src elisp
   (defun beginning-of-file-and-line ()
     (interactive)
     (goto-char (point-min))
@@ -421,6 +364,17 @@ For extending Emacs functionality
 
   (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
   (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
+  (define-key evil-normal-state-map (kbd "o")
+              (lambda ()
+                (interactive)
+                (end-of-line) ; Move to the end of the line
+                (org-open-line 1))) ; Open a line below
+  (define-key evil-normal-state-map (kbd "O")
+              (lambda ()
+                (interactive)
+                (beginning-of-line)
+                (org-open-line 1)))
+
 #+end_src
 
 ** You Snip It
@@ -648,7 +602,7 @@ For extending Emacs functionality
 
 #+end_src
 
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package dired
     :straight nil)
 
