@@ -1,6 +1,7 @@
 #+Title: Emac's Setup
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
+#+TODO: TODO | DONE
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
@@ -19,15 +20,8 @@ Benchmark Emacs startup time
 
 * Basic Emacs Settings
 #+begin_src emacs-lisp 
-  ;; Emacs options for different things
-
-  ;; (setq-default tab-width 2) 
-  ;; (setq-default standard-indent 2) 
-
   (setq inhibit-splash-screen t)
   (add-to-list 'default-frame-alist '(fullscreen . fullboth))
-  ;; (custom-set-variables
-  ;;  '(initial-frame-alist (quote ((fullscreen . fullboth)))))
   (setq make-backup-files nil)
   (toggle-scroll-bar -1)
   (tool-bar-mode     -1)
@@ -62,7 +56,6 @@ Benchmark Emacs startup time
 #+end_src
 
 * Package Manager
-** Straight.el
 Using Straight.el for package management.
 #+begin_src emacs-lisp 
   (setq straight-vc-git-default-clone-depth 1)
@@ -83,19 +76,160 @@ Using Straight.el for package management.
   (setq straight-use-package-by-default t)
   ;;  (setq use-package-always-defer t)
 #+end_src
-
 * Mac OS X Specifics 
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
       :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control))
-  ;;(setq mac-command-modifier 'meta))
+    (setq mac-command-modifier 'control)
+    (menu-bar-mode 1))
+#+end_src
+* Org Mode Setup
+Because this is one of the main reasons to use Emacs
+#+begin_src emacs-lisp
+  (defun my/org-mode-setup ()
+    (define-key evil-normal-state-map (kbd "o")
+                (lambda ()
+                  (interactive)
+                  (end-of-line) ; Move to the end of the line
+                  (org-open-line 1))) ; Open a line below
+    (define-key evil-normal-state-map (kbd "O")
+                (lambda ()
+                  (interactive)
+                  (beginning-of-line)
+                  (org-open-line 1))))
+  (add-hook 'org-mode-hook 'my/org-mode-setup) ; Open a line below
+
+  (use-package org 
+    :config
+    ;; Define custom SEQ_TODO keywords
+    (setq org-todo-keywords
+          '((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
+    ;; Specify your org files directory and agenda files
+    (setq org-directory "~/org")
+    (setq org-agenda-files (list org-directory))
+    ;; Setup for org-capture
+    (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
+    (setq org-capture-templates
+          '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
+             "* CLARIFY %?\n ")))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    (setq org-startup-with-inline-images t)
+    (setq org-blank-before-new-entry nil)
+    (setq org-hide-emphasis-markers nil)
+    (setq org-ellipsis " ▼")
+    :hook
+    (org-mode . visual-line-mode)
+    (org-mode-hook . my/org-mode-setup)
+    (org-babel-after-execute . org-redisplay-inline-images))
+
+  (use-package org-roam
+    :custom
+    (org-roam-directory (file-truename "~/org/roam"))
+    :config
+    ;; (org-roam-capture-templates
+    ;;  '(("d" "default" plain "%?"
+    ;;    :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+    ;;                       "#+title: ${title}\n#+date: %U\n#+filetags: :YourDefaultTag:\n\n* Content\n\n%?\n")
+    ;;    :unnarrowed t)))
+    (org-roam-setup))
+  (setq org-capture-templates
+        '(("r" "Roam Note" entry (file "path/to/notes.org")
+           "* %?\n:PROPERTIES:\n:ROAM_TAGS: \n:END:\n\n")))
+  (defun my-insert-roam-tags ()
+    "Insert 'ROAM_TAGS' property at point."
+    (interactive)
+    (org-set-property "ROAM_TAGS" ""))
+  (define-key org-mode-map (kbd "C-c r") #'my-insert-roam-tags)
+
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
 #+end_src
 
+#+begin_src emacs-lisp 
+  ;; (use-package ox-publish
+  ;;   :straight nil)
+
+
+  ;; Set the path to the PlantUML jar file
+  (setq org-plantuml-jar-path "~/plantuml.jar")
+
+  (use-package plantuml-mode
+    :ensure t
+    :mode ("\\.puml\\'" . plantuml-mode)
+    :config
+    (setq plantuml-jar-path "~/plantuml.jar")
+    (setq plantuml-default-exec-mode 'jar))
+  ;; Automatically refresh inline images after execution
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  ;; Org Babel for code blocks
+  (use-package ob
+    :straight nil
+    :after (:all org)
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp :tangle no"))
+    (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py" . "src python"))
+    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
+
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell      . t)
+       (emacs-lisp . t)
+       (plantuml   . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
+#+end_src
+
+#+begin_src emacs-lisp
+
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+  		      (expand-file-name "~/linux-setup/emacs-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .emacs")
+        (org-babel-tangle)))
+    (when (string-equal (buffer-file-name)
+  		      (expand-file-name "~/linux-setup/zsh-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .zsh")
+        (org-babel-tangle))))
+
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+#+begin_src emacs-lisp :tangle no
+  (use-package markdown-mode)
+  (use-package auctex)
+#+end_src
 * Evil Mode
 Evil mode for keybinding and most of efficiency goodness
-
 #+begin_src emacs-lisp
   ;; enable evil mode
   (use-package evil
@@ -117,7 +251,8 @@ Evil mode for keybinding and most of efficiency goodness
     ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
     ;;(evil-set-initial-state 'dashboard-mode 'normal)
     )
-
+#+end_src
+#+begin_src emacs-lisp 
   (use-package evil-collection
     ;; :custom (evil-collection-setup-minibuffer t)
     :after evil
@@ -126,7 +261,6 @@ Evil mode for keybinding and most of efficiency goodness
     (with-eval-after-load 'org-agenda
       (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
       (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
-
   (use-package evil-org)
   (use-package evil-nerd-commenter
     :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
@@ -170,9 +304,6 @@ For using getting around and understanding Emacs
 ** Helper Packages
 For extending Emacs functionality
 #+begin_src emacs-lisp
-
-  ;;some helper packages
-  ;;Undo/Redo in Emacs
   ;;notified if the definition of a function you are customizing change
   (use-package el-patch)
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -184,16 +315,6 @@ For extending Emacs functionality
     :init
     (setq aw-dispatch-always t)
     (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-  ;; divides search pattern into space separated components
-  ;; Optionally use the `orderless' completion style.
-  (use-package orderless
-    :init
-    ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
-    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless basic)
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles partial-completion)))))
   ;; what key should you push next? not needed embark
   (use-package which-key
     :init (which-key-mode))
@@ -323,7 +444,6 @@ For extending Emacs functionality
 
 ** Do Stuff in Emacs Easily
 #+begin_src emacs-lisp
-
   ;; Completion frameworks and doing stuff
   (use-package vertico
     :bind (:map
@@ -353,12 +473,141 @@ For extending Emacs functionality
   (setq vertico-posframe-parameters
         '((left-fringe . 8)
           (right-fringe . 8)))
-
+#+end_src
+** Consult
+#+begin_src emacs-lisp 
+  ;; Example configuration for Consult
   (use-package consult
-    :bind (("C-c s" . consult-line)
-        	 ("C-M-l" . consult-imenu)
-        	 ("C-r" . consult-history)
-        	 ))
+    ;; Replace bindings. Lazily loaded due by `use-package'.
+    :bind (;; C-c bindings in `mode-specific-map'
+           ("C-c M-x" . consult-mode-command)
+           ("C-c h" . consult-history)
+           ("C-c k" . consult-kmacro)
+           ("C-c m" . consult-man)
+           ("C-c i" . consult-info)
+           ([remap Info-search] . consult-info)
+           ;; C-x bindings in `ctl-x-map'
+           ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+           ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+           ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+           ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+           ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
+           ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+           ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+           ;; Custom M-# bindings for fast register access
+           ("M-#" . consult-register-load)
+           ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+           ("C-M-#" . consult-register)
+           ;; Other custom bindings
+           ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+           ;; M-g bindings in `goto-map'
+           ("M-g e" . consult-compile-error)
+           ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+           ("M-g g" . consult-goto-line)             ;; orig. goto-line
+           ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+           ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g i" . consult-imenu)
+           ("M-g I" . consult-imenu-multi)
+           ;; M-s bindings in `search-map'
+           ("M-s d" . consult-find)                  ;; Alternative: consult-fd
+           ("M-s c" . consult-locate)
+           ("M-s g" . consult-grep)
+           ("M-s G" . consult-git-grep)
+           ("M-s r" . consult-ripgrep)
+           ("M-s l" . consult-line)
+           ("M-s L" . consult-line-multi)
+           ("M-s k" . consult-keep-lines)
+           ("M-s u" . consult-focus-lines)
+           ;; Isearch integration
+           ("M-s e" . consult-isearch-history)
+           :map isearch-mode-map
+           ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+           ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+           ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+           ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+           ;; Minibuffer history
+           :map minibuffer-local-map
+           ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+           ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
+    ;; Enable automatic preview at point in the *Completions* buffer. This is
+    ;; relevant when you use the default completion UI.
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+
+    ;; The :init configuration is always executed (Not lazy)
+    :init
+
+    ;; Optionally configure the register formatting. This improves the register
+    ;; preview for `consult-register', `consult-register-load',
+    ;; `consult-register-store' and the Emacs built-ins.
+    (setq register-preview-delay 0.5
+          register-preview-function #'consult-register-format)
+
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
+
+    ;; Configure other variables and modes in the :config section,
+    ;; after lazily loading the package.
+    :config
+
+    ;; Optionally configure preview. The default value
+    ;; is 'any, such that any key triggers the preview.
+    ;; (setq consult-preview-key 'any)
+    ;; (setq consult-preview-key "M-.")
+    ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+    ;; For some commands and buffer sources it is useful to configure the
+    ;; :preview-key on a per-command basis using the `consult-customize' macro.
+    (consult-customize
+     consult-theme :preview-key '(:debounce 0.2 any)
+     consult-ripgrep consult-git-grep consult-grep
+     consult-bookmark consult-recent-file consult-xref
+     consult--source-bookmark consult--source-file-register
+     consult--source-recent-file consult--source-project-recent-file
+     ;; :preview-key "M-."
+     :preview-key '(:debounce 0.4 any))
+
+    ;; Optionally configure the narrowing key.
+    ;; Both < and C-+ work reasonably well.
+    (setq consult-narrow-key "<") ;; "C-+"
+
+    ;; Optionally make narrowing help available in the minibuffer.
+    ;; You may want to use `embark-prefix-help-command' or which-key instead.
+    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+    ;; By default `consult-project-function' uses `project-root' from project.el.
+    ;; Optionally configure a different project root function.
+    ;;;; 1. project.el (the default)
+    ;; (setq consult-project-function #'consult--default-project--function)
+    ;;;; 2. vc.el (vc-root-dir)
+    ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
+    ;;;; 3. locate-dominating-file
+    ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+    ;;;; 4. projectile.el (projectile-project-root)
+    ;; (autoload 'projectile-project-root "projectile")
+    ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
+    ;;;; 5. No project support
+    ;; (setq consult-project-function nil)
+    )
+#+end_src
+
+#+begin_src emacs-lisp 
+  ;; Optionally use the `orderless' completion style.
+  (use-package orderless
+    :init
+    ;; Configure a custom style dispatcher (see the Consult wiki)
+    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+    (setq completion-styles '(orderless basic)
+  	orderless-regexp t
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion)))))
 
   ;;Do commands and operatioms on buffers or synbols
   (use-package embark
@@ -374,8 +623,8 @@ For extending Emacs functionality
     :hook (after-init . solaire-global-mode))
 #+end_src
 
-** TODO Browse Files
-#+begin_src emacs-lisp :tangle no
+** Browse Files
+#+begin_src emacs-lisp 
   (use-package dired
     :straight nil)
 
@@ -431,129 +680,10 @@ For extending Emacs functionality
     (advice-add 'dired-find-file :override #'close-dired-sidebar-find-file))
 #+end_src
 
-* Org Mode Setup
-Because this is one of the main reasons to use Emacs:
+* Git Project Management
 #+begin_src emacs-lisp
-  ;; Organize your notes and maybe part of your life
-  (use-package org 
-    :config
-    ;; Define custom SEQ_TODO keywords
-    (setq org-todo-keywords
-        	'((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
-    ;; Specify your org files directory and agenda files
-    (setq org-directory "~/org")
-    (setq org-agenda-files (list org-directory))
-    ;; Setup for org-capture
-    (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
-    (setq org-capture-templates
-        	'(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
-        	   "* CLARIFY %?\n ")))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-startup-indented  t)
-    (setq org-startup-numerated t)
-    (setq org-startup-with-inline-images t)
-    (setq org-blank-before-new-entry nil)
-    (setq org-hide-emphasis-markers nil)
-    (setq org-ellipsis " ▼")
-    :hook
-    ((org-mode . visual-line-mode)  ; Added this line
-     (org-babel-after-execute . org-redisplay-inline-images)))
-
-  (use-package org-roam
-    :custom
-    (org-roam-directory (file-truename "~/org/roam"))
-    :config
-    ;; (org-roam-capture-templates
-    ;;  '(("d" "default" plain "%?"
-    ;;    :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-    ;;                       "#+title: ${title}\n#+date: %U\n#+filetags: :YourDefaultTag:\n\n* Content\n\n%?\n")
-    ;;    :unnarrowed t)))
-    (org-roam-setup))
-  (setq org-capture-templates
-        '(("r" "Roam Note" entry (file "path/to/notes.org")
-           "* %?\n:PROPERTIES:\n:ROAM_TAGS: \n:END:\n\n")))
-  (defun my-insert-roam-tags ()
-    "Insert 'ROAM_TAGS' property at point."
-    (interactive)
-    (org-set-property "ROAM_TAGS" ""))
-  (define-key org-mode-map (kbd "C-c r") #'my-insert-roam-tags)
-
-  (use-package org-roam-ui
-    :after org-roam
-    ;; Assuming you want the UI available on Emacs startup
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
-
-  (use-package visual-fill-column
-    :custom
-    (visual-fill-column-center-text t)
-    (visual-fill-column-width 140)
-    :hook (org-mode . visual-fill-column-mode))
-#+end_src
-
-#+begin_src emacs-lisp 
-  ;; (use-package ox-publish
-  ;;   :straight nil)
-
-  ;; Org Babel for code blocks
-  (use-package ob
-    :straight nil
-    :after (:all org)
-    :init
-    (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp :tangle no"))
-    (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
-    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-    (add-to-list 'org-structure-template-alist '("py" . "src python"))
-    (setq org-confirm-babel-evaluate nil)
-    :config
-
-    ;; load more languages for org-babel
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((shell      . t)
-       (emacs-lisp . t)
-       (dot        . t)
-       (python     . t)
-       (haskell    . t)
-       (scheme     . t)
-       )))
-#+end_src
-#+begin_src emacs-lisp
-  ;; Automatically tangle our Emacs.org config file when we save it
-  (defun efs/org-babel-tangle-config ()
-    (when (string-equal (buffer-file-name)
-  		      (expand-file-name "~/linux-setup/emacs-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .emacs")
-        (org-babel-tangle)))
-    (when (string-equal (buffer-file-name)
-  		      (expand-file-name "~/linux-setup/zsh-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .zsh")
-        (org-babel-tangle))))
-
-
-  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-#+end_src
-#+begin_src emacs-lisp :tangle no
-  (use-package markdown-mode)
-  (use-package auctex)
-#+end_src
-
-* Project Management
-Manage your projects
-
-#+begin_src emacs-lisp
-  ;; Project management
   (use-package magit)
 #+end_src
-
 * Buffer Management
 
 #+begin_src emacs-lisp
@@ -784,15 +914,6 @@ Manage your projects
   ;; themes at the end
   (if (display-graphic-p)
       (progn
-        (use-package ef-themes)
-        
-        (use-package modus-themes)
-
-        (use-package all-the-icons)
-
-        ;; (use-package doom-modeline
-        ;; 	:init (doom-modeline-mode nil))
-
         (use-package telephone-line
   	:init
   	(setq telephone-line-primary-left-separator 'telephone-line-cubed-left
@@ -800,25 +921,13 @@ Manage your projects
   	      telephone-line-primary-right-separator 'telephone-line-cubed-right
   	      telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
   	(setq telephone-line-height 24
-  	      telephone-line-evil-use-short-tag t))
+  	      telephone-line-evil-use-short-tag t)
+  	(telephone-line-mode t))
 
-        (use-package doom-themes
-  	:config
-  	;; Global settings (defaults)
-  	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-  	      doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  	;; (load-theme 'doom-nova)
-  	;; Enable flashing mode-line on errors
-  	(doom-themes-visual-bell-config)
-  	;; Enable custom neotree theme (all-the-icons must be installed!)
-  	;;(doom-themes-neotree-config)
-  	;; or for treemacs users
-  	(setq doom-themes-treemacs-theme "doom-colors") ; use "doom-colors" for less minimal icon theme
-  	;;(doom-themes-treemacs-config)
-  	;; Corrects (and improves) org-mode's native fontification.
-  	(doom-themes-org-config))
-
-        (telephone-line-mode t)
+        ;; Some icons and theme
+        (use-package ef-themes)
+        (use-package modus-themes)
+        (use-package all-the-icons)
         ))
 #+end_src
 ** Dealing with Parentheses
@@ -840,22 +949,9 @@ Manage your projects
     (global-highlight-parentheses-mode t))
 
   (setq blink-matching-paren t)
-#+end_src 
-
-* TODO Literate Programming
-#+begin_src python :results output
-  import random, sys
-  random.seed(1)
-  print(sys.version)
-  print("Hello world!!! Here is a random number: %f" % random.random())
 #+end_src
-
-#+RESULTS:
-: zsh:1: command not found: python
-: [ Babel evaluation exited with code 127 ]
-
 * TODO Publish Website with notes
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
   (setq org-publish-project-alist
         `(("pages"
   	 :base-directory "~/taingram.org/org/"
