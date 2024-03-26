@@ -83,80 +83,6 @@ Using Straight.el for package management.
 #+end_src
 
 
-* Look and Visuals
-
-** Themes
-#+begin_src emacs-lisp
-  (if (display-graphic-p)
-      (progn
-
-        (use-package solaire-mode
-          :config
-          (solaire-global-mode +1))
-
-        (use-package telephone-line
-          :init
-          (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-                telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-                telephone-line-primary-right-separator 'telephone-line-cubed-right
-                telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
-          (setq telephone-line-height 24
-                telephone-line-evil-use-short-tag t)
-          (telephone-line-mode t))
-
-        ;; Some icons and theme
-        (use-package ef-themes)
-        (use-package modus-themes)
-        (use-package all-the-icons)
-
-        (use-package doom-themes
-          :ensure t
-          :config
-          ;; Global settings (defaults)
-          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-                doom-themes-enable-italic t) ; if nil, italics is universally disabled
-          (load-theme 'doom-one t)           
-
-          ;; Enable flashing mode-line on errors
-          (doom-themes-visual-bell-config)
-          ;; Enable custom neotree theme (all-the-icons must be installed!)
-                                          ;(doom-themes-neotree-config)
-          ;; or for treemacs users
-                                          ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-                                          ;(doom-themes-treemacs-config)
-          ;; Corrects (and improves) org-mode's native fontification.
-          (doom-themes-org-config))
-        (use-package nano-theme
-          :ensure nil
-          :defer t
-          :straight (:host github :repo "rougier/nano-theme"))
-        ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
-#+end_src
-
-** Dealing with Parentheses
-
-#+begin_src emacs-lisp 
-  (use-package rainbow-delimiters
-    :hook (prog-mode . rainbow-delimiters-mode))
-
-  (use-package smartparens
-    :straight t
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode 1))
-
-  (use-package highlight-parentheses
-    :config
-    (define-globalized-minor-mode global-highlight-parentheses-mode
-      highlight-parentheses-mode
-      (lambda () (highlight-parentheses-mode t)))
-    (global-highlight-parentheses-mode t))
-
-  (setq blink-matching-paren t)
-#+end_src
-
-
 * Interacting with Emacs
 ** Evil-Mode
 Evil mode for keybinding and most of efficiency goodness
@@ -183,46 +109,54 @@ Evil mode for keybinding and most of efficiency goodness
 
 ** TODO Evil Bindings 
 #+begin_src emacs-lisp 
-  (use-package evil-collection
-    ;; :custom (evil-collection-setup-minibuffer t)
-    :after evil
+    (use-package evil-collection
+      ;; :custom (evil-collection-setup-minibuffer t)
+      :after evil
+      :config
+      (evil-collection-init)
+      (with-eval-after-load 'org-agenda
+        (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
+        (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+
+  (use-package evil-org
+    :ensure t
+    :after org
+    :hook (org-mode . (lambda () evil-org-mode))
     :config
-    (evil-collection-init)
-    (with-eval-after-load 'org-agenda
-      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
-      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
 
-  (use-package evil-nerd-commenter
-    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
+    (use-package evil-nerd-commenter
+      :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
 
-  (use-package evil-surround
-    :after evil
-    :config
-    (global-evil-surround-mode 1))
+    (use-package evil-surround
+      :after evil
+      :config
+      (global-evil-surround-mode 1))
 
-  (use-package evil-snipe
-    :init (evil-snipe-mode 1))
+    (use-package evil-snipe
+      :init (evil-snipe-mode 1))
 
-  (use-package evil-matchit
-    :after evil
-    :init
-    (setq evilmi-shortcut "M-m")
-    (global-evil-matchit-mode 1))
+    (use-package evil-matchit
+      :after evil
+      :init
+      (setq evilmi-shortcut "M-m")
+      (global-evil-matchit-mode 1))
 
-  (use-package evil-lion
-    :after evil
-    :config
-    (evil-lion-mode))
+    (use-package evil-lion
+      :after evil
+      :config
+      (evil-lion-mode))
 
-  (use-package evil-numbers
-    :after evil)
+    (use-package evil-numbers
+      :after evil)
 
-  (use-package vimish-fold
-    :after evil)
+    (use-package vimish-fold
+      :after evil)
 
-  (use-package evil-vimish-fold
-    :after vimish-fold
-    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
+    (use-package evil-vimish-fold
+      :after vimish-fold
+      :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
 #+end_src
 
 ** Customize Keyboard Shortcuts
@@ -344,14 +278,19 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 ** Citar and Zotero
 #+begin_src emacs-lisp 
+  (setq org-cite-global-bibliography '("~/bibliography.bib")
+        org-cite-insert-processor 'citar
+        org-cite-follow-processor 'citar
+        org-cite-activate-processor 'citar)
+
   (use-package citar
-    :custom
-    (citar-notes-paths '("~/org/notes/"))
-    (citar-bibliography '("~/bibliography.bib"))
-    (citar-indicators
-     (list ;citar-indicator-files ; plain text
-           citar-indicator-notes-icons)) ; icon)
-    )
+     :custom
+     (citar-notes-paths '("~/org/notes/"))
+     (citar-bibliography '("~/bibliography.bib"))
+     (citar-bibliography org-cite-global-bibliography)
+     (citar-indicators
+      (list ;citar-indicator-files ; plain text
+       citar-indicator-notes-icons))) 
 #+end_src
 
 ** Org-Roam
@@ -435,7 +374,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           org-roam-ui-open-on-start t))
 #+end_src
 ** TODO Literate Programming
-#+BEGIN_SRC emacs-lisp :tangle no
+#+BEGIN_SRC emacs-lisp 
   (setq org-plantuml-jar-path "~/plantuml.jar")
 
   (use-package plantuml-mode
@@ -452,10 +391,10 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     :after (:all org)
     :init
     (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp :tangle no"))
-    (add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
-    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-    (add-to-list 'org-structure-template-alist '("py" . "src python"))
+    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp :tangle no"))
+    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
     (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
     (setq org-confirm-babel-evaluate nil)
     :config
@@ -541,40 +480,41 @@ For extending Emacs functionality
 #+end_src
 ** Make the Minibuffer easier to follow
 #+begin_src emacs-lisp 
-  ;; Completion frameworks and doing stuff
-  (use-package vertico
-    :bind (:map
-           vertico-map
-           ("C-j" . vertico-next)
-           ("C-k" . vertico-previous)
-           :map minibuffer-local-map
-           ("M-h" . backward-kill-word))
-    :custom (vertico-cycle t)
-    :init (vertico-mode))
+        ;; Completion frameworks and doing stuff
+        (use-package vertico
+          :bind (:map
+                 vertico-map
+                 ("C-j" . vertico-next)
+                 ("C-k" . vertico-previous)
+                 :map minibuffer-local-map
+                 ("M-h" . backward-kill-word))
+          :custom (vertico-cycle t)
+          :init (vertico-mode))
 
-  (use-package vertico-posframe
-    :after vertico
-    :config
-    (add-hook 'vertico-mode-hook #'vertico-posframe-mode))
+      (use-package vertico-posframe
+        :after vertico
+        :custom
+        (vertico-posframe-parameters '((left-fringe . 8)
+                                       (right-fringe . 8)))
+        :config
+        (add-hook 'vertico-mode-hook #'vertico-posframe-mode)
+        (vertico-multiform-mode 1)
+        
+        ;; Configuring multiform for specific commands
+        (setq vertico-multiform-commands
+         '((consult-line
+            posframe
+            (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+            (vertico-posframe-border-width . 10)
+            (vertico-posframe-fallback-mode . vertico-buffer-mode))
+           (t posframe)))
+        )
 
-  (setq vertico-multiform-commands
-        '((consult-line
-           posframe
-           (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-           (vertico-posframe-border-width . 10)
-           (vertico-posframe-fallback-mode . vertico-buffer-mode))
-          (t posframe)))
-
-  (vertico-multiform-mode 1)
-  (setq vertico-posframe-parameters
-        '((left-fringe . 8)
-          (right-fringe . 8)))
-
-  (use-package marginalia
-    :bind (:map minibuffer-local-map
-                ("M-A" . marginalia-cycle))
-    :init
-    (marginalia-mode))
+        (use-package marginalia
+          :bind (:map minibuffer-local-map
+                      ("M-A" . marginalia-cycle))
+          :init
+          (marginalia-mode))
 
 #+end_src
 ** Consult
@@ -907,6 +847,13 @@ For extending Emacs functionality
 
 
 * TODO Programming
+** Flycheck
+#+begin_src emacs-lisp 
+  (use-package flycheck
+    :ensure t
+    :config
+    (add-hook 'after-init-hook #'global-flycheck-mode))
+#+end_src
 ** TODO Corfu
 #+begin_src emacs-lisp :tangle no 
   (use-package corfu
@@ -1009,6 +956,84 @@ For extending Emacs functionality
     :ensure nil ; Ensure nil because xwidget is not a installable package
     :bind ("C-c w" . xwidget-webkit-browse-url))
 #+end_src
+
+
+* Look and Visuals
+
+** Themes
+#+begin_src emacs-lisp
+  (if (display-graphic-p)
+      (progn
+
+        (use-package solaire-mode
+          :config
+          (solaire-global-mode +1))
+
+        (use-package telephone-line
+          :init
+          (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+                telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+                telephone-line-primary-right-separator 'telephone-line-cubed-right
+                telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+          (setq telephone-line-height 24
+                telephone-line-evil-use-short-tag t)
+          (telephone-line-mode t))
+
+        ;; Some icons and theme
+        (use-package ef-themes)
+        (use-package modus-themes)
+        (use-package all-the-icons)
+        (use-package nerd-icons-completion
+          :config
+          (nerd-icons-completion-mode))
+
+        (use-package doom-themes
+          :ensure t
+          :config
+          ;; Global settings (defaults)
+          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+                doom-themes-enable-italic t) ; if nil, italics is universally disabled
+          (load-theme 'doom-one t)           
+
+          ;; Enable flashing mode-line on errors
+          (doom-themes-visual-bell-config)
+          ;; Enable custom neotree theme (all-the-icons must be installed!)
+                                          ;(doom-themes-neotree-config)
+          ;; or for treemacs users
+                                          ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+                                          ;(doom-themes-treemacs-config)
+          ;; Corrects (and improves) org-mode's native fontification.
+          (doom-themes-org-config))
+        (use-package nano-theme
+          :ensure nil
+          :defer t
+          :straight (:host github :repo "rougier/nano-theme"))
+        ))
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+#+end_src
+
+** Dealing with Parentheses
+
+#+begin_src emacs-lisp 
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+  (use-package smartparens
+    :straight t
+    :config
+    (require 'smartparens-config)
+    (smartparens-global-mode 1))
+
+  (use-package highlight-parentheses
+    :config
+    (define-globalized-minor-mode global-highlight-parentheses-mode
+      highlight-parentheses-mode
+      (lambda () (highlight-parentheses-mode t)))
+    (global-highlight-parentheses-mode t))
+
+  (setq blink-matching-paren t)
+#+end_src
+
 
 
 * Scratch Area
@@ -1126,4 +1151,3 @@ For extending Emacs functionality
 
 
 * References
-[cite:@HowTakeNotes]
