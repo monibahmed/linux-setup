@@ -14,68 +14,65 @@ Benchmark Emacs startup time
    'emacs-startup-hook
    (lambda ()
      (message "*** Emacs loaded in %s seconds with %d garbage collections."
-  	    (emacs-init-time "%.2f")
-  	    gcs-done)))
+              (emacs-init-time "%.2f")
+              gcs-done)))
 #+end_src
+
+
+* Package Manager
+Using Straight.el for package management.
+#+begin_src emacs-lisp 
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name
+          "straight/repos/straight.el/bootstrap.el"
+          (or (bound-and-true-p straight-base-dir)
+              user-emacs-directory)))
+        (bootstrap-version 7))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+  (straight-use-package 'use-package)
+  (setq straight-vc-git-default-clone-depth 1)
+  (setq straight-use-package-by-default t)
+
+#+end_src
+
 
 * Basic Emacs Settings
 #+begin_src emacs-lisp 
-  (setq inhibit-splash-screen t)
+  (setq-default inhibit-splash-screen t)
   (add-to-list 'default-frame-alist '(fullscreen . fullboth))
   (setq make-backup-files nil)
   (toggle-scroll-bar -1)
   (tool-bar-mode     -1)
   (menu-bar-mode     -1)
   (global-auto-revert-mode 1)
-  ;;(if (display-graphic-p)
-  ;;    (progn (menu-bar-mode     -1)))
   (tooltip-mode      -1)
-  (setq make-backup-files nil) ; stop creating backup~ files
-  (setq auto-save-default nil) ; stop creating #autosave# files
+  (setq make-backup-files nil) 
+  (setq auto-save-default nil)
   (setq package-enable-at-startup nil)
   (setq vc-follow-symlinks nil)
-  ;; Trying to speed up emacs load
   (setq jit-lock-stealth-time nil)
   (setq jit-lock-defer-time nil)
   (setq jit-lock-defer-time 0.05)
   (setq jit-lock-stealth-load 200)
-  (setq indent-tabs-mode nil)
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 2)
   (setq custom-file (concat user-emacs-directory "custom.el"))
   (setq switch-to-buffer-obey-display-actions t)
-  ;; disable scrollbars
   (customize-set-variable 'scroll-bar-mode nil)
   (customize-set-variable 'horizontal-scroll-bar-mode nil)
   (setq browse-url-browser-function 'browse-url-default-browser)
-
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
-
-  ;;doesn't work as expected
-  ;;(add-to-list 'default-frame-alist '(undecorated . t))
   (defalias 'yes-or-no-p 'y-or-n-p)
-
 #+end_src
 
-* Package Manager
-Using Straight.el for package management.
-#+begin_src emacs-lisp 
-  (setq straight-vc-git-default-clone-depth 1)
-  (defvar bootstrap-version)
-  (let ((bootstrap-file
-         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-        (bootstrap-version 6))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-  	(url-retrieve-synchronously
-  	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-  	 'silent 'inhibit-cookies)
-        (goto-char (point-max))
-        (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
 
-  (straight-use-package 'use-package)
-  (setq straight-use-package-by-default t)
-  ;;  (setq use-package-always-defer t)
-#+end_src
 * Mac OS X Specifics
 #+begin_src emacs-lisp
   (when (memq window-system '(mac ns x))
@@ -84,15 +81,92 @@ Using Straight.el for package management.
     (setq mac-command-modifier 'control)
     (menu-bar-mode 1))
 #+end_src
+
+
+* Look and Visuals
+
+** Themes
+#+begin_src emacs-lisp
+  (if (display-graphic-p)
+      (progn
+
+        (use-package solaire-mode
+          :config
+          (solaire-global-mode +1))
+
+        (use-package telephone-line
+          :init
+          (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+                telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+                telephone-line-primary-right-separator 'telephone-line-cubed-right
+                telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+          (setq telephone-line-height 24
+                telephone-line-evil-use-short-tag t)
+          (telephone-line-mode t))
+
+        ;; Some icons and theme
+        (use-package ef-themes)
+        (use-package modus-themes)
+        (use-package all-the-icons)
+
+        (use-package doom-themes
+          :ensure t
+          :config
+          ;; Global settings (defaults)
+          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+                doom-themes-enable-italic t) ; if nil, italics is universally disabled
+          (load-theme 'doom-one t)           
+
+          ;; Enable flashing mode-line on errors
+          (doom-themes-visual-bell-config)
+          ;; Enable custom neotree theme (all-the-icons must be installed!)
+                                          ;(doom-themes-neotree-config)
+          ;; or for treemacs users
+                                          ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+                                          ;(doom-themes-treemacs-config)
+          ;; Corrects (and improves) org-mode's native fontification.
+          (doom-themes-org-config))
+        (use-package nano-theme
+          :ensure nil
+          :defer t
+          :straight (:host github :repo "rougier/nano-theme"))
+        ))
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+#+end_src
+
+** Dealing with Parentheses
+
+#+begin_src emacs-lisp 
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+  (use-package smartparens
+    :straight t
+    :config
+    (require 'smartparens-config)
+    (smartparens-global-mode 1))
+
+  (use-package highlight-parentheses
+    :config
+    (define-globalized-minor-mode global-highlight-parentheses-mode
+      highlight-parentheses-mode
+      (lambda () (highlight-parentheses-mode t)))
+    (global-highlight-parentheses-mode t))
+
+  (setq blink-matching-paren t)
+#+end_src
+
+
 * Org Mode Setup
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
 ** Org-Mode 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp 
   (use-package org 
     :config
     ;; Define custom SEQ_TODO keywords
     (setq org-todo-keywords
-          '((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
+          '((sequence "TDOD" "|" "DONE")))
+          ;; '((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
     ;; Specify your org files directory and agenda files
     (setq org-directory "~/org")
     (setq org-agenda-files (list org-directory))
@@ -100,7 +174,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
     (setq org-capture-templates
           '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
-             "* CLARIFY %?\n ")))
+             "* TODO %?\n ")))
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
@@ -117,97 +191,109 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     (visual-fill-column-center-text t)
     (visual-fill-column-width 140)
     :hook (org-mode . visual-fill-column-mode))
-#+END_SRC
+
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/emacs-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .emacs")
+        (org-babel-tangle)))
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/zsh-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .zsh")
+        (org-babel-tangle))))
+
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
 ** Org-Roam
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp 
   (use-package org-roam
-      :custom
-      (org-roam-directory (file-truename "~/org/roam"))
-      (org-roam-completion-everywhere t)
-      (org-roam-capture-templates
-       '(("n" "default" plain
-          "%?\n* SEED References\n"
-          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-          :unnarrowed t)
-         ("l" "programming language" plain
-          "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
-          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-          :unnarrowed t)
-         ("s" "Seed" plain
-          (file "~/org/roam/Templates/SeedTemplate.org")
-          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-          :unnarrowed t)
-         ("b" "book notes" plain
-          "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
-          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-          :unnarrowed t)
-         ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
-          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
-          :unnarrowed t)))
+    :custom
+    (org-roam-directory (file-truename "~/org/roam"))
+    (org-roam-completion-everywhere t)
+    (org-roam-capture-templates
+     '(("n" "default" plain
+        "%?\n* SEED References\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ("l" "programming language" plain
+        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ("s" "Seed" plain
+        (file "~/org/roam/Templates/SeedTemplate.org")
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ("b" "book notes" plain
+        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+        :unnarrowed t)))
       :bind (("C-c n l" . org-roam-buffer-toggle)
-             ("C-c n f" . org-roam-node-find)
-             ("C-c n i" . org-roam-node-insert)
-             :map org-mode-map
-             ("C-M-i"    . completion-at-point)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i" . completion-at-point))
       :config
       (org-roam-setup))
 
-    (defun my/org-roam-node-insert-and-newline ()
-      "Insert an Org-roam node and add a newline after it."
-      (interactive)
-      (org-roam-node-insert)
-      ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-      (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-    (with-eval-after-load 'org-roam
-      (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+  (defun my/org-roam-node-insert-and-newline ()
+    "Insert an Org-roam node and add a newline after it."
+    (interactive)
+    (org-roam-node-insert)
+    ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
+    (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
+  (with-eval-after-load 'org-roam
+    (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
 
-    (use-package org-roam-ui
-      :after org-roam
-      ;; Assuming you want the UI available on Emacs startup
-      :config
-      (setq org-roam-ui-sync-theme t
-            org-roam-ui-follow t
-            org-roam-ui-update-on-save t
-            org-roam-ui-open-on-start t))
-
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 #+end_src
-** References with Zotero
-#+begin_src emacs-lisp 
-    (use-package org-ref
-     :ensure t
-     :config
-     ;; Path to your .bib file exported from Zotero
-     (setq org-ref-default-bibliography '("~/bibliography.bib")
-           ;; Directory where ZotFile stores your PDFs in Google Drive, synced locally
-           org-ref-pdf-directory "/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources"
-           org-ref-bibliography-notes "/path/to/your/org/notes/bibnotes.org"))
-     (use-package citar
-       :ensure t
-       :config
-       (setq citar-bibliography '("~/bibliography.bib")
-             citar-library-paths '("/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources")
-             citar-notes-paths '("~/org/roam"))
-       ;; Optional: Configure citar to open PDFs with Emacs or another viewer
-       ;; (setq citar-file-open-function #'your-preferred-open-function)
-       )
+** TODO References with Zotero
+#+begin_src emacs-lisp :tangle no
+  (use-package org-ref
+    :ensure t
+    :config
+    ;; Path to your .bib file exported from Zotero
+    (setq org-ref-default-bibliography '("~/bibliography.bib")
+          ;; Directory where ZotFile stores your PDFs in Google Drive, synced locally
+          org-ref-pdf-directory "/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources"
+          org-ref-bibliography-notes "/path/to/your/org/notes/bibnotes.org"))
+  (use-package citar
+    :ensure t
+    :config
+    (setq citar-bibliography '("~/bibliography.bib")
+          citar-library-paths '("/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources")
+          citar-notes-paths '("~/org/roam"))
+    ;; Optional: Configure citar to open PDFs with Emacs or another viewer
+    ;; (setq citar-file-open-function #'your-preferred-open-function)
+    )
 
-     (use-package org-roam-bibtex
-       :after org-roam
-       :ensure t
-       :config
-       (require 'citar) ; Ensure citar is loaded for compatibility
-       (org-roam-bibtex-mode)
-       (setq orb-roam-ref-format 'citar))
+  (use-package org-roam-bibtex
+    :after org-roam
+    :ensure t
+    :config
+    (require 'citar) ; Ensure citar is loaded for compatibility
+    (org-roam-bibtex-mode)
+    (setq orb-roam-ref-format 'citar))
 #+end_src
 
-** TODO Publishing
-#+begin_src emacs-lisp 
-  ;; (use-package ox-publish
-  ;;   :straight nil)
-  ;; Set the path to the PlantUML jar file
-#+END_SRC
 ** TODO Literate Programming
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle no
   (setq org-plantuml-jar-path "~/plantuml.jar")
 
   (use-package plantuml-mode
@@ -245,35 +331,25 @@ Org and Org-roam will help you network your thoughts and reflect your understand
        )))
 #+end_src
 
-#+begin_src emacs-lisp
 
-  ;; Automatically tangle our Emacs.org config file when we save it
-  (defun efs/org-babel-tangle-config ()
-    (when (string-equal (buffer-file-name)
-  		      (expand-file-name "~/linux-setup/emacs-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .emacs")
-        (org-babel-tangle)))
-    (when (string-equal (buffer-file-name)
-  		      (expand-file-name "~/linux-setup/zsh-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .zsh")
-        (org-babel-tangle))))
-
-
-  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-#+end_src
-** Latex and Markup Support
-#+begin_src emacs-lisp 
+** TODO Latex and Markup Support
+#+begin_src emacs-lisp :tangle no
   (use-package markdown-mode)
   (use-package auctex)
 #+end_src 
-* Evil Mode
+
+** TODO Publishing
+#+begin_src emacs-lisp :tangle no
+  ;; (use-package ox-publish
+  ;;   :straight nil)
+  ;; Set the path to the PlantUML jar file
+#+END_SRC
+
+
+* Interacting with Emacs
+** Evil-Mode
 Evil mode for keybinding and most of efficiency goodness
-#+begin_src emacs-lisp
-  ;; enable evil mode
+#+begin_src emacs-lisp 
   (use-package evil
     :init
     (setq evil-want-integration t)
@@ -287,14 +363,14 @@ Evil mode for keybinding and most of efficiency goodness
     ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
     ;;(setq evil-emacs-state-modes nil)
     :config
-    (evil-mode 1)
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
     ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
     ;;(evil-set-initial-state 'dashboard-mode 'normal)
-    )
+    (evil-mode 1))
 #+end_src
-** Evil Bindings for different modes
+
+** Evil Bindings 
 #+begin_src emacs-lisp 
   (use-package evil-collection
     ;; :custom (evil-collection-setup-minibuffer t)
@@ -304,35 +380,46 @@ Evil mode for keybinding and most of efficiency goodness
     (with-eval-after-load 'org-agenda
       (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
       (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
-  (use-package evil-org)
+
+  (use-package evil-org
+    :ensure t
+    :after org
+    :hook (org-mode . (lambda () evil-org-mode))
+    :config
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
+
   (use-package evil-nerd-commenter
     :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
+
   (use-package evil-surround
     :after evil
     :config
     (global-evil-surround-mode 1))
+
   (use-package evil-snipe
     :init (evil-snipe-mode 1))
+
   (use-package evil-matchit
     :after evil
     :init
     (setq evilmi-shortcut "M-m")
     (global-evil-matchit-mode 1))
+
   (use-package evil-lion
     :after evil
     :config
     (evil-lion-mode))
+
   (use-package evil-numbers
     :after evil)
+
   (use-package vimish-fold
     :after evil)
+
   (use-package evil-vimish-fold
     :after vimish-fold
     :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
-  (define-key evil-normal-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
-  (define-key evil-visual-state-map (kbd "C-=") 'evil-numbers/inc-at-pt)
-  (define-key evil-normal-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
-  (define-key evil-visual-state-map (kbd "C--") 'evil-numbers/dec-at-pt)
 
   (defun ta/enter-insert-state-hook ()
     (hl-line-mode -1)
@@ -342,45 +429,15 @@ Evil mode for keybinding and most of efficiency goodness
   (add-hook 'evil-replace-state-entry-hook 'ta/enter-insert-state-hook)
 #+end_src
 
-* Useful packages
-For using getting around and understanding Emacs
-** Helper Packages
-For extending Emacs functionality
-#+begin_src emacs-lisp
-  ;;notified if the definition of a function you are customizing change
-  (use-package el-patch)
-  ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist
-    :init (savehist-mode))
-  ;; a better window manager?
-  (use-package ace-window
-    :bind ("C-c o" . 'ace-window)
-    :init
-    (setq aw-dispatch-always t)
-    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-  ;; what key should you push next? not needed embark
-  (use-package which-key
-    :init (which-key-mode))
-  ;; Enable rich annotations using the Marginalia package
-  (use-package marginalia
-    ;; Either bind `marginalia-cycle' globally or only in the minibuffer
-    :bind (("M-A" . marginalia-cycle)
-  	 :map minibuffer-local-map
-  	 ("M-A" . marginalia-cycle))
-    :init
-    (marginalia-mode))
-  (use-package restart-emacs)
-  (use-package default-text-scale)
-#+end_src
 ** Customize Keyboard Shortcuts
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp 
   ;; Customize your keyboard shortcuts
   (use-package hydra)
   (defhydra hydra-text-scale (:timeout 4)
-    "scale text"
-    ("j" text-scale-increase "in")
-    ("k" text-scale-decrease "out")
-    ("f" nil "finished" :exit t))
+            "scale text"
+            ("j" text-scale-increase "in")
+            ("k" text-scale-decrease "out")
+            ("f" nil "finished" :exit t))
 
   (global-set-key
    (kbd "C-x o")
@@ -391,23 +448,23 @@ For extending Emacs functionality
   (use-package general
     :config
     (general-create-definer rune/leader-keys
-      :keymaps '(normal insert visual emacs)
-      :prefix "SPC"
-      :global-prefix "C-SPC")
+                            :keymaps '(normal insert visual emacs)
+                            :prefix "SPC"
+                            :global-prefix "C-SPC")
     (rune/leader-keys
-      "t"  '(:ignore t :which-key "Toggles")
-      "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
-      "gp" '(gptel                                                            :which-key "GPT-4")
-      "gP" '(gptel-send                                                       :which-key "Send to GPT")
-      "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
-      "xv" '(my-project-vterm :which-key "Vterm") 
-      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
-      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
-      "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
-      "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
-      "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
-      "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
-      ))
+     "t"  '(:ignore t :which-key "Toggles")
+     "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
+     "gp" '(gptel                                                            :which-key "GPT-4")
+     "gP" '(gptel-send                                                       :which-key "Send to GPT")
+     "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
+     "xv" '(my-project-vterm :which-key "Vterm") 
+     "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
+     "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
+     "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
+     "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
+     "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
+     "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
+     ))
 
   (defun beginning-of-file-and-line ()
     (interactive)
@@ -421,49 +478,83 @@ For extending Emacs functionality
 
   (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
   (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
-  (define-key evil-normal-state-map (kbd "o")
-              (lambda ()
-                (interactive)
-                (end-of-line) ; Move to the end of the line
-                (org-open-line 1))) ; Open a line below
-  (define-key evil-normal-state-map (kbd "O")
-              (lambda ()
-                (interactive)
-                (beginning-of-line)
-                (org-open-line 1)))
+
+  ;; (define-key evil-normal-state-map (kbd "o")
+  ;;             (lambda ()
+  ;;               (interactive)
+  ;;               (end-of-line) ; Move to the end of the line
+  ;;               (org-open-line 1))) ; Open a line below
+
+  ;; (define-key evil-normal-state-map (kbd "O")
+  ;;             (lambda ()
+  ;;               (interactive)
+  ;;               (beginning-of-line)
+  ;;               (org-open-line 1)))
 
 #+end_src
 
-** You Snip It
-#+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :config
-    (setq yas-triggers-in-field t)
-    ;; (setq yas-next-field-or-maybe-expand nil)
-    (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
 
-    :init 
-    (yas-global-mode 1)
-    )
+* Useful packages
+For using getting around and understanding Emacs
+** Helper Packages
+For extending Emacs functionality
+#+begin_src emacs-lisp 
+  ;;notified if the definition of a function you are customizing change
+  (use-package el-patch)
 
-  ;; (defun my-yas-try-expanding-auto-snippets ()
-  ;;   (when yas-minor-mode
-  ;;     (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
-  ;;       (yas-expand))))
-  ;; (add-hook 'post-command-hook #'my-yas-try-expanding-auto-snippets)
-#+END_SRC
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init (savehist-mode))
 
-** Do Stuff in Emacs Easily
-#+begin_src emacs-lisp
+  ;; a better window manager?
+  (use-package ace-window
+    :bind ("C-c o" . 'ace-window)
+    :init
+    (setq aw-dispatch-always t)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+
+  ;; what key should you push next? not needed embark
+  (use-package which-key
+    :init (which-key-mode))
+  (use-package restart-emacs)
+
+  (use-package default-text-scale)
+
+  (use-package project
+    :straight nil)
+  (use-package popper
+    :bind (("C-`"   . popper-toggle)
+           ("M-`"   . popper-cycle)
+           ("C-M-`" . popper-toggle-type))
+    :init
+    ;; have popper respect display-buffer-alist rules
+    ;; (setq popper-display-control nil)
+    ;; enable actions in echo area (k to kill buffer)
+    ;; (setq popper-echo-dispatch-actions t)
+    ;; how to group popups
+    ;; (setq popper-display-function #'popper-select-popup-at-bottom)
+    (setq popper-group-function #'popper-group-by-project)
+    ;; which buffers should be considered popups
+    (setq popper-window-height 0.33)
+    (setq popper-reference-buffers
+          '("\\*ChatGPT\\*"
+            "\\*scratch\\*"
+            "\\*?vterm"
+            help-mode
+            compilation-mode))
+    (popper-mode +1)
+    (popper-echo-mode +1))                ; For echo area hints
+#+end_src
+** Make the Minibuffer easier to follow
+#+begin_src emacs-lisp 
   ;; Completion frameworks and doing stuff
   (use-package vertico
     :bind (:map
-        	 vertico-map
-        	 ("C-j" . vertico-next)
-        	 ("C-k" . vertico-previous)
-        	 ("C-f" . vertico-exit)
-        	 :map minibuffer-local-map
-        	 ("M-h" . backward-kill-word))
+           vertico-map
+           ("C-j" . vertico-next)
+           ("C-k" . vertico-previous)
+           :map minibuffer-local-map
+           ("M-h" . backward-kill-word))
     :custom (vertico-cycle t)
     :init (vertico-mode))
 
@@ -484,6 +575,13 @@ For extending Emacs functionality
   (setq vertico-posframe-parameters
         '((left-fringe . 8)
           (right-fringe . 8)))
+
+  (use-package marginalia
+    :bind (:map minibuffer-local-map
+                ("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode))
+
 #+end_src
 ** Consult
 #+begin_src emacs-lisp 
@@ -491,57 +589,57 @@ For extending Emacs functionality
   (use-package consult
     ;; Replace bindings. Lazily loaded due by `use-package'.
     :bind (;; C-c bindings in `mode-specific-map'
-           ("C-c M-x" . consult-mode-command)
-           ("C-c h" . consult-history)
-           ("C-c k" . consult-kmacro)
-           ("C-c m" . consult-man)
-           ("C-c i" . consult-info)
+           ("C-c M-x"           . consult-mode-command)
+           ("C-c h"             . consult-history)
+           ("C-c k"             . consult-kmacro)
+           ("C-c m"             . consult-man)
+           ("C-c i"             . consult-info)
            ([remap Info-search] . consult-info)
-           ;; C-x bindings in `ctl-x-map'
-           ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-           ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-           ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-           ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-           ("C-x t b" . consult-buffer-other-tab)    ;; orig. switch-to-buffer-other-tab
-           ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
-           ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-           ;; Custom M-# bindings for fast register access
-           ("M-#" . consult-register-load)
-           ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-           ("C-M-#" . consult-register)
-           ;; Other custom bindings
-           ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-           ;; M-g bindings in `goto-map'
-           ("M-g e" . consult-compile-error)
-           ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-           ("M-g g" . consult-goto-line)             ;; orig. goto-line
-           ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-           ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-           ("M-g m" . consult-mark)
-           ("M-g k" . consult-global-mark)
-           ("M-g i" . consult-imenu)
-           ("M-g I" . consult-imenu-multi)
-           ;; M-s bindings in `search-map'
-           ("M-s d" . consult-find)                  ;; Alternative: consult-fd
-           ("M-s c" . consult-locate)
-           ("M-s g" . consult-grep)
-           ("M-s G" . consult-git-grep)
-           ("M-s r" . consult-ripgrep)
-           ("M-s l" . consult-line)
-           ("M-s L" . consult-line-multi)
-           ("M-s k" . consult-keep-lines)
-           ("M-s u" . consult-focus-lines)
-           ;; Isearch integration
-           ("M-s e" . consult-isearch-history)
+                                                               ;; C-x bindings in `ctl-x-map'
+           ("C-x M-:"           . consult-complex-command)     ;; orig    . repeat-complex-command
+           ("C-x b"             . consult-buffer)              ;; orig  . switch-to-buffer
+           ("C-x 4 b"           . consult-buffer-other-window) ;; orig    . switch-to-buffer-other-window
+           ("C-x 5 b"           . consult-buffer-other-frame)  ;; orig    . switch-to-buffer-other-frame
+           ("C-x t b"           . consult-buffer-other-tab)    ;; orig    . switch-to-buffer-other-tab
+           ("C-x r b"           . consult-bookmark)            ;; orig    . bookmark-jump
+           ("C-x p b"           . consult-project-buffer)      ;; orig    . project-switch-to-buffer
+                                                               ;; Custom M-# bindings for fast register access
+           ("M-#"               . consult-register-load)
+           ("M-'"               . consult-register-store)      ;; orig. abbrev-prefix-mark (unrelated)
+           ("C-M-#"             . consult-register)
+                                                               ;; Other custom bindings
+           ("M-y"               . consult-yank-pop)            ;; orig. yank-pop
+                                                               ;; M-g bindings in `goto-map'
+           ("M-g e"             . consult-compile-error)
+           ("M-g f"             . consult-flymake)             ;; Alternative: consult-flycheck
+           ("M-g g"             . consult-goto-line)           ;; orig  . goto-line
+           ("M-g M-g"           . consult-goto-line)           ;; orig    . goto-line
+           ("M-g o"             . consult-outline)             ;; Alternative: consult-org-heading
+           ("M-g m"             . consult-mark)
+           ("M-g k"             . consult-global-mark)
+           ("M-g i"             . consult-imenu)
+           ("M-g I"             . consult-imenu-multi)
+                                                               ;; M-s bindings in `search-map'
+           ("M-s d"             . consult-find)                ;; Alternative: consult-fd
+           ("M-s c"             . consult-locate)
+           ("M-s g"             . consult-grep)
+           ("M-s G"             . consult-git-grep)
+           ("M-s r"             . consult-ripgrep)
+           ("M-s l"             . consult-line)
+           ("M-s L"             . consult-line-multi)
+           ("M-s k"             . consult-keep-lines)
+           ("M-s u"             . consult-focus-lines)
+                                                               ;; Isearch integration
+           ("M-s e"             . consult-isearch-history)
            :map isearch-mode-map
-           ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
-           ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
-           ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
-           ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
-           ;; Minibuffer history
+           ("M-e"               . consult-isearch-history)     ;; orig. isearch-edit-string
+           ("M-s e"             . consult-isearch-history)     ;; orig  . isearch-edit-string
+           ("M-s l"             . consult-line)                ;; needed by consult-line to detect isearch
+           ("M-s L"             . consult-line-multi)          ;; needed by consult-line to detect isearch
+                                                               ;; Minibuffer history
            :map minibuffer-local-map
-           ("M-s" . consult-history)                 ;; orig. next-matching-history-element
-           ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+           ("M-s"               . consult-history)             ;; orig. next-matching-history-element
+           ("M-r"               . consult-history))            ;; orig. previous-matching-history-element
 
     ;; Enable automatic preview at point in the *Completions* buffer. This is
     ;; relevant when you use the default completion UI.
@@ -608,6 +706,7 @@ For extending Emacs functionality
     )
 #+end_src
 
+** Orderless
 #+begin_src emacs-lisp 
   ;; Optionally use the `orderless' completion style.
   (use-package orderless
@@ -616,35 +715,49 @@ For extending Emacs functionality
     ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
     ;;       orderless-component-separator #'orderless-escapable-split-on-space)
     (setq completion-styles '(orderless basic)
-  	orderless-regexp t
+          orderless-regexp t
           completion-category-defaults nil
           completion-category-overrides '((file (styles partial-completion)))))
 
   ;;Do commands and operatioms on buffers or synbols
   (use-package embark
     :bind (("C-c e" . embark-act)
-        	 ("M-." . embark-dwim)
-        	 ("C-h B" . embark-bindings))
+           ("M-." . embark-dwim)
+           ("C-h B" . embark-bindings))
     :init (setq prefix-help-command #'embark-prefix-help-command))
 
   (use-package embark-consult
     :after (embark consult)
     :hook (embark-collect-mode . consult-preview-at-point-mode))
-  (use-package solaire-mode
-    :hook (after-init . solaire-global-mode))
 #+end_src
+
+** TODO You Snip It
+#+BEGIN_SRC emacs-lisp :tangle no 
+  (use-package yasnippet
+    :config
+    (setq yas-triggers-in-field t)
+    ;; (setq yas-next-field-or-maybe-expand nil)
+    (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
+
+    :init 
+    (yas-global-mode 1)
+    )
+
+  ;; (defun my-yas-try-expanding-auto-snippets ()
+  ;;   (when yas-minor-mode
+  ;;     (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+  ;;       (yas-expand))))
+  ;; (add-hook 'post-command-hook #'my-yas-try-expanding-auto-snippets)
+#+END_SRC
 
 ** Browse Files
 #+begin_src emacs-lisp 
   (use-package dired
     :straight nil)
 
-  (use-package all-the-icons-dired
-    :after dired-sidebar
-    :hook (dired-mode . all-the-icons-dired-mode))
-
   (use-package dired-sidebar
     :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+    :ensure t
     :commands (dired-sidebar-toggle-sidebar)
     :init
     (add-hook 'dired-sidebar-mode-hook
@@ -654,49 +767,24 @@ For extending Emacs functionality
     :config
     (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
     (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
-    (setq dired-sidebar-use-term-integration t))
 
+    (setq dired-sidebar-subtree-line-prefix "__")
+    (setq dired-sidebar-theme 'vscode)
+    (setq dired-sidebar-use-term-integration t)
+    (setq dired-sidebar-use-custom-font t))
+  (use-package all-the-icons-dired
+    :after dired-sidebar
+    :hook (dired-mode . all-the-icons-dired-mode))
 
 #+end_src
 
+#+begin_src emacs-lisp :tangle no 
+#+end_src
+
+
+* TODO Buffer Management
+** Ibuffer
 #+begin_src emacs-lisp 
-  (use-package dired
-    :straight nil)
-
-  (use-package all-the-icons-dired
-    :after dired-sidebar
-    :hook (dired-mode . all-the-icons-dired-mode))
-
-  (use-package dired-sidebar
-    :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-    :commands (dired-sidebar-toggle-sidebar)
-    :init
-    (add-hook 'dired-sidebar-mode-hook
-              (lambda ()
-                (unless (file-remote-p default-directory)
-                  (auto-revert-mode))))
-    :config
-    (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
-    (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
-    (setq dired-sidebar-use-term-integration t))
-
-  ;; Close the dired-sidebar when file opens
-  (with-eval-after-load 'dired
-    (defun close-dired-sidebar-find-file ()
-      "Close the dired-sidebar when opening a file."
-      (interactive)
-      (let ((buffer (dired-get-file-for-visit)))
-        (dired-sidebar-toggle-sidebar)
-        (find-file buffer)))
-    (advice-add 'dired-find-file :override #'close-dired-sidebar-find-file))
-#+end_src
-* Git Project Management
-#+begin_src emacs-lisp
-  (use-package magit)
-#+end_src
-* Buffer Management
-
-#+begin_src emacs-lisp
   (use-package ibuffer
     :straight nil)
 
@@ -708,26 +796,26 @@ For extending Emacs functionality
 
   (setq ibuffer-saved-filter-groups
         (quote (("default"
-  	       ("Dotfiles" (filename . "^\\."))
-  	       ("Messages"  (name . "^\\/"))
-  	       ("Org"       (mode . org-mode))
-  	       ("Planner"   (or
-  			     (name . "^\\/Calendar\\*$")
-  			     (name . "^\\/Org Agenda\\*$")))
-  	       ("Emacs"     (or
-  			     (name . "^\\/scratch\\*$")
-  			     (name . "^\\/Messages\\*$")))))))
+                 ("Dotfiles" (filename . "^\\."))
+                 ("Messages"  (name . "^\\/"))
+                 ("Org"       (mode . org-mode))
+                 ("Planner"   (or
+                               (name . "^\\/Calendar\\*$")
+                               (name . "^\\/Org Agenda\\*$")))
+                 ("Emacs"     (or
+                               (name . "^\\/scratch\\*$")
+                               (name . "^\\/Messages\\*$")))))))
 
   (add-hook 'ibuffer-mode-hook
-  	  (lambda ()
-  	    (ibuffer-switch-to-saved-filter-groups "default")))
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default")))
 #+end_src
-
+** Perspective
 #+begin_src emacs-lisp 
   (use-package perspective
     :bind (
-  	 ("C-x C-b" . persp-ibuffer)
-  	 ("C-x k" . persp-kill-buffer* ))
+           ("C-x C-b" . persp-ibuffer)
+           ("C-x k" . persp-kill-buffer* ))
     :custom
     (persp-mode-prefix-key (kbd "C-x C-x"))
     :init
@@ -735,69 +823,78 @@ For extending Emacs functionality
     (persp-mode))
 #+end_src 
 
-#+begin_src emacs-lisp
-  (use-package project
-    :straight nil)
-  (use-package popper
-    :bind (("C-`"   . popper-toggle)
-  	 ("M-`"   . popper-cycle)
-  	 ("C-M-`" . popper-toggle-type))
-    :init
-    ;; have popper respect display-buffer-alist rules
-    ;; (setq popper-display-control nil)
-    ;; enable actions in echo area (k to kill buffer)
-    ;; (setq popper-echo-dispatch-actions t)
-    ;; how to group popups
-    ;; (setq popper-display-function #'popper-select-popup-at-bottom)
-    (setq popper-group-function #'popper-group-by-project)
-    ;; which buffers should be considered popups
-    (setq popper-window-height 0.33)
-    (setq popper-reference-buffers
-  	'("\\*ChatGPT\\*"
-  	  "\\*scratch\\*"
-  	  "\\*?vterm"
-  	  help-mode
-  	  compilation-mode))
-    (popper-mode +1)
-    (popper-echo-mode +1))                ; For echo area hints
+
+* Git Project Management
+#+begin_src emacs-lisp 
+  (use-package magit)
 #+end_src
 
-* Shell Support
-#+begin_src emacs-lisp 
+
+* TODO Shell Support
+#+begin_src emacs-lisp :tangle no 
 
   (if (not (eq system-type 'windows-nt))
       (progn
         (use-package vterm
-  	:config (setq vterm-max-scrollback 10000))
+          :config (setq vterm-max-scrollback 10000))
         (use-package multi-vterm)
 
         ;; Some fancy project/perspective stuff.
         (defun my-project-vterm ()
-  	"Open a `vterm` in the current project's root directory."
-  	(interactive)
-  	(let ((project-root (project-root (project-current t))))
-  	  (if project-root
-  	      (let ((default-directory project-root))
-  		(vterm (format "vterm: %s" project-root)))
-  	    (message "Not in a project!"))))
+          "Open a `vterm` in the current project's root directory."
+          (interactive)
+          (let ((project-root (project-root (project-current t))))
+            (if project-root
+                (let ((default-directory project-root))
+                  (vterm (format "vterm: %s" project-root)))
+              (message "Not in a project!"))))
         ;; (global-set-key (kbd "C-c p v") #'my-project-vterm)
         (defun project-switch-to-perspective ()
-  	"Switch to a perspective with the name of the current project."
-  	(interactive)
-  	(let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current t))))))
-  	  (if (not (persp-switch project-name))
-  	      (progn
-  		(persp-switch project-name)
-  		(dired (project-root (project-current t)))))))
+          "Switch to a perspective with the name of the current project."
+          (interactive)
+          (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current t))))))
+            (if (not (persp-switch project-name))
+                (progn
+                  (persp-switch project-name)
+                  (dired (project-root (project-current t)))))))
         (global-set-key (kbd "C-x p p") 'project-switch-to-perspective)
         (advice-add 'project-switch-project :after #'project-switch-to-perspective)
 
         ))
 
 #+end_src
-* Programming
-** Corfu
-#+begin_src emacs-lisp 
+* AI Integration 
+** Copilot 
+#+begin_src emacs-lisp  :tangle no 
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+    :init (setq copilot-indent-offset-warning-disable t)
+    :bind (:map copilot-completion-map
+                ("M-<tab>" . 'copilot-accept-completion)
+                ("M-TAB" . 'copilot-accept-completion)
+                ("TAB" . 'copilot-accept-completion-by-word)
+                ("<tab>" . 'copilot-accept-completion-by-word)))
+
+#+end_src
+** GPTEL 
+#+begin_src emacs-lisp :tangle no 
+  (use-package gptel
+    :custom
+    (gptel-model "gpt-3.5-turbo")
+    (gptel-default-mode 'org-mode)
+    (gptel-prompt-prefix-alist
+     '((markdown-mode . "# ")
+       (org-mode . "* ")
+       (text-mode . "# ")))
+    :config
+    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
+
+#+end_src
+
+* TODO Programming
+** TODO Corfu
+#+begin_src emacs-lisp :tangle no 
   (use-package corfu
     ;; Optional customizations
     :custom
@@ -868,50 +965,24 @@ For extending Emacs functionality
     :mode "\\.hs\\'")
 
 #+end_src
-** Copilot 
-#+begin_src emacs-lisp 
-  (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-    :init (setq copilot-indent-offset-warning-disable t)
-    :bind (:map copilot-completion-map
-  	      ("M-<tab>" . 'copilot-accept-completion)
-  	      ("M-TAB" . 'copilot-accept-completion)
-  	      ("TAB" . 'copilot-accept-completion-by-word)
-  	      ("<tab>" . 'copilot-accept-completion-by-word)))
-
-#+end_src
 ** TODO Cape
-** GPTEL 
-#+begin_src emacs-lisp
-  (use-package gptel
-    :custom
-    (gptel-model "gpt-3.5-turbo")
-    (gptel-default-mode 'org-mode)
-    (gptel-prompt-prefix-alist
-     '((markdown-mode . "# ")
-       (org-mode . "* ")
-       (text-mode . "# ")))
-    :config
-    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
 
-#+end_src
-* PDFs
-#+begin_src emacs-lisp 
+* TODO PDFs
+#+begin_src emacs-lisp :tangle no 
   (use-package pdf-tools
     :config
     (pdf-tools-install)
-    
+
     ;; enable midnight mode for dark theme
     (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
-    
+
     ;; disable blinking
     (add-hook 'pdf-view-mode-hook (lambda ()
-  				  (set (make-local-variable 'blink-cursor-mode) nil)))
+                                    (set (make-local-variable 'blink-cursor-mode) nil)))
 
     ;; unbind q key
     ;; (define-key pdf-view-mode-map (kbd "q") nil)
-    
+
     (setq-default pdf-view-display-size 'fit-page)
     (setq pdf-annot-activate-created-annotations t)
     :bind
@@ -919,66 +990,27 @@ For extending Emacs functionality
     (pdf-view-resize-factor 1.0))
 #+end_src
 
-* Themes
-#+begin_src emacs-lisp 
-  ;; themes at the end
-  (if (display-graphic-p)
-      (progn
-        (use-package telephone-line
-  	:init
-  	(setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-  	      telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-  	      telephone-line-primary-right-separator 'telephone-line-cubed-right
-  	      telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
-  	(setq telephone-line-height 24
-  	      telephone-line-evil-use-short-tag t)
-  	(telephone-line-mode t))
 
-        ;; Some icons and theme
-        (use-package ef-themes)
-        (use-package modus-themes)
-        (use-package all-the-icons)
-        ))
-#+end_src
-** Dealing with Parentheses
-#+begin_src emacs-lisp
-  (use-package rainbow-delimiters
-    :hook (prog-mode . rainbow-delimiters-mode))
-
-  (use-package smartparens
-    :straight t
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode 1))
-
-  (use-package highlight-parentheses
-    :config
-    (define-globalized-minor-mode global-highlight-parentheses-mode
-      highlight-parentheses-mode
-      (lambda () (highlight-parentheses-mode t)))
-    (global-highlight-parentheses-mode t))
-
-  (setq blink-matching-paren t)
-#+end_src
 * TODO Publish Website with notes
 #+begin_src emacs-lisp :tangle no
   (setq org-publish-project-alist
         `(("pages"
-  	 :base-directory "~/taingram.org/org/"
-  	 :base-extension "org"
-  	 :recursive t
-  	 :publishing-directory "~/taingram.or/html/"
-  	 :publishing-function org-html-publish-to-html)
+           :base-directory "~/taingram.org/org/"
+           :base-extension "org"
+           :recursive t
+           :publishing-directory "~/taingram.or/html/"
+           :publishing-function org-html-publish-to-html)
 
-  	("static"
-  	 :base-directory "~/taingram.org/org/"
-  	 :base-extension "css\\|txt\\|jpg\\|gif\\|png"
-  	 :recursive t
-  	 :publishing-directory  "~/taingram.org/html/"
-  	 :publishing-function org-publish-attachment)
+          ("static"
+           :base-directory "~/taingram.org/org/"
+           :base-extension "css\\|txt\\|jpg\\|gif\\|png"
+           :recursive t
+           :publishing-directory  "~/taingram.org/html/"
+           :publishing-function org-publish-attachment)
 
-  	("taingram.org" :components ("pages" "static"))))
+          ("taingram.org" :components ("pages" "static"))))
 #+end_src
+
 
 * TODO Web Browsing
 #+begin_src emacs-lisp :tangle no
@@ -986,6 +1018,7 @@ For extending Emacs functionality
     :ensure nil ; Ensure nil because xwidget is not a installable package
     :bind ("C-c w" . xwidget-webkit-browse-url))
 #+end_src
+
 
 * Scratch Area
 #+begin_src emacs-lisp :tangle no
@@ -1011,19 +1044,19 @@ For extending Emacs functionality
 
 #+begin_src emacs-lisp :tangle no
   (gptel-make-ollama "Ollama"             ;Any name of your choosing
-    :host "localhost:11434"               ;Where it's running
-    :stream t                             ;Stream responses
-    :models '("mistral:latest"))          ;List of models
+                     :host "localhost:11434"               ;Where it's running
+                     :stream t                             ;Stream responses
+                     :models '("mistral:latest"))          ;List of models
   ;; OPTIONAL configuration
   (setq-default
    gptel-model "llama2"
    gptel-backend (gptel-make-ollama "Ollama"
-                   :host "127.0.0.1:11434"
-                   :stream t
-                   :models '("mistral:latest")))
+                                    :host "127.0.0.1:11434"
+                                    :stream t
+                                    :models '("mistral:latest")))
 #+end_src
 
-#+begin_src emacs-lisp :tangle no :tangle no
+#+begin_src emacs-lisp :tangle no
   (defun get-buffer-path ()
     "Get the path of the current buffer and copy it to the clipboard"
     (interactive)
@@ -1034,7 +1067,7 @@ For extending Emacs functionality
     )  
 #+end_src
 
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp  :tangle no 
   (defun my-org-get-sanitized-file-name (heading-text)
     "Return a sanitized, title-cased file name from HEADING-TEXT."
     (let* ((title-case-heading (s-titleize heading-text))
@@ -1083,7 +1116,7 @@ For extending Emacs functionality
   (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading)
 #+end_src
 
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp :tangle no 
   (use-package s)
   (defun my-org-open-at-point-same-window (orig-fun &rest args)
     "Advise `org-open-at-point' to open links in the same window."
@@ -1093,7 +1126,7 @@ For extending Emacs functionality
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp 
+#+BEGIN_SRC emacs-lisp :tangle no 
   (use-package lorem-ipsum
     :ensure t
     :config
