@@ -1,7 +1,7 @@
 #+Title: Emac's Setup
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
-#+TODO: TODO 
+#+SEQ_TODO: TODO 
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
@@ -157,23 +157,155 @@ Using Straight.el for package management.
 #+end_src
 
 
+* Interacting with Emacs
+** Evil-Mode
+Evil mode for keybinding and most of efficiency goodness
+#+begin_src emacs-lisp 
+  (use-package evil
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-d-scroll t)
+    (setq evil-want-C-i-jump nil)
+    ;; (setq evil-undo-system 'undo-tree)
+    (setq evil-insert-state-cursor '(bar))
+    (setq evil-normal-state-cursor '(box))
+    ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
+    ;;(setq evil-emacs-state-modes nil)
+    :config
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+    ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
+    ;;(evil-set-initial-state 'dashboard-mode 'normal)
+    (evil-mode 1))
+#+end_src
+
+** TODO Evil Bindings 
+#+begin_src emacs-lisp 
+  (use-package evil-collection
+    ;; :custom (evil-collection-setup-minibuffer t)
+    :after evil
+    :config
+    (evil-collection-init)
+    (with-eval-after-load 'org-agenda
+      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
+      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+
+  (use-package evil-nerd-commenter
+    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
+
+  (use-package evil-surround
+    :after evil
+    :config
+    (global-evil-surround-mode 1))
+
+  (use-package evil-snipe
+    :init (evil-snipe-mode 1))
+
+  (use-package evil-matchit
+    :after evil
+    :init
+    (setq evilmi-shortcut "M-m")
+    (global-evil-matchit-mode 1))
+
+  (use-package evil-lion
+    :after evil
+    :config
+    (evil-lion-mode))
+
+  (use-package evil-numbers
+    :after evil)
+
+  (use-package vimish-fold
+    :after evil)
+
+  (use-package evil-vimish-fold
+    :after vimish-fold
+    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
+#+end_src
+
+** Customize Keyboard Shortcuts
+#+begin_src emacs-lisp 
+  ;; Customize your keyboard shortcuts
+  ;; (use-package hydra)
+  ;; (defhydra hydra-text-scale (:timeout 4)
+  ;;           "scale text"
+  ;;           ("j" text-scale-increase "in")
+  ;;           ("k" text-scale-decrease "out")
+  ;;           ("f" nil "finished" :exit t))
+
+  (global-set-key
+   (kbd "C-x o")
+   (lambda () (interactive)
+     (switch-to-buffer
+      (other-buffer (current-buffer) 1))))
+
+  (use-package general
+    :config
+    (general-create-definer rune/leader-keys
+      :keymaps '(normal insert visual emacs)
+      :prefix "SPC"
+      :global-prefix "C-SPC")
+    (rune/leader-keys
+      "t"  '(:ignore t :which-key "Toggles")
+      "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
+      "gp" '(gptel                                                            :which-key "GPT-4")
+      "gP" '(gptel-send                                                       :which-key "Send to GPT")
+      "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
+      "xv" '(my-project-vterm :which-key "Vterm") 
+      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
+      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
+      "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
+      "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
+      "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
+      "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
+      ))
+
+  (defun beginning-of-file-and-line ()
+    (interactive)
+    (goto-char (point-min))
+    (beginning-of-line))
+
+  (defun end-of-file-and-line ()
+    (interactive)
+    (goto-char (point-max))
+    (end-of-line))
+
+  (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
+  (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
+
+  ;; (define-key evil-normal-state-map (kbd "o")
+  ;;             (lambda ()
+  ;;               (interactive)
+  ;;               (end-of-line) ; Move to the end of the line
+  ;;               (org-open-line 1))) ; Open a line below
+
+  ;; (define-key evil-normal-state-map (kbd "O")
+  ;;             (lambda ()
+  ;;               (interactive)
+  ;;               (beginning-of-line)
+  ;;               (org-open-line 1)))
+
+#+end_src
+
+
 * Org Mode Setup
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
 ** Org-Mode 
 #+begin_src emacs-lisp 
   (use-package org 
     :config
-    ;; Define custom SEQ_TODO keywords
     (setq org-todo-keywords
           '((sequence "TDOD" "|" "DONE")))
-          ;; '((sequence "CLARIFY(c)" "ORGANIZE(o)" "ENGAGE(e)" "REFLECT(r)")))
-    ;; Specify your org files directory and agenda files
     (setq org-directory "~/org")
     (setq org-agenda-files (list org-directory))
-    ;; Setup for org-capture
     (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
-    (setq org-capture-templates
-          '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
+    '((setq org-capture-templates
+            ;; other capture templates
+            ("s" "Slipbox" entry  (file "braindump/org/inbox.org")
+             "* %?\n")
+            ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
              "* TODO %?\n ")))
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
@@ -207,52 +339,91 @@ Org and Org-roam will help you network your thoughts and reflect your understand
         (message "Tangling new .zsh")
         (org-babel-tangle))))
 
-
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+** Citar and Zotero
+#+begin_src emacs-lisp 
+  (use-package citar
+    :custom
+    (citar-notes-paths '("~/org/notes/"))
+    (citar-bibliography '("~/bibliography.bib"))
+    (citar-indicators
+     (list ;citar-indicator-files ; plain text
+           citar-indicator-notes-icons)) ; icon)
+    )
 #+end_src
 
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
+
+  ;; (cl-defmethod org-roam-node-type ((node org-roam-node))
+  ;;   "Return the TYPE of NODE."
+  ;;   (condition-case nil
+  ;;       (file-name-nondirectory
+  ;;        (directory-file-name
+  ;;         (file-name-directory
+  ;;          (file-relative-name (org-roam-node-file node) org-roam-directory))))
+  ;;     (error "")))
+
   (use-package org-roam
     :custom
     (org-roam-directory (file-truename "~/org/roam"))
     (org-roam-completion-everywhere t)
     (org-roam-capture-templates
-     '(("n" "default" plain
-        "%?\n* SEED References\n"
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     '(("m" "main" plain
+        "%?"
+        :if-new (file+head "main/${slug}.org"
+                           "#+title: ${title}\n")
+        :immediate-finish t
         :unnarrowed t)
-       ("l" "programming language" plain
-        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+       ("r" "reference" plain "%?"
+        :if-new
+        (file+head "reference/${title}.org" "#+title: ${title}\n")
+        :immediate-finish t
         :unnarrowed t)
-       ("s" "Seed" plain
-        (file "~/org/roam/Templates/SeedTemplate.org")
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-        :unnarrowed t)
-       ("b" "book notes" plain
-        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-        :unnarrowed t)
-       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+       ("a" "article" plain "%?"
+        :if-new
+        (file+head "articles/${title}.org" "#+title: ${title}\n#+filetags: :article:\n")
+        :immediate-finish t
         :unnarrowed t)))
-      :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert)
-         :map org-mode-map
-         ("C-M-i" . completion-at-point))
-      :config
-      (org-roam-setup))
-
-  (defun my/org-roam-node-insert-and-newline ()
-    "Insert an Org-roam node and add a newline after it."
-    (interactive)
-    (org-roam-node-insert)
-    ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-    (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-  (with-eval-after-load 'org-roam
-    (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+    ;; (org-roam-node-display-template
+    ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    ;; (org-roam-capture-templates
+    ;;     '(("n" "default" plain
+    ;;        "%?\n* SEED References\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("l" "programming language" plain
+    ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("s" "Seed" plain
+    ;;        (file "~/org/roam/Templates/SeedTemplate.org")
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("b" "book notes" plain
+    ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
+    ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+    ;;        :unnarrowed t)))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup))
+  ;; (defun my/org-roam-node-insert-and-newline ()
+  ;;   "Insert an Org-roam node and add a newline after it."
+  ;;   (interactive)
+  ;;   (org-roam-node-insert)
+  ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
+  ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
+  ;; (with-eval-after-load 'org-roam
+  ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
 
   (use-package org-roam-ui
     :after org-roam
@@ -263,35 +434,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           org-roam-ui-update-on-save t
           org-roam-ui-open-on-start t))
 #+end_src
-** TODO References with Zotero
-#+begin_src emacs-lisp :tangle no
-  (use-package org-ref
-    :ensure t
-    :config
-    ;; Path to your .bib file exported from Zotero
-    (setq org-ref-default-bibliography '("~/bibliography.bib")
-          ;; Directory where ZotFile stores your PDFs in Google Drive, synced locally
-          org-ref-pdf-directory "/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources"
-          org-ref-bibliography-notes "/path/to/your/org/notes/bibnotes.org"))
-  (use-package citar
-    :ensure t
-    :config
-    (setq citar-bibliography '("~/bibliography.bib")
-          citar-library-paths '("/Users/monibahmed/Library/CloudStorage/GoogleDrive-compasserror@gmail.com/My Drive/Resources")
-          citar-notes-paths '("~/org/roam"))
-    ;; Optional: Configure citar to open PDFs with Emacs or another viewer
-    ;; (setq citar-file-open-function #'your-preferred-open-function)
-    )
-
-  (use-package org-roam-bibtex
-    :after org-roam
-    :ensure t
-    :config
-    (require 'citar) ; Ensure citar is loaded for compatibility
-    (org-roam-bibtex-mode)
-    (setq orb-roam-ref-format 'citar))
-#+end_src
-
 ** TODO Literate Programming
 #+BEGIN_SRC emacs-lisp :tangle no
   (setq org-plantuml-jar-path "~/plantuml.jar")
@@ -331,7 +473,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
        )))
 #+end_src
 
-
 ** TODO Latex and Markup Support
 #+begin_src emacs-lisp :tangle no
   (use-package markdown-mode)
@@ -345,153 +486,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   ;; Set the path to the PlantUML jar file
 #+END_SRC
 
-
-* Interacting with Emacs
-** Evil-Mode
-Evil mode for keybinding and most of efficiency goodness
-#+begin_src emacs-lisp 
-  (use-package evil
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-d-scroll t)
-    (setq evil-want-C-i-jump nil)
-    ;; (setq evil-undo-system 'undo-tree)
-    (setq evil-insert-state-cursor '(bar))
-    (setq evil-normal-state-cursor '(box))
-    ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
-    ;;(setq evil-emacs-state-modes nil)
-    :config
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-    ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
-    ;;(evil-set-initial-state 'dashboard-mode 'normal)
-    (evil-mode 1))
-#+end_src
-
-** Evil Bindings 
-#+begin_src emacs-lisp 
-  (use-package evil-collection
-    ;; :custom (evil-collection-setup-minibuffer t)
-    :after evil
-    :config
-    (evil-collection-init)
-    (with-eval-after-load 'org-agenda
-      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
-      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
-
-  (use-package evil-org
-    :ensure t
-    :after org
-    :hook (org-mode . (lambda () evil-org-mode))
-    :config
-    (require 'evil-org-agenda)
-    (evil-org-agenda-set-keys))
-
-  (use-package evil-nerd-commenter
-    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
-
-  (use-package evil-surround
-    :after evil
-    :config
-    (global-evil-surround-mode 1))
-
-  (use-package evil-snipe
-    :init (evil-snipe-mode 1))
-
-  (use-package evil-matchit
-    :after evil
-    :init
-    (setq evilmi-shortcut "M-m")
-    (global-evil-matchit-mode 1))
-
-  (use-package evil-lion
-    :after evil
-    :config
-    (evil-lion-mode))
-
-  (use-package evil-numbers
-    :after evil)
-
-  (use-package vimish-fold
-    :after evil)
-
-  (use-package evil-vimish-fold
-    :after vimish-fold
-    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
-
-  (defun ta/enter-insert-state-hook ()
-    (hl-line-mode -1)
-    ;;(set-cursor-color "#ff4c4c")
-    )
-  (add-hook 'evil-insert-state-entry-hook 'ta/enter-insert-state-hook)
-  (add-hook 'evil-replace-state-entry-hook 'ta/enter-insert-state-hook)
-#+end_src
-
-** Customize Keyboard Shortcuts
-#+begin_src emacs-lisp 
-  ;; Customize your keyboard shortcuts
-  (use-package hydra)
-  (defhydra hydra-text-scale (:timeout 4)
-            "scale text"
-            ("j" text-scale-increase "in")
-            ("k" text-scale-decrease "out")
-            ("f" nil "finished" :exit t))
-
-  (global-set-key
-   (kbd "C-x o")
-   (lambda () (interactive)
-     (switch-to-buffer
-      (other-buffer (current-buffer) 1))))
-
-  (use-package general
-    :config
-    (general-create-definer rune/leader-keys
-                            :keymaps '(normal insert visual emacs)
-                            :prefix "SPC"
-                            :global-prefix "C-SPC")
-    (rune/leader-keys
-     "t"  '(:ignore t :which-key "Toggles")
-     "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
-     "gp" '(gptel                                                            :which-key "GPT-4")
-     "gP" '(gptel-send                                                       :which-key "Send to GPT")
-     "ts" '(hydra-text-scale/body                                            :which-key "Scale Text")
-     "xv" '(my-project-vterm :which-key "Vterm") 
-     "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
-     "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
-     "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
-     "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
-     "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
-     "yv" '(lambda() (interactive) yas-snippet-visit-file  :which-key "Visit Yasnippet File")
-     ))
-
-  (defun beginning-of-file-and-line ()
-    (interactive)
-    (goto-char (point-min))
-    (beginning-of-line))
-
-  (defun end-of-file-and-line ()
-    (interactive)
-    (goto-char (point-max))
-    (end-of-line))
-
-  (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
-  (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
-
-  ;; (define-key evil-normal-state-map (kbd "o")
-  ;;             (lambda ()
-  ;;               (interactive)
-  ;;               (end-of-line) ; Move to the end of the line
-  ;;               (org-open-line 1))) ; Open a line below
-
-  ;; (define-key evil-normal-state-map (kbd "O")
-  ;;             (lambda ()
-  ;;               (interactive)
-  ;;               (beginning-of-line)
-  ;;               (org-open-line 1)))
-
-#+end_src
 
 
 * Useful packages
@@ -595,7 +589,7 @@ For extending Emacs functionality
            ("C-c m"             . consult-man)
            ("C-c i"             . consult-info)
            ([remap Info-search] . consult-info)
-                                                               ;; C-x bindings in `ctl-x-map'
+           ;; C-x bindings in `ctl-x-map'
            ("C-x M-:"           . consult-complex-command)     ;; orig    . repeat-complex-command
            ("C-x b"             . consult-buffer)              ;; orig  . switch-to-buffer
            ("C-x 4 b"           . consult-buffer-other-window) ;; orig    . switch-to-buffer-other-window
@@ -603,13 +597,13 @@ For extending Emacs functionality
            ("C-x t b"           . consult-buffer-other-tab)    ;; orig    . switch-to-buffer-other-tab
            ("C-x r b"           . consult-bookmark)            ;; orig    . bookmark-jump
            ("C-x p b"           . consult-project-buffer)      ;; orig    . project-switch-to-buffer
-                                                               ;; Custom M-# bindings for fast register access
+           ;; Custom M-# bindings for fast register access
            ("M-#"               . consult-register-load)
            ("M-'"               . consult-register-store)      ;; orig. abbrev-prefix-mark (unrelated)
            ("C-M-#"             . consult-register)
-                                                               ;; Other custom bindings
+           ;; Other custom bindings
            ("M-y"               . consult-yank-pop)            ;; orig. yank-pop
-                                                               ;; M-g bindings in `goto-map'
+           ;; M-g bindings in `goto-map'
            ("M-g e"             . consult-compile-error)
            ("M-g f"             . consult-flymake)             ;; Alternative: consult-flycheck
            ("M-g g"             . consult-goto-line)           ;; orig  . goto-line
@@ -619,7 +613,7 @@ For extending Emacs functionality
            ("M-g k"             . consult-global-mark)
            ("M-g i"             . consult-imenu)
            ("M-g I"             . consult-imenu-multi)
-                                                               ;; M-s bindings in `search-map'
+           ;; M-s bindings in `search-map'
            ("M-s d"             . consult-find)                ;; Alternative: consult-fd
            ("M-s c"             . consult-locate)
            ("M-s g"             . consult-grep)
@@ -629,14 +623,14 @@ For extending Emacs functionality
            ("M-s L"             . consult-line-multi)
            ("M-s k"             . consult-keep-lines)
            ("M-s u"             . consult-focus-lines)
-                                                               ;; Isearch integration
+           ;; Isearch integration
            ("M-s e"             . consult-isearch-history)
            :map isearch-mode-map
            ("M-e"               . consult-isearch-history)     ;; orig. isearch-edit-string
            ("M-s e"             . consult-isearch-history)     ;; orig  . isearch-edit-string
            ("M-s l"             . consult-line)                ;; needed by consult-line to detect isearch
            ("M-s L"             . consult-line-multi)          ;; needed by consult-line to detect isearch
-                                                               ;; Minibuffer history
+           ;; Minibuffer history
            :map minibuffer-local-map
            ("M-s"               . consult-history)             ;; orig. next-matching-history-element
            ("M-r"               . consult-history))            ;; orig. previous-matching-history-element
@@ -782,7 +776,24 @@ For extending Emacs functionality
 #+end_src
 
 
-* TODO Buffer Management
+* Open and Annotate PDFs
+#+begin_src emacs-lisp 
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+    (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
+    (add-hook 'pdf-view-mode-hook
+              (lambda ()
+                (set (make-local-variable 'blink-cursor-mode) nil)))
+    (setq-default pdf-view-display-size 'fit-page)
+    (setq pdf-annot-activate-created-annotations t)
+    :bind
+    :custom
+    (pdf-view-resize-factor 1.0))
+#+end_src
+
+
+* Buffer Management
 ** Ibuffer
 #+begin_src emacs-lisp 
   (use-package ibuffer
@@ -831,7 +842,7 @@ For extending Emacs functionality
 
 
 * TODO Shell Support
-#+begin_src emacs-lisp :tangle no 
+#+begin_src emacs-lisp 
 
   (if (not (eq system-type 'windows-nt))
       (progn
@@ -863,6 +874,8 @@ For extending Emacs functionality
         ))
 
 #+end_src
+
+
 * AI Integration 
 ** Copilot 
 #+begin_src emacs-lisp  :tangle no 
@@ -891,6 +904,7 @@ For extending Emacs functionality
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
 
 #+end_src
+
 
 * TODO Programming
 ** TODO Corfu
@@ -966,29 +980,6 @@ For extending Emacs functionality
 
 #+end_src
 ** TODO Cape
-
-* TODO PDFs
-#+begin_src emacs-lisp :tangle no 
-  (use-package pdf-tools
-    :config
-    (pdf-tools-install)
-
-    ;; enable midnight mode for dark theme
-    (add-hook 'pdf-view-mode-hook 'pdf-view-midnight-minor-mode)
-
-    ;; disable blinking
-    (add-hook 'pdf-view-mode-hook (lambda ()
-                                    (set (make-local-variable 'blink-cursor-mode) nil)))
-
-    ;; unbind q key
-    ;; (define-key pdf-view-mode-map (kbd "q") nil)
-
-    (setq-default pdf-view-display-size 'fit-page)
-    (setq pdf-annot-activate-created-annotations t)
-    :bind
-    :custom
-    (pdf-view-resize-factor 1.0))
-#+end_src
 
 
 * TODO Publish Website with notes
@@ -1132,3 +1123,7 @@ For extending Emacs functionality
     :config
     (lorem-ipsum-use-default-bindings))
 #+END_SRC
+
+
+* References
+[cite:@HowTakeNotes]
