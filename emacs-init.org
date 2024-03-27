@@ -107,16 +107,16 @@ Evil mode for keybinding and most of efficiency goodness
     (evil-mode 1))
 #+end_src
 
-** TODO Evil Bindings 
+** Evil Bindings 
 #+begin_src emacs-lisp 
-    (use-package evil-collection
-      ;; :custom (evil-collection-setup-minibuffer t)
-      :after evil
-      :config
-      (evil-collection-init)
-      (with-eval-after-load 'org-agenda
-        (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
-        (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+  (use-package evil-collection
+    ;; :custom (evil-collection-setup-minibuffer t)
+    :after evil
+    :config
+    (evil-collection-init)
+    (with-eval-after-load 'org-agenda
+      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
+      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
 
   (use-package evil-org
     :ensure t
@@ -126,37 +126,37 @@ Evil mode for keybinding and most of efficiency goodness
     (require 'evil-org-agenda)
     (evil-org-agenda-set-keys))
 
-    (use-package evil-nerd-commenter
-      :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
+  (use-package evil-nerd-commenter
+    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
 
-    (use-package evil-surround
-      :after evil
-      :config
-      (global-evil-surround-mode 1))
+  (use-package evil-surround
+    :after evil
+    :config
+    (global-evil-surround-mode 1))
 
-    (use-package evil-snipe
-      :init (evil-snipe-mode 1))
+  (use-package evil-snipe
+    :init (evil-snipe-mode 1))
 
-    (use-package evil-matchit
-      :after evil
-      :init
-      (setq evilmi-shortcut "M-m")
-      (global-evil-matchit-mode 1))
+  (use-package evil-matchit
+    :after evil
+    :init
+    (setq evilmi-shortcut "M-m")
+    (global-evil-matchit-mode 1))
 
-    (use-package evil-lion
-      :after evil
-      :config
-      (evil-lion-mode))
+  (use-package evil-lion
+    :after evil
+    :config
+    (evil-lion-mode))
 
-    (use-package evil-numbers
-      :after evil)
+  (use-package evil-numbers
+    :after evil)
 
-    (use-package vimish-fold
-      :after evil)
+  (use-package vimish-fold
+    :after evil)
 
-    (use-package evil-vimish-fold
-      :after vimish-fold
-      :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
+  (use-package evil-vimish-fold
+    :after vimish-fold
+    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
 #+end_src
 
 ** Customize Keyboard Shortcuts
@@ -284,94 +284,121 @@ Org and Org-roam will help you network your thoughts and reflect your understand
         org-cite-activate-processor 'citar)
 
   (use-package citar
-     :custom
-     (citar-notes-paths '("~/org/notes/"))
-     (citar-bibliography '("~/bibliography.bib"))
-     (citar-bibliography org-cite-global-bibliography)
-     (citar-indicators
-      (list ;citar-indicator-files ; plain text
-       citar-indicator-notes-icons))) 
+    :custom
+    (citar-notes-paths '("~/org/roam/reference/"))
+    (citar-bibliography '("~/bibliography.bib"))
+    (citar-bibliography org-cite-global-bibliography)
+    (citar-indicators
+     (list ;citar-indicator-files ; plain text
+      citar-indicator-notes-icons))) 
 #+end_src
 
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
+   (use-package org-roam
+     :custom
+     (org-roam-directory (file-truename "~/org/roam"))
+     (org-roam-completion-everywhere t)
+     (org-roam-capture-templates
+      '(("d" "default" plain
+         "%?"
+         :target
+         (file+head
+          "%<%Y%m%d%H%M%S>-${slug}.org"
+          "#+title: ${note-title}\n")
+         :unnarrowed t)
+        ("r" "reference note" plain
+         "%?"
+         :target
+         (file+head
+          "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
+          "#+title: ${note-title}\n#+created: %U\n#+last_modified: %U\n\n")
+         :unnarrowed t)))
+  ;; (org-roam-capture-templates
+  ;;     '(("m" "main" plain
+  ;;        "%?"
+  ;;        :if-new (file+head "main/${slug}.org"
+  ;;                           "#+TITLE: ${title}\n")
+  ;;        :immediate-finish t
+  ;;        :unnarrowed t)
+  ;;       ("r" "reference" plain "%?"
+  ;;        :if-new
+  ;;        (file+head "reference/${note-title}.org" "#+TITLE: Reference: ${title}\n")
+  ;;        :immediate-finish t
+  ;;        :unnarrowed t)
+  ;;       ("p" "project" plain "%?"
+  ;;        :if-new
+  ;;        (file+head "project/${slug}.org" "#+TITLE: ${title}\n#+filetags: :project:\n")
+  ;;        :immediate-finish t
+  ;;        :unnarrowed t)
+     ;; (org-roam-node-display-template
+     ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+     ;; (org-roam-capture-templates
+     ;;     '(("n" "default" plain
+     ;;        "%?\n* SEED References\n"
+     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     ;;        :unnarrowed t)
+     ;;       ("l" "programming language" plain
+     ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     ;;        :unnarrowed t)
+     ;;       ("s" "Seed" plain
+     ;;        (file "~/org/roam/Templates/SeedTemplate.org")
+     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     ;;        :unnarrowed t)
+     ;;       ("b" "book notes" plain
+     ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
+     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
+     ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+     ;;        :unnarrowed t)))
 
-  ;; (cl-defmethod org-roam-node-type ((node org-roam-node))
-  ;;   "Return the TYPE of NODE."
-  ;;   (condition-case nil
-  ;;       (file-name-nondirectory
-  ;;        (directory-file-name
-  ;;         (file-name-directory
-  ;;          (file-relative-name (org-roam-node-file node) org-roam-directory))))
-  ;;     (error "")))
+     :bind (("C-c n l" . org-roam-buffer-toggle)
+            ("C-c n f" . org-roam-node-find)
+            ("C-c n i" . org-roam-node-insert)
+            :map org-mode-map
+            ("C-M-i" . completion-at-point))
+     :config
+     (org-roam-setup))
+   ;; (defun my/org-roam-node-insert-and-newline ()
+   ;;   "Insert an Org-roam node and add a newline after it."
+   ;;   (interactive)
+   ;;   (org-roam-node-insert)
+   ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
+   ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
+   ;; (with-eval-after-load 'org-roam
+   ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
 
-  (use-package org-roam
-    :custom
-    (org-roam-directory (file-truename "~/org/roam"))
-    (org-roam-completion-everywhere t)
-    (org-roam-capture-templates
-     '(("m" "main" plain
-        "%?"
-        :if-new (file+head "main/${slug}.org"
-                           "#+title: ${title}\n")
-        :immediate-finish t
-        :unnarrowed t)
-       ("r" "reference" plain "%?"
-        :if-new
-        (file+head "reference/${title}.org" "#+title: ${title}\n")
-        :immediate-finish t
-        :unnarrowed t)
-       ("a" "article" plain "%?"
-        :if-new
-        (file+head "articles/${title}.org" "#+title: ${title}\n#+filetags: :article:\n")
-        :immediate-finish t
-        :unnarrowed t)))
-    ;; (org-roam-node-display-template
-    ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-    ;; (org-roam-capture-templates
-    ;;     '(("n" "default" plain
-    ;;        "%?\n* SEED References\n"
-    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-    ;;        :unnarrowed t)
-    ;;       ("l" "programming language" plain
-    ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
-    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-    ;;        :unnarrowed t)
-    ;;       ("s" "Seed" plain
-    ;;        (file "~/org/roam/Templates/SeedTemplate.org")
-    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-    ;;        :unnarrowed t)
-    ;;       ("b" "book notes" plain
-    ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
-    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-    ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
-    ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
-    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
-    ;;        :unnarrowed t)))
-    :bind (("C-c n l" . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n i" . org-roam-node-insert)
-           :map org-mode-map
-           ("C-M-i" . completion-at-point))
-    :config
-    (org-roam-setup))
-  ;; (defun my/org-roam-node-insert-and-newline ()
-  ;;   "Insert an Org-roam node and add a newline after it."
-  ;;   (interactive)
-  ;;   (org-roam-node-insert)
-  ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-  ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-  ;; (with-eval-after-load 'org-roam
-  ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+   (use-package citar-org-roam
+     :after (org citar org-roam)
+     :config
+     (setq citar-org-roam-note-title-template "${author} - ${title}")
+     (setq citar-org-roam-subdir "reference")
+     (setq citar-org-roam-capture-template-key "r")
+     (citar-org-roam-mode))
 
-  (use-package org-roam-ui
-    :after org-roam
-    ;; Assuming you want the UI available on Emacs startup
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
+   (use-package org-roam-ui
+     :after org-roam
+     ;; Assuming you want the UI available on Emacs startup
+     :config
+     (setq org-roam-ui-sync-theme t
+           org-roam-ui-follow t
+           org-roam-ui-update-on-save t
+           org-roam-ui-open-on-start t))
+
+   (with-eval-after-load 'org-roam
+     (cl-defmethod org-roam-node-type ((node org-roam-node))
+       "Return the TYPE of NODE."
+       (condition-case nil
+           (file-name-nondirectory
+            (directory-file-name
+             (file-name-directory
+              (file-relative-name (org-roam-node-file node) org-roam-directory))))
+         (error "")))
+     (setq org-roam-node-display-template
+           (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+
 #+end_src
 ** TODO Literate Programming
 #+BEGIN_SRC emacs-lisp 
@@ -480,41 +507,41 @@ For extending Emacs functionality
 #+end_src
 ** Make the Minibuffer easier to follow
 #+begin_src emacs-lisp 
-        ;; Completion frameworks and doing stuff
-        (use-package vertico
-          :bind (:map
-                 vertico-map
-                 ("C-j" . vertico-next)
-                 ("C-k" . vertico-previous)
-                 :map minibuffer-local-map
-                 ("M-h" . backward-kill-word))
-          :custom (vertico-cycle t)
-          :init (vertico-mode))
+  ;; Completion frameworks and doing stuff
+  (use-package vertico
+    :bind (:map
+           vertico-map
+           ("C-j" . vertico-next)
+           ("C-k" . vertico-previous)
+           :map minibuffer-local-map
+           ("M-h" . backward-kill-word))
+    :custom (vertico-cycle t)
+    :init (vertico-mode))
 
-      (use-package vertico-posframe
-        :after vertico
-        :custom
-        (vertico-posframe-parameters '((left-fringe . 8)
-                                       (right-fringe . 8)))
-        :config
-        (add-hook 'vertico-mode-hook #'vertico-posframe-mode)
-        (vertico-multiform-mode 1)
-        
-        ;; Configuring multiform for specific commands
-        (setq vertico-multiform-commands
-         '((consult-line
-            posframe
-            (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-            (vertico-posframe-border-width . 10)
-            (vertico-posframe-fallback-mode . vertico-buffer-mode))
-           (t posframe)))
-        )
+  (use-package vertico-posframe
+    :after vertico
+    :custom
+    (vertico-posframe-parameters '((left-fringe . 8)
+                                   (right-fringe . 8)))
+    :config
+    (add-hook 'vertico-mode-hook #'vertico-posframe-mode)
+    (vertico-multiform-mode 1)
+    
+    ;; Configuring multiform for specific commands
+    (setq vertico-multiform-commands
+          '((consult-line
+             posframe
+             (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
+             (vertico-posframe-border-width . 10)
+             (vertico-posframe-fallback-mode . vertico-buffer-mode))
+            (t posframe)))
+    )
 
-        (use-package marginalia
-          :bind (:map minibuffer-local-map
-                      ("M-A" . marginalia-cycle))
-          :init
-          (marginalia-mode))
+  (use-package marginalia
+    :bind (:map minibuffer-local-map
+                ("M-A" . marginalia-cycle))
+    :init
+    (marginalia-mode))
 
 #+end_src
 ** Consult
@@ -1037,6 +1064,23 @@ For extending Emacs functionality
 
 
 * Scratch Area
+#+begin_src emacs-lisp 
+
+
+  ;; (defun my/citar-org-roam-create-note (keys-entries)
+  ;;    "Create an Org-roam note for the selected reference from Citar."
+  ;;    (interactive (list (citar-select-refs :rebuild-cache t)))
+  ;;    (let* ((key (caar keys-entries))
+  ;;           (entry (cdar keys-entries))
+  ;;           (title (or (citar-get-value "title" entry) "No Title"))
+  ;;           (citekey (concat "@bibliography:" key)))
+  ;;      (org-roam-capture- :keys "r"
+  ;;                         :node (org-roam-node-create :title title)
+  ;;                         :info (list :citekey citekey)
+  ;;                         :props '(:finalize find-file)
+  ;; :templates        ;;  (setq citar-notes-functions #'my/citar-org-roam-create-note)
+#+end_src
+
 #+begin_src emacs-lisp :tangle no
   (use-package pdf-tools
     :config
