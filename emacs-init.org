@@ -226,6 +226,31 @@ Evil mode for keybinding and most of efficiency goodness
 
 * Org Mode Setup
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
+** Citar and Zotero
+#+begin_src emacs-lisp 
+   (use-package citar
+     :custom
+     (citar-indicators
+      (list citar-indicator-files ; plain text
+            citar-indicator-notes-icons)) ; icon
+     (org-cite-global-bibliography '("~/bibliography.bib"))
+     (org-cite-insert-processor   'citar)
+     (org-cite-follow-processor   'citar)
+     (org-cite-activate-processor 'citar)
+     (citar-bibliography org-cite-global-bibliography)
+     ;; optional: org-cite-insert is also bound to C-c C-x C-@
+     :bind
+     (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+     :hook
+     (LaTeX-mode . citar-capf-setup)
+     (org-mode . citar-capf-setup))
+
+  (use-package citar-embark
+    :after citar embark
+    :config (citar-embark-mode)) 
+
+#+end_src
+
 ** Org-Mode 
 #+begin_src emacs-lisp 
   (use-package org 
@@ -276,128 +301,111 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
 
-** Citar and Zotero
-#+begin_src emacs-lisp 
-  (setq org-cite-global-bibliography '("~/bibliography.bib")
-        org-cite-insert-processor 'citar
-        org-cite-follow-processor 'citar
-        org-cite-activate-processor 'citar)
-
-  (use-package citar
-    :custom
-    (citar-notes-paths '("~/org/roam/reference/"))
-    (citar-bibliography '("~/bibliography.bib"))
-    (citar-bibliography org-cite-global-bibliography)
-    (citar-indicators
-     (list ;citar-indicator-files ; plain text
-      citar-indicator-notes-icons))) 
-#+end_src
-
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
-   (use-package org-roam
-     :custom
-     (org-roam-directory (file-truename "~/org/roam"))
-     (org-roam-completion-everywhere t)
-     (org-roam-capture-templates
-      '(("d" "default" plain
-         "%?"
-         :target
-         (file+head
-          "%<%Y%m%d%H%M%S>-${slug}.org"
-          "#+title: ${note-title}\n")
-         :unnarrowed t)
-        ("r" "reference note" plain
-         "%?"
-         :target
-         (file+head
-          "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
-          "#+title: ${note-title}\n#+created: %U\n#+last_modified: %U\n\n")
-         :unnarrowed t)))
-  ;; (org-roam-capture-templates
-  ;;     '(("m" "main" plain
-  ;;        "%?"
-  ;;        :if-new (file+head "main/${slug}.org"
-  ;;                           "#+TITLE: ${title}\n")
-  ;;        :immediate-finish t
-  ;;        :unnarrowed t)
-  ;;       ("r" "reference" plain "%?"
-  ;;        :if-new
-  ;;        (file+head "reference/${note-title}.org" "#+TITLE: Reference: ${title}\n")
-  ;;        :immediate-finish t
-  ;;        :unnarrowed t)
-  ;;       ("p" "project" plain "%?"
-  ;;        :if-new
-  ;;        (file+head "project/${slug}.org" "#+TITLE: ${title}\n#+filetags: :project:\n")
-  ;;        :immediate-finish t
-  ;;        :unnarrowed t)
-     ;; (org-roam-node-display-template
-     ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-     ;; (org-roam-capture-templates
-     ;;     '(("n" "default" plain
-     ;;        "%?\n* SEED References\n"
-     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-     ;;        :unnarrowed t)
-     ;;       ("l" "programming language" plain
-     ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
-     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-     ;;        :unnarrowed t)
-     ;;       ("s" "Seed" plain
-     ;;        (file "~/org/roam/Templates/SeedTemplate.org")
-     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-     ;;        :unnarrowed t)
-     ;;       ("b" "book notes" plain
-     ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
-     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-     ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
-     ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
-     ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
-     ;;        :unnarrowed t)))
+  (use-package org-roam
+    :custom
+    (org-roam-directory (file-truename "~/org/roam"))
+    (org-roam-completion-everywhere t)
+    (org-roam-capture-templates
+     '(("d" "default" plain
+        "%?"
+        :target
+        (file+head
+         "%<%Y%m%d%H%M%S>-${slug}.org"
+         "#+title: ${note-title}\n")
+        :unnarrowed t)
+       ("r" "reference note" plain
+        "%?"
+        :target
+        (file+head
+         "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
+         "#+TITLE: ${note-title}\n\n* References\n[cite:@${citar-citekey}]")
+        :unnarrowed t)))
+    ;; (org-roam-capture-templates
+    ;;     '(("m" "main" plain
+    ;;        "%?"
+    ;;        :if-new (file+head "main/${slug}.org"
+    ;;                           "#+TITLE: ${title}\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;;       ("r" "reference" plain "%?"
+    ;;        :if-new
+    ;;        (file+head "reference/${note-title}.org" "#+TITLE: Reference: ${title}\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;;       ("p" "project" plain "%?"
+    ;;        :if-new
+    ;;        (file+head "project/${slug}.org" "#+TITLE: ${title}\n#+filetags: :project:\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;; (org-roam-node-display-template
+    ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    ;; (org-roam-capture-templates
+    ;;     '(("n" "default" plain
+    ;;        "%?\n* SEED References\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("l" "programming language" plain
+    ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("s" "Seed" plain
+    ;;        (file "~/org/roam/Templates/SeedTemplate.org")
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("b" "book notes" plain
+    ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
+    ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+    ;;        :unnarrowed t)))
 
-     :bind (("C-c n l" . org-roam-buffer-toggle)
-            ("C-c n f" . org-roam-node-find)
-            ("C-c n i" . org-roam-node-insert)
-            :map org-mode-map
-            ("C-M-i" . completion-at-point))
-     :config
-     (org-roam-setup))
-   ;; (defun my/org-roam-node-insert-and-newline ()
-   ;;   "Insert an Org-roam node and add a newline after it."
-   ;;   (interactive)
-   ;;   (org-roam-node-insert)
-   ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-   ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-   ;; (with-eval-after-load 'org-roam
-   ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup))
+  ;; (defun my/org-roam-node-insert-and-newline ()
+  ;;   "Insert an Org-roam node and add a newline after it."
+  ;;   (interactive)
+  ;;   (org-roam-node-insert)
+  ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
+  ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
+  ;; (with-eval-after-load 'org-roam
+  ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
 
-   (use-package citar-org-roam
-     :after (org citar org-roam)
-     :config
-     (setq citar-org-roam-note-title-template "${author} - ${title}")
-     (setq citar-org-roam-subdir "reference")
-     (setq citar-org-roam-capture-template-key "r")
-     (citar-org-roam-mode))
+  (use-package citar-org-roam
+    :after (org citar org-roam)
+    :config
+    (setq citar-org-roam-note-title-template "${author} - ${title}")
+    (setq citar-org-roam-subdir "reference")
+    (setq citar-org-roam-capture-template-key "r")
+    (citar-org-roam-mode))
 
-   (use-package org-roam-ui
-     :after org-roam
-     ;; Assuming you want the UI available on Emacs startup
-     :config
-     (setq org-roam-ui-sync-theme t
-           org-roam-ui-follow t
-           org-roam-ui-update-on-save t
-           org-roam-ui-open-on-start t))
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 
-   (with-eval-after-load 'org-roam
-     (cl-defmethod org-roam-node-type ((node org-roam-node))
-       "Return the TYPE of NODE."
-       (condition-case nil
-           (file-name-nondirectory
-            (directory-file-name
-             (file-name-directory
-              (file-relative-name (org-roam-node-file node) org-roam-directory))))
-         (error "")))
-     (setq org-roam-node-display-template
-           (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+  (with-eval-after-load 'org-roam
+    (cl-defmethod org-roam-node-type ((node org-roam-node))
+      "Return the TYPE of NODE."
+      (condition-case nil
+          (file-name-nondirectory
+           (directory-file-name
+            (file-name-directory
+             (file-relative-name (org-roam-node-file node) org-roam-directory))))
+        (error "")))
+    (setq org-roam-node-display-template
+          (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
 
 #+end_src
 ** TODO Literate Programming
@@ -882,7 +890,7 @@ For extending Emacs functionality
     (add-hook 'after-init-hook #'global-flycheck-mode))
 #+end_src
 ** TODO Corfu
-#+begin_src emacs-lisp :tangle no 
+#+begin_src emacs-lisp 
   (use-package corfu
     ;; Optional customizations
     :custom
