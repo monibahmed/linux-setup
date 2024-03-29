@@ -1,7 +1,6 @@
 #+Title: Emac's Setup
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
-#+SEQ_TODO: TODO 
 
 * Benchmarking Emacs Boot time
 Benchmark Emacs startup time
@@ -70,6 +69,12 @@ Using Straight.el for package management.
   (customize-set-variable 'horizontal-scroll-bar-mode nil)
   (setq browse-url-browser-function 'browse-url-default-browser)
   (defalias 'yes-or-no-p 'y-or-n-p)
+
+  ;; Check if the local-config.el file exists, and load it if it does
+  (let ((local-config "~/emacs-local-config.el"))
+    (when (file-exists-p local-config)
+      (load-file local-config)))
+
 #+end_src
 
 
@@ -182,19 +187,19 @@ Evil mode for keybinding and most of efficiency goodness
       :prefix "SPC"
       :global-prefix "C-SPC")
     (rune/leader-keys
-      "t"  '(:ignore t :which-key "Toggles")
-      "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
-      "gp" '(gptel                                                            :which-key "Gptel")
-      "gP" '(gptel-send                                                       :which-key "Gptel-Send")
-      "xv" '(my-project-vterm                                                 :which-key "Vterm") 
-      "gt" '(lambda() (interactive)(find-file "~/org/gtd.org")                :which-key "gtd.org")
-      "ok" '(lambda() (interactive)(find-file "~/org/okr.org")                :which-key "okr.org")
-      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
-      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
-      "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
-      "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
-      "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
-      "yv" '(lambda() (interactive) yas-snippet-visit-file                    :which-key "Visit Yasnippet File")
+      "t"  '(:ignore t                                                             :which-key "Toggles")
+      "gc" '(copilot-mode                                                          :which-key "Copilot Mode")
+      "gp" '(gptel                                                                 :which-key "Gptel")
+      "gP" '(gptel-send                                                            :which-key "Gptel-Send")
+      "xv" '(my-project-vterm                                                      :which-key "Vterm") 
+      "gt" '(lambda() (interactive)(find-file (concat google-drive "/org/gtd.org")):which-key "gtd.org")
+      "ok" '(lambda() (interactive)(find-file (concat google-drive "/org/okr.org")):which-key "okr.org")
+      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org")      :which-key "emacs-init.org")
+      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")        :which-key "zsh-init.org")
+      "yn" '(yas-new-snippet                                                       :which-key "New Yasnippet")
+      "yr" '(yas-reload-all                                                        :which-key "Yasnippet Reload")
+      "yt" '(yas-describe-tables                                                   :which-key "Yasnippet Describe")
+      "yv" '(lambda() (interactive) yas-snippet-visit-file                         :which-key "Visit Yasnippet File")
       ))
 
   (defun beginning-of-file-and-line ()
@@ -209,45 +214,31 @@ Evil mode for keybinding and most of efficiency goodness
 
   (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
   (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
-
-  ;; (define-key evil-normal-state-map (kbd "o")
-  ;;             (lambda ()
-  ;;               (interactive)
-  ;;               (end-of-line) ; Move to the end of the line
-  ;;               (org-open-line 1))) ; Open a line below
-
-  ;; (define-key evil-normal-state-map (kbd "O")
-  ;;             (lambda ()
-  ;;               (interactive)
-  ;;               (beginning-of-line)
-  ;;               (org-open-line 1)))
-
 #+end_src
-
 
 * Org Mode Setup
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
 ** Citar and Zotero
 #+begin_src emacs-lisp 
-  (use-package citar
-    :custom
-    (citar-indicators
-     (list citar-indicator-files ; plain text
-           citar-indicator-notes-icons)) ; icon
-    (org-cite-global-bibliography '("~/bibliography.bib"))
-    (org-cite-insert-processor   'citar)
-    (org-cite-follow-processor   'citar)
-    (org-cite-activate-processor 'citar)
-    (citar-bibliography org-cite-global-bibliography)
-    :bind
-    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
-    :hook
-    (LaTeX-mode . citar-capf-setup)
-    (org-mode . citar-capf-setup))
+    (use-package citar
+      :custom
+      (citar-indicators
+       (list citar-indicator-files ; plain text
+             citar-indicator-notes-icons)) ; icon
+      (org-cite-global-bibliography (list (concat google-drive "bibliography.bib")))
+      (org-cite-insert-processor   'citar)
+      (org-cite-follow-processor   'citar)
+      (org-cite-activate-processor 'citar)
+      (citar-bibliography org-cite-global-bibliography)
+      :bind
+      (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+      :hook
+      (LaTeX-mode . citar-capf-setup)
+      (org-mode . citar-capf-setup))
 
-  (use-package citar-embark
-    :after citar embark
-    :config (citar-embark-mode)) 
+    (use-package citar-embark
+      :after citar embark
+      :config (citar-embark-mode)) 
 
 #+end_src
 
@@ -257,14 +248,16 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     :config
     (setq org-todo-keywords
           '((sequence "TODO" "|" "DONE")))
-    (setq org-directory "~/org")
-    (setq emacs-directory "~/linux-setup")
-    (setq org-default-notes-file "~/org/gtd.org")
+    (setq org-capture-templates
+          `(("t" "Todo" entry (file+headline ,(concat google-drive "org/gtd.org") "Capture Tasks")
+             "* TODO %?\n")))
+    (setq org-directory (concat google-drive "/org"))
+    (setq org-default-notes-file (concat google-drive "/org/gtd.org"))
     (setq org-agenda-custom-commands
           '(("d" "Drafts" tags "DRAFT={TRUE}"
              ((org-agenda-overriding-header "Drafts")
               (org-agenda-prefix-format '((tags . "%-2t ")))))))
-    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+    (setq org-agenda-files (directory-files-recursively (concat google-drive "/org") "\\.org$"))
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
@@ -279,13 +272,13 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (defun update-org-agenda-files-recursively ()
     "Update `org-agenda-files` to include all .org files under ~/org directory."
     (interactive)
-    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$")))
+    (setq org-agenda-files (directory-files-recursively (concat google-drive "/org") "\\.org$")))
 
   (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
 
-  (use-package org-tidy
-    :hook
-    (org-mode . org-tidy-mode))
+  ;; (use-package org-tidy
+  ;;   :hook
+  ;;   (org-mode . org-tidy-mode))
 
   (use-package visual-fill-column
     :custom
@@ -317,7 +310,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+BEGIN_SRC emacs-lisp 
   (use-package org-roam
     :custom
-    (org-roam-directory (file-truename "~/org/roam"))
+    (org-roam-directory (file-truename (concat google-drive "/org/roam")))
     (org-roam-completion-everywhere t)
     (org-roam-capture-templates
      '(("d" "default" plain
@@ -328,42 +321,24 @@ Org and Org-roam will help you network your thoughts and reflect your understand
          "#+title: ${note-title}\n")
         :unnarrowed t)
        ("r" "reference note" plain
-        "%?"
-        :target
-        (file+head
-         "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
-         "#+TITLE: ${note-title}\n#+FILETAGS:\n\n* References\n[cite:@${citar-citekey}]")
+        (file "~/org/roam/templates/ReferenceNote.org") 
+        :if-new
+        (file+head "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
+                   "")
         :unnarrowed t)
-       ("b" "book notes" plain (file "~/org/BookNoteTemplate.org")
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-        :unnarrowed t)
-       ))
-    ;; :after-finalize #'my-add-reference-to-gtd)))
-    ;; ("r" "reference note" plain
-    ;;    "%?"
-    ;;    :target
-    ;;    (file+head
-    ;;     "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${slug}.org"
-    ;;     "#+FILETAGS: :reference:\n#+TITLE: ${title}\n\n* References\n[cite:@${citekey}]")
-    ;;    :unnarrowed t
-    ;;    :immediate-finish t)))
-    ;; :after-finalize #'my-add-reference-to-gtd)))
-
+       ("p" "project note" plain
+        (file "~/org/roam/templates/ProjectNote.org") 
+        :if-new
+        (file+head "%(expand-file-name \"${slug}.org\" \"~/org/roam/project/\")" 
+                   "") 
+        :unnarrowed t)))
     :bind (("C-c n l" . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n i" . org-roam-node-insert)
-           :map org-mode-map
-           ("C-M-i" . completion-at-point))
-    :config
-    (org-roam-setup))
-  ;; (defun my/org-roam-node-insert-and-newline ()
-  ;;   "Insert an Org-roam node and add a newline after it."
-  ;;   (interactive)
-  ;;   (org-roam-node-insert)
-  ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-  ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-  ;; (with-eval-after-load 'org-roam
-  ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+              ("C-c n f" . org-roam-node-find)
+              ("C-c n i" . org-roam-node-insert)
+              :map org-mode-map
+              ("C-M-i" . completion-at-point))
+       :config
+       (org-roam-setup))
 #+end_src
 
 ** Extra Org/Roam/Citar Packages
@@ -373,7 +348,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     :config
     (setq citar-org-roam-note-title-template "${author} - ${title}")
     (setq citar-org-roam-subdir "reference")
-    (setq citar-org-roam-capture-template-key "b")
+    (setq citar-org-roam-capture-template-key "r")
     (citar-org-roam-mode))
 
   (use-package org-ql)
@@ -401,8 +376,47 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 
 #+end_src
-** Org-Roam Project Tracking in GTD
-#+begin_src emacs-lisp 
+** Literate Programming
+#+BEGIN_SRC emacs-lisp 
+  (setq org-plantuml-jar-path "~/plantuml.jar")
+
+  (use-package plantuml-mode
+    :ensure t
+    :mode ("\\.puml\\'" . plantuml-mode)
+    :config
+    (setq plantuml-jar-path "~/plantuml.jar")
+    (setq plantuml-default-exec-mode 'jar))
+  ;; Automatically refresh inline images after execution
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  ;; Org Babel for code blocks
+  (use-package ob
+    :straight nil
+    :after (:all org)
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp :tangle no"))
+    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
+    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
+
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell      . t)
+       (emacs-lisp . t)
+       (plantuml   . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
+#+end_src
+
+** TODO Org-Roam Project Tracking in GTD
+#+begin_src emacs-lisp :tangle no
   (defun my-org-sanitize-heading (heading-text)
     "Sanitize HEADING-TEXT to be file-system friendly."
     (replace-regexp-in-string "[^[:alnum:]-]" "" (downcase heading-text)))
@@ -457,45 +471,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
   (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading-for-organize)
 #+end_src
-** Literate Programming
-#+BEGIN_SRC emacs-lisp 
-  (setq org-plantuml-jar-path "~/plantuml.jar")
-
-  (use-package plantuml-mode
-    :ensure t
-    :mode ("\\.puml\\'" . plantuml-mode)
-    :config
-    (setq plantuml-jar-path "~/plantuml.jar")
-    (setq plantuml-default-exec-mode 'jar))
-  ;; Automatically refresh inline images after execution
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-  ;; Org Babel for code blocks
-  (use-package ob
-    :straight nil
-    :after (:all org)
-    :init
-    (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp :tangle no"))
-    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
-    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
-    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
-    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
-    (setq org-confirm-babel-evaluate nil)
-    :config
-
-    ;; load more languages for org-babel
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((shell      . t)
-       (emacs-lisp . t)
-       (plantuml   . t)
-       (dot        . t)
-       (python     . t)
-       (haskell    . t)
-       (scheme     . t)
-       )))
-#+end_src
-
 ** TODO Latex and Markup Support
 #+begin_src emacs-lisp :tangle no
   (use-package markdown-mode)
@@ -957,78 +932,78 @@ For extending Emacs functionality
 #+end_src
 ** Corfu
 #+begin_src emacs-lisp 
-    (use-package corfu
-      ;; Optional customizations
-      :custom
-      (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-      (corfu-auto t)                 ;; Enable auto completion
-      (corfu-separator ?\s)          ;; Orderless field separator
-      ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-      ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-      ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-      ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-      ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-      ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+  (use-package corfu
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    (corfu-separator ?\s)          ;; Orderless field separator
+    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
 
-      :hook (prog-mode . corfu-mode)
-      ;; Enable Corfu only for certain modes.
-      ;; :hook ((prog-mode . corfu-mode)
-      ;;        (shell-mode . corfu-mode)
-      ;;        (eshell-mode . corfu-mode))
+    :hook (prog-mode . corfu-mode)
+    ;; Enable Corfu only for certain modes.
+    ;; :hook ((prog-mode . corfu-mode)
+    ;;        (shell-mode . corfu-mode)
+    ;;        (eshell-mode . corfu-mode))
 
-      ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
-      ;; be used globally (M-/).  See also the customization variable
-      ;; `global-corfu-modes' to exclude certain modes.
-      :init
-      (global-corfu-mode))
+    ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
+    ;; be used globally (M-/).  See also the customization variable
+    ;; `global-corfu-modes' to exclude certain modes.
+    :init
+    (global-corfu-mode))
   (with-eval-after-load 'corfu
     ;; Navigate completion list
     (define-key corfu-map (kbd "C-j") #'corfu-next)
     (define-key corfu-map (kbd "C-k") #'corfu-previous))
 
-    ;; A few more useful configurations...
-    (use-package emacs
-      :init
-      ;; TAB cycle if there are only few candidates
-      (setq completion-cycle-threshold 3)
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    (setq completion-cycle-threshold 3)
 
-      ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-      ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-      ;; (setq read-extended-command-predicate
-      ;;       #'command-completion-default-include-p)
+    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+    ;; (setq read-extended-command-predicate
+    ;;       #'command-completion-default-include-p)
 
-      ;; Enable indentation+completion using the TAB key.
-      ;; `completion-at-point' is often bound to M-TAB.
-      (setq tab-always-indent 'complete))      (use-package corfu
-      :straight t
-      :config
-      ;; Optionally use TAB for cycling, default is `corfu-complete'.
-      (setq corfu-cycle t)
-      ;; Optionally enable `corfu-mode' in all buffers.
-      (global-set-key (kbd "M-RET") #'corfu-complete)
-      (setq corfu-quit-at-boundary nil)
-      (setq corfu-quit-no-match t))
+    ;; Enable indentation+completion using the TAB key.
+    ;; `completion-at-point' is often bound to M-TAB.
+    (setq tab-always-indent 'complete))      (use-package corfu
+    :straight t
+    :config
+    ;; Optionally use TAB for cycling, default is `corfu-complete'.
+    (setq corfu-cycle t)
+    ;; Optionally enable `corfu-mode' in all buffers.
+    (global-set-key (kbd "M-RET") #'corfu-complete)
+    (setq corfu-quit-at-boundary nil)
+    (setq corfu-quit-no-match t))
 
-    ;; Use Dabbrev with Corfu!
-    (use-package dabbrev
-      ;; Swap M-/ and C-M-/
-      :bind (("M-/" . dabbrev-completion)
-             ("C-M-/" . dabbrev-expand))
-      :config
-      (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
-      ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
-      (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-      (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
+  ;; Use Dabbrev with Corfu!
+  (use-package dabbrev
+    ;; Swap M-/ and C-M-/
+    :bind (("M-/" . dabbrev-completion)
+           ("C-M-/" . dabbrev-expand))
+    :config
+    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+    ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+    (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+    (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
 
-    (use-package eglot
-      :config
-      (setq eglot-autoshutdown t)
-      (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
+  (use-package eglot
+    :config
+    (setq eglot-autoshutdown t)
+    (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
 
-    (use-package nix-mode
-      :mode "\\.nix\\'")
-    (use-package haskell-mode
-      :mode "\\.hs\\'")
+  (use-package nix-mode
+    :mode "\\.nix\\'")
+  (use-package haskell-mode
+    :mode "\\.hs\\'")
 
 #+end_src
 ** TODO Cape
@@ -1071,7 +1046,7 @@ For extending Emacs functionality
     ;;(add-to-list 'completion-at-point-functions #'cape-dict)
     ;;(add-to-list 'completion-at-point-functions #'cape-elisp-symbol)
     ;;(add-to-list 'completion-at-point-functions #'cape-line)
-  )
+    )
 #+end_src
 
 
