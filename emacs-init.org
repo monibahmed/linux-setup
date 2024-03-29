@@ -1,6 +1,3 @@
-:PROPERTIES:
-:DRAFT:    TRUE
-:END:
 #+Title: Emac's Setup
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
@@ -87,7 +84,7 @@ Using Straight.el for package management.
 
 
 * Interacting with Emacs
-** Evil-Mode
+** Evil Mode
 Evil mode for keybinding and most of efficiency goodness
 #+begin_src emacs-lisp 
   (use-package evil
@@ -256,179 +253,186 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 ** Org-Mode
 #+begin_src emacs-lisp 
-      (use-package org 
-      :config
-      (setq org-todo-keywords
-            '((sequence "TDOD" "|" "DONE")))
-      (setq org-directory "~/org")
-      (setq org-agenda-files (list org-directory))
-      (setq org-agenda-custom-commands
-            '(("d" "Draft Items" tags-todo "DRAFT=\"TRUE\""
-               ((org-agenda-overriding-header "Draft Items")))))
-      (setq org-default-notes-file (concat org-directory "~/org/gtd.org"))
-      '((setq org-capture-templates
-              ;; other capture templates
-              ("s" "Slipbox" entry  (file "braindump/org/inbox.org")
-               "* %?\n")
-              ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Ideas")
-               "* TODO %?\n ")))
-      (setq org-confirm-babel-evaluate nil)
-      (setq org-startup-indented  t)
-      (setq org-startup-numerated t)
-      (setq org-startup-with-inline-images t)
-      (setq org-blank-before-new-entry nil)
-      (setq org-hide-emphasis-markers nil)
-      (setq org-ellipsis " ▼")
-      :hook
-      (org-mode . visual-line-mode)
-      (org-babel-after-execute . org-redisplay-inline-images))
+  (use-package org 
+    :config
+    (setq org-todo-keywords
+          '((sequence "TODO" "|" "DONE")))
+    (setq org-directory "~/org")
+    ;; (setq org-element-use-cache nil)
+    ;; (setq org-element-cache-persistent nil)
+    (setq emacs-directory "~/linux-setup")
+    ;; (setq org-agenda-files (list emacs-directory org-directory))
+    (setq org-default-notes-file "~/org/gtd.org")
+    (setq org-agenda-custom-commands
+          '(("d" "Drafts" tags "DRAFT={TRUE}"
+             ((org-agenda-overriding-header "Drafts")
+              ))))
+    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    (setq org-startup-with-inline-images t)
+    (setq org-blank-before-new-entry nil)
+    (setq org-hide-emphasis-markers nil)
+    (setq org-ellipsis " ▼")
+    :hook
+    (org-mode . visual-line-mode)
+    (org-babel-after-execute . org-redisplay-inline-images))
+  (defun update-org-agenda-files-recursively ()
+    "Update `org-agenda-files` to include all .org files under ~/org directory."
+    (interactive)
+    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$")))
 
-    (use-package visual-fill-column
-      :custom
-      (visual-fill-column-center-text t)
-      (visual-fill-column-width 140)
-      :hook (org-mode . visual-fill-column-mode))
-  #+end_src
+  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
+
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
+#+end_src
+
 ** Org Tangle
-  #+begin_src emacs-lisp 
+#+begin_src emacs-lisp 
   ;; Automatically tangle our Emacs.org config file when we save it
-    (defun efs/org-babel-tangle-config ()
-      (when (string-equal (buffer-file-name)
-                          (expand-file-name "~/linux-setup/emacs-init.org"))
-        ;; Dynamic scoping to the rescue
-        (let ((org-confirm-babel-evaluate nil))
-          (message "Tangling new .emacs")
-          (org-babel-tangle)))
-      (when (string-equal (buffer-file-name)
-                          (expand-file-name "~/linux-setup/zsh-init.org"))
-        ;; Dynamic scoping to the rescue
-        (let ((org-confirm-babel-evaluate nil))
-          (message "Tangling new .zsh")
-          (org-babel-tangle))))
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/emacs-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .emacs")
+        (org-babel-tangle)))
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/zsh-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .zsh")
+        (org-babel-tangle))))
 
-    (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
-    (use-package org-roam
-      :custom
-      (org-roam-directory (file-truename "~/org/roam"))
-      (org-roam-completion-everywhere t)
-      (org-roam-capture-templates
-       '(("d" "default" plain
-          "%?"
-          :target
-          (file+head
-           "%<%Y%m%d%H%M%S>-${slug}.org"
-           "#+title: ${note-title}\n")
-          :unnarrowed t)
-         ("r" "reference note" plain
-          "%?"
-          :target
-          (file+head
-           "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
-           "#+TITLE: ${note-title}\n#+FILETAGS:\n\n* References\n[cite:@${citar-citekey}]")
-          :unnarrowed t)))
-      ;; :after-finalize #'my-add-reference-to-gtd)))
-      ;; ("r" "reference note" plain
-      ;;    "%?"
-      ;;    :target
-      ;;    (file+head
-      ;;     "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${slug}.org"
-      ;;     "#+FILETAGS: :reference:\n#+TITLE: ${title}\n\n* References\n[cite:@${citekey}]")
-      ;;    :unnarrowed t
-      ;;    :immediate-finish t)))
-      ;; :after-finalize #'my-add-reference-to-gtd)))
-      
+  (use-package org-roam
+    :custom
+    (org-roam-directory (file-truename "~/org/roam"))
+    (org-roam-completion-everywhere t)
+    (org-roam-capture-templates
+     '(("d" "default" plain
+        "%?"
+        :target
+        (file+head
+         "%<%Y%m%d%H%M%S>-${slug}.org"
+         "#+title: ${note-title}\n")
+        :unnarrowed t)
+       ("r" "reference note" plain
+        "%?"
+        :target
+        (file+head
+         "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
+         "#+TITLE: ${note-title}\n#+FILETAGS:\n\n* References\n[cite:@${citar-citekey}]")
 
-      ;; (org-roam-capture-templates
-      ;;     '(("m" "main" plain
-      ;;        "%?"
-      ;;        :if-new (file+head "main/${slug}.org"
-      ;;                           "#+TITLE: ${title}\n")
-      ;;        :immediate-finish t
-      ;;        :unnarrowed t)
-      ;;       ("r" "reference" plain "%?"
-      ;;        :if-new
-      ;;        (file+head "reference/${note-title}.org" "#+TITLE: Reference: ${title}\n")
-      ;;        :immediate-finish t
-      ;;        :unnarrowed t)
-      ;;       ("p" "project" plain "%?"
-      ;;        :if-new
-      ;;        (file+head "project/${slug}.org" "#+TITLE: ${title}\n#+filetags: :project:\n")
-      ;;        :immediate-finish t
-      ;;        :unnarrowed t)
-      ;; (org-roam-node-display-template
-      ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-      ;; (org-roam-capture-templates
-      ;;     '(("n" "default" plain
-      ;;        "%?\n* SEED References\n"
-      ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      ;;        :unnarrowed t)
-      ;;       ("l" "programming language" plain
-      ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
-      ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      ;;        :unnarrowed t)
-      ;;       ("s" "Seed" plain
-      ;;        (file "~/org/roam/Templates/SeedTemplate.org")
-      ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      ;;        :unnarrowed t)
-      ;;       ("b" "book notes" plain
-      ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
-      ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-      ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
-      ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
-      ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
-      ;;        :unnarrowed t)))
+        :unnarrowed t)))
+    ;; :after-finalize #'my-add-reference-to-gtd)))
+    ;; ("r" "reference note" plain
+    ;;    "%?"
+    ;;    :target
+    ;;    (file+head
+    ;;     "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${slug}.org"
+    ;;     "#+FILETAGS: :reference:\n#+TITLE: ${title}\n\n* References\n[cite:@${citekey}]")
+    ;;    :unnarrowed t
+    ;;    :immediate-finish t)))
+    ;; :after-finalize #'my-add-reference-to-gtd)))
+    
 
-      :bind (("C-c n l" . org-roam-buffer-toggle)
-             ("C-c n f" . org-roam-node-find)
-             ("C-c n i" . org-roam-node-insert)
-             :map org-mode-map
-             ("C-M-i" . completion-at-point))
-      :config
-      (org-roam-setup))
-    ;; (defun my/org-roam-node-insert-and-newline ()
-    ;;   "Insert an Org-roam node and add a newline after it."
-    ;;   (interactive)
-    ;;   (org-roam-node-insert)
-    ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
-    ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
-    ;; (with-eval-after-load 'org-roam
-    ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
-  #+end_src
+    ;; (org-roam-capture-templates
+    ;;     '(("m" "main" plain
+    ;;        "%?"
+    ;;        :if-new (file+head "main/${slug}.org"
+    ;;                           "#+TITLE: ${title}\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;;       ("r" "reference" plain "%?"
+    ;;        :if-new
+    ;;        (file+head "reference/${note-title}.org" "#+TITLE: Reference: ${title}\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;;       ("p" "project" plain "%?"
+    ;;        :if-new
+    ;;        (file+head "project/${slug}.org" "#+TITLE: ${title}\n#+filetags: :project:\n")
+    ;;        :immediate-finish t
+    ;;        :unnarrowed t)
+    ;; (org-roam-node-display-template
+    ;;  (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    ;; (org-roam-capture-templates
+    ;;     '(("n" "default" plain
+    ;;        "%?\n* SEED References\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("l" "programming language" plain
+    ;;        "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("s" "Seed" plain
+    ;;        (file "~/org/roam/Templates/SeedTemplate.org")
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :unnarrowed t)
+    ;;       ("b" "book notes" plain
+    ;;        "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%?"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+    ;;        :u[[id:70AB7B7E-C432-4045-BF44-6E883A91141F][A cool note]]nnarrowed t)
+    ;;       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+    ;;        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+    ;;        :unnarrowed t)))
+
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup))
+  ;; (defun my/org-roam-node-insert-and-newline ()
+  ;;   "Insert an Org-roam node and add a newline after it."
+  ;;   (interactive)
+  ;;   (org-roam-node-insert)
+  ;;   ;; Wait for `org-roam-node-insert` to finish, especially if it's awaiting user input
+  ;;   (run-with-idle-timer 0.1 nil (lambda () (insert "\n"))))
+  ;; (with-eval-after-load 'org-roam
+  ;;   (define-key org-mode-map (kbd "C-c n i") #'my/org-roam-node-insert-and-newline))
+#+end_src
 ** Extra Org/Roam/Citar Packages
 #+begin_src emacs-lisp 
-    (use-package citar-org-roam
-      ;; :after (org citar org-roam)
-      :config
-      (setq citar-org-roam-note-title-template "${author} - ${title}")
-      (setq citar-org-roam-subdir "reference")
-      (setq citar-org-roam-capture-template-key "r")
-      (citar-org-roam-mode))
+  (use-package citar-org-roam
+    ;; :after (org citar org-roam)
+    :config
+    (setq citar-org-roam-note-title-template "${author} - ${title}")
+    (setq citar-org-roam-subdir "reference")
+    (setq citar-org-roam-capture-template-key "r")
+    (citar-org-roam-mode))
 
-    (use-package org-ql)
+  (use-package org-ql)
 
-    (use-package org-roam-ui
-      :after org-roam
-      ;; Assuming you want the UI available on Emacs startup
-      :config
-      (setq org-roam-ui-sync-theme t
-            org-roam-ui-follow t
-            org-roam-ui-update-on-save t
-            org-roam-ui-open-on-start t))
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 
-    (with-eval-after-load 'org-roam
-      (cl-defmethod org-roam-node-type ((node org-roam-node))
-        "Return the TYPE of NODE."
-        (condition-case nil
-            (file-name-nondirectory
-             (directory-file-name
-              (file-name-directory
-               (file-relative-name (org-roam-node-file node) org-roam-directory))))
-          (error "")))
-      (setq org-roam-node-display-template
-            (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+  (with-eval-after-load 'org-roam
+    (cl-defmethod org-roam-node-type ((node org-roam-node))
+      "Return the TYPE of NODE."
+      (condition-case nil
+          (file-name-nondirectory
+           (directory-file-name
+            (file-name-directory
+             (file-relative-name (org-roam-node-file node) org-roam-directory))))
+        (error "")))
+    (setq org-roam-node-display-template
+          (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
 
 
 #+end_src
@@ -939,7 +943,7 @@ For extending Emacs functionality
 
 * AI Integration 
 ** Copilot 
-#+begin_src emacs-lisp  :tangle no 
+#+begin_src emacs-lisp  
   (use-package copilot
     :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
     :init (setq copilot-indent-offset-warning-disable t)
@@ -950,8 +954,9 @@ For extending Emacs functionality
                 ("<tab>" . 'copilot-accept-completion-by-word)))
 
 #+end_src
+
 ** GPTEL 
-#+begin_src emacs-lisp :tangle no 
+#+begin_src emacs-lisp 
   (use-package gptel
     :custom
     (gptel-model "gpt-3.5-turbo")
@@ -965,21 +970,21 @@ For extending Emacs functionality
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
 
 #+end_src
+
 ** Ollama
 #+begin_src emacs-lisp :tangle no
   (gptel-make-ollama "Ollama"             ;Any name of your choosing
-                     :host "localhost:11434"               ;Where it's running
-                     :stream t                             ;Stream responses
-                     :models '("mistral:latest"))          ;List of models
+    :host "localhost:11434"               ;Where it's running
+    :stream t                             ;Stream responses
+    :models '("mistral:latest"))          ;List of models
   ;; OPTIONAL configuration
   (setq-default
    gptel-model "llama2"
    gptel-backend (gptel-make-ollama "Ollama"
-                                    :host "127.0.0.1:11434"
-                                    :stream t
-                                    :models '("mistral:latest")))
+                   :host "127.0.0.1:11434"
+                   :stream t
+                   :models '("mistral:latest")))
 #+end_src
-
 
 * TODO Programming
 ** Flycheck
