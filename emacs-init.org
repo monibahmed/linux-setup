@@ -187,19 +187,23 @@ Evil mode for keybinding and most of efficiency goodness
       :prefix "SPC"
       :global-prefix "C-SPC")
     (rune/leader-keys
-      "t"  '(:ignore t                                                             :which-key "Toggles")
-      "gc" '(copilot-mode                                                          :which-key "Copilot Mode")
-      "gp" '(gptel                                                                 :which-key "Gptel")
-      "gP" '(gptel-send                                                            :which-key "Gptel-Send")
-      "xv" '(my-project-vterm                                                      :which-key "Vterm") 
-      "gt" '(lambda() (interactive)(find-file (concat google-drive "/org/gtd.org")):which-key "gtd.org")
-      "ok" '(lambda() (interactive)(find-file (concat google-drive "/org/okr.org")):which-key "okr.org")
-      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org")      :which-key "emacs-init.org")
-      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")        :which-key "zsh-init.org")
-      "yn" '(yas-new-snippet                                                       :which-key "New Yasnippet")
-      "yr" '(yas-reload-all                                                        :which-key "Yasnippet Reload")
-      "yt" '(yas-describe-tables                                                   :which-key "Yasnippet Describe")
-      "yv" '(lambda() (interactive) yas-snippet-visit-file                         :which-key "Visit Yasnippet File")
+      "t"  '(:ignore t                                                        :which-key "Toggles")
+      "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
+      "gp" '(gptel                                                            :which-key "Gptel")
+      "gP" '(gptel-send                                                       :which-key "Gptel-Send")
+      "xv" '(my-project-vterm                                                 :which-key "Vterm") 
+      "gt" '(lambda() (interactive)(find-file "~/org/gtd.org")                :which-key "gtd.org")
+      "ok" '(lambda() (interactive)(find-file "~/org/okr.org")                :which-key "okr.org")
+      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
+      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
+      "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
+      "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
+      "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
+      "yv" '(lambda() (interactive) yas-snippet-visit-file                    :which-key "Visit Yasnippet File")
+      ;; Org Mode Bindings
+      "ot" '(org-capture :which-key "Org Todo")
+      "oa" '(org-agenda  :which-key "Org Agenda")
+      "orr" '(citar-create-note :which-key "Org Roam Reference Note")
       ))
 
   (defun beginning-of-file-and-line ()
@@ -216,75 +220,90 @@ Evil mode for keybinding and most of efficiency goodness
   (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
 #+end_src
 
+
 * Org Mode Setup
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
 ** Citar and Zotero
 #+begin_src emacs-lisp 
-    (use-package citar
-      :custom
-      (citar-indicators
-       (list citar-indicator-files ; plain text
-             citar-indicator-notes-icons)) ; icon
-      (org-cite-global-bibliography (list (concat google-drive "bibliography.bib")))
-      (org-cite-insert-processor   'citar)
-      (org-cite-follow-processor   'citar)
-      (org-cite-activate-processor 'citar)
-      (citar-bibliography org-cite-global-bibliography)
-      :bind
-      (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
-      :hook
-      (LaTeX-mode . citar-capf-setup)
-      (org-mode . citar-capf-setup))
+  (use-package citar
+    :custom
+    (citar-indicators
+     (list citar-indicator-files ; plain text
+           citar-indicator-notes-icons)) ; icon
+    (org-cite-global-bibliography (list "~/bibliography.bib"))
+    (org-cite-insert-processor   'citar)
+    (org-cite-follow-processor   'citar)
+    (org-cite-activate-processor 'citar)
+    (citar-bibliography org-cite-global-bibliography)
+    :bind
+    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+    :hook
+    (LaTeX-mode    . citar-capf-setup)
+    (org-mode      . citar-capf-setup)
+    (org-roam-mode . citar-capf-setup))
+  
 
-    (use-package citar-embark
-      :after citar embark
-      :config (citar-embark-mode)) 
+  (use-package citar-embark
+    :after citar embark
+    :config (citar-embark-mode)) 
 
 #+end_src
 
 ** Org-Mode
 #+begin_src emacs-lisp 
-  (use-package org 
-    :config
-    (setq org-todo-keywords
-          '((sequence "TODO" "|" "DONE")))
-    (setq org-capture-templates
-          `(("t" "Todo" entry (file+headline ,(concat google-drive "org/gtd.org") "Capture Tasks")
-             "* TODO %?\n")))
-    (setq org-directory (concat google-drive "/org"))
-    (setq org-default-notes-file (concat google-drive "/org/gtd.org"))
-    (setq org-agenda-custom-commands
-          '(("d" "Drafts" tags "DRAFT={TRUE}"
-             ((org-agenda-overriding-header "Drafts")
-              (org-agenda-prefix-format '((tags . "%-2t ")))))))
-    (setq org-agenda-files (directory-files-recursively (concat google-drive "/org") "\\.org$"))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-startup-indented  t)
-    (setq org-startup-numerated t)
-    (setq org-startup-with-inline-images t)
-    (setq org-blank-before-new-entry nil)
-    (setq org-hide-emphasis-markers nil)
-    (setq org-ellipsis " ▼")
-    :hook
-    (org-mode . visual-line-mode)
-    (org-babel-after-execute . org-redisplay-inline-images))
+    (use-package org 
+      :config
+      (setq org-todo-keywords
+            '((sequence "TODO" "|" "DONE")))
+      (setq org-capture-templates
+            '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
+               "* TODO %?\n")))
+      (setq org-directory "~/org")
+      (setq org-default-notes-file "~/org/gtd.org")
+      (setq org-agenda-custom-commands
+            '(("d" "Drafts" tags "DRAFT={TRUE}"
+               ((org-agenda-overriding-header "Drafts")
+                (org-agenda-prefix-format '((tags . "%-2t ")))))))
+      (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+      (setq org-confirm-babel-evaluate nil)
+      (setq org-startup-indented  t)
+      (setq org-startup-numerated t)
+      (setq org-startup-with-inline-images t)
+      (setq org-blank-before-new-entry nil)
+      (setq org-hide-emphasis-markers nil)
+      (setq org-ellipsis " ▼")
+      :hook
+      (org-mode . visual-line-mode)
+      (org-babel-after-execute . org-redisplay-inline-images))
 
-  (defun update-org-agenda-files-recursively ()
-    "Update `org-agenda-files` to include all .org files under ~/org directory."
-    (interactive)
-    (setq org-agenda-files (directory-files-recursively (concat google-drive "/org") "\\.org$")))
+    (defun update-org-agenda-files-recursively ()
+      "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
+      (interactive)
+      (setq org-agenda-files
+            (seq-filter
+             (lambda (file)
+               (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
+             (directory-files-recursively "~/org" "\\.org$"))))
 
-  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
+    (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
 
-  ;; (use-package org-tidy
-  ;;   :hook
-  ;;   (org-mode . org-tidy-mode))
+    (defun my/refresh-org-keywords ()
+      (save-excursion
+        (goto-char (point-min))
+        (when (re-search-forward "^#\\+SEQ_TODO:" nil t)
+          (org-ctrl-c-ctrl-c))))
 
-  (use-package visual-fill-column
-    :custom
-    (visual-fill-column-center-text t)
-    (visual-fill-column-width 140)
-    :hook (org-mode . visual-fill-column-mode))
+    (add-hook 'org-mode-hook #'my/refresh-org-keywords)
+
+    ;; (use-package org-tidy
+    ;;   :hook
+    ;;   (org-mode . org-tidy-mode))
+
+    (use-package visual-fill-column
+      :custom
+      (visual-fill-column-center-text t)
+      (visual-fill-column-width 140)
+      :hook (org-mode . visual-fill-column-mode))
 #+end_src
 
 ** Org Tangle
@@ -310,7 +329,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+BEGIN_SRC emacs-lisp 
   (use-package org-roam
     :custom
-    (org-roam-directory (file-truename (concat google-drive "/org/roam")))
+    (org-roam-directory (file-truename "~/org/roam"))
     (org-roam-completion-everywhere t)
     (org-roam-capture-templates
      '(("d" "default" plain
@@ -323,7 +342,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
        ("r" "reference note" plain
         (file "~/org/roam/templates/ReferenceNote.org") 
         :if-new
-        (file+head "%(expand-file-name (or citar-org-roam-subdir \"\") org-roam-directory)/${citar-citekey}.org"
+        (file+head "%(expand-file-name \"${slug}.org\" \"~/org/roam/reference/\")" 
                    "")
         :unnarrowed t)
        ("p" "project note" plain
@@ -333,12 +352,12 @@ Org and Org-roam will help you network your thoughts and reflect your understand
                    "") 
         :unnarrowed t)))
     :bind (("C-c n l" . org-roam-buffer-toggle)
-              ("C-c n f" . org-roam-node-find)
-              ("C-c n i" . org-roam-node-insert)
-              :map org-mode-map
-              ("C-M-i" . completion-at-point))
-       :config
-       (org-roam-setup))
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-setup))
 #+end_src
 
 ** Extra Org/Roam/Citar Packages
@@ -374,7 +393,10 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     (setq org-roam-node-display-template
           (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
 
-
+(use-package jinx
+  :hook (emacs-startup . global-jinx-mode)
+  :bind (("M-$" . jinx-correct)
+         ("C-M-$" . jinx-languages)))
 #+end_src
 ** Literate Programming
 #+BEGIN_SRC emacs-lisp 
@@ -782,7 +804,7 @@ For extending Emacs functionality
 
 
 * Open and Annotate PDFs
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp :tangle no
   (use-package pdf-tools
     :config
     (pdf-tools-install)
