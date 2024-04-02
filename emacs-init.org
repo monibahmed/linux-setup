@@ -353,7 +353,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
      '(
        ("d" "default" plain
         "\nprojnote%?"
-        :if-new (file+head "default-${slug}.org" "#+TITLE: ${title}\n\n")
+        :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
         :unnarrowed t)
        ("r" "reference" plain
         "\nrefnote%?"
@@ -368,7 +368,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
         :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
         :unnarrowed t)
        ))
-   :bind (("C-c n l" . org-roam-buffer-toggle)
+   :bind (("C-c n l"  . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n i" . org-roam-node-insert)
            :map org-mode-map
