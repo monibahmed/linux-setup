@@ -4,4 +4,10 @@
 # --
 
 * SCOPE ${1:what is the outcome of this project}
+  :PROPERTIES:
+  :DRAFT:    TRUE
+  :END:
+
 ${3:add details}
+
+
