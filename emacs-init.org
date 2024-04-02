@@ -241,300 +241,6 @@ Evil mode for keybinding and most of efficiency goodness
 #+end_src
 
 
-* Org Mode Setup
-Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
-** Citar and Zotero
-#+begin_src emacs-lisp 
-  (use-package citar
-    :custom
-    (citar-indicators
-     (list citar-indicator-files ; plain text
-           citar-indicator-notes-icons)) ; icon
-    (org-cite-global-bibliography (list "~/bibliography.bib"))
-    (org-cite-insert-processor   'citar)
-    (org-cite-follow-processor   'citar)
-    (org-cite-activate-processor 'citar)
-    (citar-bibliography org-cite-global-bibliography)
-    :bind
-    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
-    :hook
-    (LaTeX-mode    . citar-capf-setup)
-    (org-mode      . citar-capf-setup)
-    (org-roam-mode . citar-capf-setup))
-
-  (use-package citar-embark
-    :after citar embark
-    :config (citar-embark-mode)) 
-
-#+end_src
-
-** Org-Mode
-#+begin_src emacs-lisp 
-  (use-package org 
-    :config
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "WAITING(w)" "DONE(d)")
-            (sequence "SCOPE(s)" "|"  "CANCELED(c)")))
-    (setq org-use-fast-todo-selection t)
-    (setq org-capture-templates
-          '(
-            ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
-             "* TODO %?\n")
-            ("m" "Meeting" entry (file+headline "~/org/meetings.org" "Meetings")
-             (function (lambda () (yas-expand-snippet (yas-lookup-snippet "meeting" 'org-mode))))))
-          )
-    
-    (setq org-directory "~/org")
-    (setq org-default-notes-file "~/org/gtd.org")
-    (setq org-agenda-custom-commands
-          '(("d" "Drafts" tags "DRAFT={TRUE}"
-             ((org-agenda-overriding-header "Drafts")
-              (org-agenda-prefix-format '((tags . "%-2t ")))))))
-    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-startup-indented  t)
-    (setq org-startup-numerated t)
-    (setq org-startup-with-inline-images t)
-    (setq org-blank-before-new-entry nil)
-    (setq org-hide-emphasis-markers nil)
-    (setq org-ellipsis " ▼")
-    :hook
-    (org-mode . visual-line-mode)
-    (org-babel-after-execute . org-redisplay-inline-images))
-
-  (defun update-org-agenda-files-recursively ()
-    "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
-    (interactive)
-    (setq org-agenda-files
-          (seq-filter
-           (lambda (file)
-             (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
-           (directory-files-recursively "~/org" "\\.org$"))))
-
-  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
-
-  ;; (use-package org-tidy
-  ;;   :hook
-  ;;   (org-mode . org-tidy-mode))
-
-  (use-package visual-fill-column
-    :custom
-    (visual-fill-column-center-text t)
-    (visual-fill-column-width 140)
-    :hook (org-mode . visual-fill-column-mode))
-
-#+end_src
-
-** Org Tangle
-#+begin_src emacs-lisp 
-  ;; Automatically tangle our Emacs.org config file when we save it
-  (defun efs/org-babel-tangle-config ()
-    (when (string-equal (buffer-file-name)
-                        (expand-file-name "~/linux-setup/emacs-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .emacs")
-        (org-babel-tangle)))
-    (when (string-equal (buffer-file-name)
-                        (expand-file-name "~/linux-setup/zsh-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .zsh")
-        (org-babel-tangle))))
-
-  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-#+end_src
-
-** Org-Roam
-#+BEGIN_SRC emacs-lisp 
-    (use-package org-roam
-      :custom
-      (org-roam-directory "~/org/roam")
-      (org-roam-completion-everywhere t)
-      (org-roam-capture-templates
-       '(
-         ("d" "default" plain
-          "\n<projnote%?"
-          :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("r" "reference" plain
-          "\n<refnote%?\n* References\n[cite:@${citar-citekey}]"
-          :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("p" "project" plain
-          "\n<projnote%?"
-          :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("m" "permanent" plain
-          "\n<permnote%?"
-          :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ))
-     :bind (("C-c n l"  . org-roam-buffer-toggle)
-             ("C-c n f" . org-roam-node-find)
-             ("C-c n i" . org-roam-node-insert)
-             :map org-mode-map
-             ("C-M-i" . completion-at-point))
-      :config
-      (org-roam-db-autosync-mode))
-#+end_src
-
-** Extra Org/Roam/Citar Packages
-#+begin_src emacs-lisp 
-  (use-package citar-org-roam
-    ;; :after (org citar org-roam)
-    :config
-    (setq citar-org-roam-note-title-template "${author} - ${title}")
-    (setq citar-org-roam-subdir ".")
-    (setq citar-org-roam-capture-template-key "r")
-    (citar-org-roam-mode))
-
-  (use-package org-ql)
-
-  (use-package org-roam-ui
-    :after org-roam
-    ;; Assuming you want the UI available on Emacs startup
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
-
-  (with-eval-after-load 'org-roam
-    (cl-defmethod org-roam-node-type ((node org-roam-node))
-      "Return the first word of the file name of NODE, delimited by '_'."
-      (let ((filename (file-name-nondirectory (org-roam-node-file node))))
-        (car (split-string filename "_" t))))
-    (setq org-roam-node-display-template
-          (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
-
-  ;; (with-eval-after-load 'org-roam
-  ;;   (cl-defmethod org-roam-node-type ((node org-roam-node))
-  ;;     "Return the TYPE of NODE."
-  ;;     (condition-case nil
-  ;;         (file-name-nondirectory
-  ;;          (directory-file-name
-  ;;           (file-name-directory
-  ;;            (file-relative-name (org-roam-node-file node) org-roam-directory))))
-  ;;       (error "")))
-  ;;   (setq org-roam-node-display-template
-  ;;         (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
-
-  (use-package jinx
-    :hook (emacs-startup . global-jinx-mode)
-    :bind (("M-$" . jinx-correct)
-           ("C-M-$" . jinx-languages)))
-#+end_src
-** Literate Programming
-#+BEGIN_SRC emacs-lisp 
-  (setq org-plantuml-jar-path "~/plantuml.jar")
-
-  (use-package plantuml-mode
-    :ensure t
-    :mode ("\\.puml\\'" . plantuml-mode)
-    :config
-    (setq plantuml-jar-path "~/plantuml.jar")
-    (setq plantuml-default-exec-mode 'jar))
-  ;; Automatically refresh inline images after execution
-  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
-  ;; Org Babel for code blocks
-  (use-package ob
-    :straight nil
-    :after (:all org)
-    :init
-    (require 'org-tempo)
-    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp :tangle no"))
-    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
-    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
-    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
-    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
-    (setq org-confirm-babel-evaluate nil)
-    :config
-
-    ;; load more languages for org-babel
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((shell      . t)
-       (emacs-lisp . t)
-       (plantuml   . t)
-       (dot        . t)
-       (python     . t)
-       (haskell    . t)
-       (scheme     . t)
-       )))
-#+end_src
-
-** TODO Org-Roam Project Tracking in GTD
-#+begin_src emacs-lisp :tangle no
-  (defun my-org-sanitize-heading (heading-text)
-    "Sanitize HEADING-TEXT to be file-system friendly."
-    (replace-regexp-in-string "[^[:alnum:]-]" "" (downcase heading-text)))
-
-  (defun my-org-create-and-link-file (heading-text category)
-    "Create a file from HEADING-TEXT in the specified CATEGORY and insert a link."
-    (let* ((base-dir (cond ((string= category "Project Execution") "~/org/roam/projects/")
-                           ((string= category "Reference Review") "~/org/roam/reference/")))
-           (sanitized-heading (my-org-sanitize-heading heading-text))
-           (file-name (concat base-dir sanitized-heading ".org")))
-      (unless (file-exists-p file-name)
-        (with-temp-buffer
-          (insert (concat "#+title: " heading-text "\n"))
-          (make-directory (file-name-directory file-name) t)
-          (write-file file-name))
-        (message "Created file: %s" file-name))
-      ;; Insert link
-      (save-excursion
-        (org-back-to-heading t)
-        (end-of-line)
-        (insert (format "\n[[file:%s][Link to detailed note]]\n" file-name)))))
-
-  (defun my-org-move-heading-to-category (category)
-    "Move the current heading to the specified CATEGORY section."
-    (let ((target-heading (concat "* " category)))
-      (org-cut-subtree) ; Cut the current subtree.
-      (goto-char (point-min)) ; Start from the beginning of the buffer.
-      ;; Search for the target category section.
-      (if (re-search-forward (regexp-quote target-heading) nil t)
-          (progn
-            ;; Move to the end of this section before inserting.
-            ;; This ensures we're inserting at the correct level.
-            (org-end-of-subtree t t) ; The 't t' arguments skip planning lines and drawers.
-            ;; Insert a newline if necessary to separate from the previous content.
-            (unless (looking-at "\n") (insert "\n"))
-            (org-paste-subtree 2)) ; Paste the subtree as a subheading.
-        ;; If the section doesn't exist, inform the user.
-        (message "Category section '%s' not found." category))))
-
-
-  (defun my-org-move-heading-to-category-and-create-file ()
-    "Prompt user to move the current heading to a specific category and create a linked file."
-    (let* ((category (completing-read "Category: " '("Project Execution" "Reference Review")))
-           (heading-text (nth 4 (org-heading-components))))
-      (my-org-create-and-link-file heading-text category)
-      (my-org-move-heading-to-category category)))
-
-  (defun my-org-process-heading-for-organize ()
-    "Process current heading if its state is changed to 'ORGANIZE'."
-    (when (string= org-state "ORGANIZE")
-      (my-org-move-heading-to-category-and-create-file)))
-
-  (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading-for-organize)
-#+end_src
-** TODO Latex and Markup Support
-#+begin_src emacs-lisp :tangle no
-  (use-package markdown-mode)
-  (use-package auctex)
-#+end_src 
-
-** TODO Publishing
-#+begin_src emacs-lisp :tangle no
-  ;; (use-package ox-publish
-  ;;   :straight nil)
-  ;; Set the path to the PlantUML jar file
-#+END_SRC
-
-
-
 * Useful packages
 For using getting around and understanding Emacs
 ** Helper Packages
@@ -827,8 +533,301 @@ For extending Emacs functionality
 #+END_SRC
 
 
-* Open and Annotate PDFs
+
+* Org Mode Setup
+Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
+** Org-Mode
 #+begin_src emacs-lisp 
+  (use-package org 
+    :config
+    (setq org-todo-keywords
+          '((sequence "TODO(t)" "WAITING(w)" "DONE(d)")
+            (sequence "SCOPE(s)" "|"  "CANCELED(c)")))
+    (setq org-use-fast-todo-selection t)
+    (setq org-file-apps 
+          '((auto-mode . emacs)
+            ("\\.pdf\\'" . system)))
+    (setq org-capture-templates
+          '(
+            ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
+             "* TODO %?\n")
+            ("m" "Meeting" entry (file+headline "~/org/meetings.org" "Meetings")
+             (function (lambda () (yas-expand-snippet (yas-lookup-snippet "meeting" 'org-mode))))))
+          )
+    
+    (setq org-directory "~/org")
+    (setq org-default-notes-file "~/org/gtd.org")
+    (setq org-agenda-custom-commands
+          '(("d" "Drafts" tags "DRAFT={TRUE}"
+             ((org-agenda-overriding-header "Drafts")
+              (org-agenda-prefix-format '((tags . "%-2t ")))))))
+    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    (setq org-startup-with-inline-images t)
+    (setq org-blank-before-new-entry nil)
+    (setq org-hide-emphasis-markers nil)
+    (setq org-ellipsis " ▼")
+    :custom
+    (org-link-set-parameters "zotero" :follow
+                             (lambda (zpath)
+                               (browse-url
+                                (format "zotero:%s" zpath))))
+    
+    :hook
+    (org-mode . visual-line-mode)
+    (org-babel-after-execute . org-redisplay-inline-images))
+
+  (defun update-org-agenda-files-recursively ()
+    "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
+    (interactive)
+    (setq org-agenda-files
+          (seq-filter
+           (lambda (file)
+             (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
+           (directory-files-recursively "~/org" "\\.org$"))))
+
+  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
+
+  ;; (use-package org-tidy
+  ;;   :hook
+  ;;   (org-mode . org-tidy-mode))
+
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
+
+  (use-package jinx
+    :hook (emacs-startup . global-jinx-mode)
+    :bind (("M-$" . jinx-correct)
+           ("C-M-$" . jinx-languages)))
+#+end_src
+
+** Org Tangle
+#+begin_src emacs-lisp 
+  ;; Automatically tangle our Emacs.org config file when we save it
+  (defun efs/org-babel-tangle-config ()
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/emacs-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .emacs")
+        (org-babel-tangle)))
+    (when (string-equal (buffer-file-name)
+                        (expand-file-name "~/linux-setup/zsh-init.org"))
+      ;; Dynamic scoping to the rescue
+      (let ((org-confirm-babel-evaluate nil))
+        (message "Tangling new .zsh")
+        (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+** Org-Roam
+#+BEGIN_SRC emacs-lisp 
+    (use-package org-roam
+      :custom
+      (org-roam-directory "~/org/roam")
+      (org-roam-completion-everywhere t)
+      (org-roam-capture-templates
+       '(
+         ("d" "default" plain
+          "\n<projnote%?"
+          :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("r" "reference" plain
+          "\n<refnote%?\n* References\n[cite:@${citar-citekey}]"
+          :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("p" "project" plain
+          "\n<projnote%?"
+          :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("m" "permanent" plain
+          "\n<permnote%?"
+          :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ))
+      :bind (("C-c n l" . org-roam-buffer-toggle)
+             ("C-c n f" . org-roam-node-find)
+             ("C-c n i" . org-roam-node-insert)
+             :map org-mode-map
+             ("C-M-i" . completion-at-point))
+      :config
+      (org-roam-db-autosync-mode))
+
+    (use-package org-ql)
+
+    (use-package org-roam-ui
+      :after org-roam
+      ;; Assuming you want the UI available on Emacs startup
+      :config
+      (setq org-roam-ui-sync-theme t
+            org-roam-ui-follow t
+            org-roam-ui-update-on-save t
+            org-roam-ui-open-on-start t))
+
+  (with-eval-after-load 'org-roam
+    (cl-defmethod org-roam-node-type ((node org-roam-node))
+      "Return the type of the NODE based on the first letter of the file name."
+      (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
+             (first-letter (substring filename 0 1)))
+        (cond ((string-equal first-letter "m") "main")
+              ((string-equal first-letter "p") "project")
+              ((string-equal first-letter "r") "reference")
+              (t "unknown")))) ; default type if it doesn't match any of the cases
+    (setq org-roam-node-display-template
+          (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+#+end_src
+
+** Org-Mode Literate Programming
+#+BEGIN_SRC emacs-lisp 
+  (setq org-plantuml-jar-path "~/plantuml.jar")
+
+  (use-package plantuml-mode
+    :ensure t
+    :mode ("\\.puml\\'" . plantuml-mode)
+    :config
+    (setq plantuml-jar-path "~/plantuml.jar")
+    (setq plantuml-default-exec-mode 'jar))
+  ;; Automatically refresh inline images after execution
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+  ;; Org Babel for code blocks
+  (use-package ob
+    :straight nil
+    :after (:all org)
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp :tangle no"))
+    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
+    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
+
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell      . t)
+       (emacs-lisp . t)
+       (plantuml   . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
+#+end_src
+
+** TODO Citar and Zotero
+#+begin_src emacs-lisp :tangle no
+  (use-package citar
+    :custom
+    (citar-indicators
+     (list citar-indicator-files ; plain text
+           citar-indicator-notes-icons)) ; icon
+    (org-cite-global-bibliography (list "~/bibliography.bib"))
+    (org-cite-insert-processor   'citar)
+    (org-cite-follow-processor   'citar)
+    (org-cite-activate-processor 'citar)
+    (citar-bibliography org-cite-global-bibliography)
+    :bind
+    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+    :hook
+    (LaTeX-mode    . citar-capf-setup)
+    (org-mode      . citar-capf-setup)
+    (org-roam-mode . citar-capf-setup)
+    )
+
+  (use-package citar-org-roam
+    ;; :after (org citar org-roam)
+    :config
+    (setq citar-org-roam-note-title-template "${author} - ${title}")
+    (setq citar-org-roam-subdir ".")
+    (setq citar-org-roam-capture-template-key "r")
+    (citar-org-roam-mode))
+
+  (use-package citar-embark
+    :after citar embark
+    :config (citar-embark-mode)) 
+#+end_src
+
+** TODO Org-Roam Project Tracking in GTD
+#+begin_src emacs-lisp :tangle no
+  (defun my-org-sanitize-heading (heading-text)
+    "Sanitize HEADING-TEXT to be file-system friendly."
+    (replace-regexp-in-string "[^[:alnum:]-]" "" (downcase heading-text)))
+
+  (defun my-org-create-and-link-file (heading-text category)
+    "Create a file from HEADING-TEXT in the specified CATEGORY and insert a link."
+    (let* ((base-dir (cond ((string= category "Project Execution") "~/org/roam/projects/")
+                           ((string= category "Reference Review") "~/org/roam/reference/")))
+           (sanitized-heading (my-org-sanitize-heading heading-text))
+           (file-name (concat base-dir sanitized-heading ".org")))
+      (unless (file-exists-p file-name)
+        (with-temp-buffer
+          (insert (concat "#+title: " heading-text "\n"))
+          (make-directory (file-name-directory file-name) t)
+          (write-file file-name))
+        (message "Created file: %s" file-name))
+      ;; Insert link
+      (save-excursion
+        (org-back-to-heading t)
+        (end-of-line)
+        (insert (format "\n[[file:%s][Link to detailed note]]\n" file-name)))))
+
+  (defun my-org-move-heading-to-category (category)
+    "Move the current heading to the specified CATEGORY section."
+    (let ((target-heading (concat "* " category)))
+      (org-cut-subtree) ; Cut the current subtree.
+      (goto-char (point-min)) ; Start from the beginning of the buffer.
+      ;; Search for the target category section.
+      (if (re-search-forward (regexp-quote target-heading) nil t)
+          (progn
+            ;; Move to the end of this section before inserting.
+            ;; This ensures we're inserting at the correct level.
+            (org-end-of-subtree t t) ; The 't t' arguments skip planning lines and drawers.
+            ;; Insert a newline if necessary to separate from the previous content.
+            (unless (looking-at "\n") (insert "\n"))
+            (org-paste-subtree 2)) ; Paste the subtree as a subheading.
+        ;; If the section doesn't exist, inform the user.
+        (message "Category section '%s' not found." category))))
+
+
+  (defun my-org-move-heading-to-category-and-create-file ()
+    "Prompt user to move the current heading to a specific category and create a linked file."
+    (let* ((category (completing-read "Category: " '("Project Execution" "Reference Review")))
+           (heading-text (nth 4 (org-heading-components))))
+      (my-org-create-and-link-file heading-text category)
+      (my-org-move-heading-to-category category)))
+
+  (defun my-org-process-heading-for-organize ()
+    "Process current heading if its state is changed to 'ORGANIZE'."
+    (when (string= org-state "ORGANIZE")
+      (my-org-move-heading-to-category-and-create-file)))
+
+  (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading-for-organize)
+#+end_src
+** TODO Latex and Markup Support
+#+begin_src emacs-lisp :tangle no
+  (use-package markdown-mode)
+  (use-package auctex)
+#+end_src 
+
+** TODO Publishing
+#+begin_src emacs-lisp :tangle no
+  ;; (use-package ox-publish
+  ;;   :straight nil)
+  ;; Set the path to the PlantUML jar file
+#+END_SRC
+
+
+
+* Open and Annotate PDFs
+#+begin_src emacs-lisp :tangle no
   (use-package pdf-tools
     :config
     (pdf-tools-install)
