@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: my-project-note
+# key: projnote
+# --
+* Goals
+  - ${1:Goal here}
+* Tasks
+  - ${2:Task here}
+* Notes
+  - ${3:Notes here}

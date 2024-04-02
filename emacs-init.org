@@ -201,10 +201,28 @@ Evil mode for keybinding and most of efficiency goodness
       "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
       "yv" '(lambda() (interactive) yas-snippet-visit-file                    :which-key "Visit Yasnippet File")
       ;; Org Mode Bindings
-      "ot" '(org-capture :which-key "Org Todo")
-      "oa" '(org-agenda  :which-key "Org Agenda")
-      "orr" '(citar-create-note :which-key "Org Roam Reference Note")
+      "oc" '(org-capture                        :which-key "Org Todo")
+      "ot" '(my/org-capture-todo                :which-key "Org Todo")
+      "oa" '(org-agenda                         :which-key "Org Agenda")
+      "or" '(citar-create-note                  :which-key "Org Roam Reference Note")
+      "op" '(my/org-roam-capture-project-note   :which-key "Org Roam Project Note")
+      "om" '(my/org-roam-capture-permanent-note :which-key "Org Roam Permanent Note")
       ))
+
+  (defun my/org-roam-capture-project-note ()
+    "Capture a new Org Roam project note using the designated project template."
+    (interactive)
+    (org-roam-capture[[id:CB94DCA8-C002-453B-9E6A-79C1BD277566][trying]] :keys "p"))
+
+  (defun my/org-roam-capture-permanent-note ()
+    "Capture a new Org Roam project note using the designated project template."
+    (interactive)
+    (org-roam-capture :keys "m"))
+
+  (defun my/org-capture-todo ()
+    "Capture a new Org Roam project note using the designated project template."
+    (interactive)
+    (org-capture :keys "t"))
 
   (defun beginning-of-file-and-line ()
     (interactive)
@@ -241,7 +259,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     (LaTeX-mode    . citar-capf-setup)
     (org-mode      . citar-capf-setup)
     (org-roam-mode . citar-capf-setup))
-  
 
   (use-package citar-embark
     :after citar embark
@@ -251,59 +268,59 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 ** Org-Mode
 #+begin_src emacs-lisp 
-    (use-package org 
-      :config
-      (setq org-todo-keywords
-            '((sequence "TODO" "|" "DONE")))
-      (setq org-capture-templates
-            '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
-               "* TODO %?\n")))
-      (setq org-directory "~/org")
-      (setq org-default-notes-file "~/org/gtd.org")
-      (setq org-agenda-custom-commands
-            '(("d" "Drafts" tags "DRAFT={TRUE}"
-               ((org-agenda-overriding-header "Drafts")
-                (org-agenda-prefix-format '((tags . "%-2t ")))))))
-      (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
-      (setq org-confirm-babel-evaluate nil)
-      (setq org-startup-indented  t)
-      (setq org-startup-numerated t)
-      (setq org-startup-with-inline-images t)
-      (setq org-blank-before-new-entry nil)
-      (setq org-hide-emphasis-markers nil)
-      (setq org-ellipsis " ▼")
-      :hook
-      (org-mode . visual-line-mode)
-      (org-babel-after-execute . org-redisplay-inline-images))
+  (use-package org 
+    :config
+    (setq org-todo-keywords
+          '((sequence "TODO(t)" "WAITING(w)" "DONE(d)")
+            (sequence "SCOPE(s)" "|"  "CANCELED(c)")))
+    (setq org-use-fast-todo-selection t)
+    (setq org-capture-templates
+          '(
+            ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
+             "* TODO %?\n")
+            ("m" "Meeting" entry (file+headline "~/org/meetings.org" "Meetings")
+             (function (lambda () (yas-expand-snippet (yas-lookup-snippet "meeting" 'org-mode))))))
+          )
+    
+    (setq org-directory "~/org")
+    (setq org-default-notes-file "~/org/gtd.org")
+    (setq org-agenda-custom-commands
+          '(("d" "Drafts" tags "DRAFT={TRUE}"
+             ((org-agenda-overriding-header "Drafts")
+              (org-agenda-prefix-format '((tags . "%-2t ")))))))
+    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+    (setq org-confirm-babel-evaluate nil)
+    (setq org-startup-indented  t)
+    (setq org-startup-numerated t)
+    (setq org-startup-with-inline-images t)
+    (setq org-blank-before-new-entry nil)
+    (setq org-hide-emphasis-markers nil)
+    (setq org-ellipsis " ▼")
+    :hook
+    (org-mode . visual-line-mode)
+    (org-babel-after-execute . org-redisplay-inline-images))
 
-    (defun update-org-agenda-files-recursively ()
-      "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
-      (interactive)
-      (setq org-agenda-files
-            (seq-filter
-             (lambda (file)
-               (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
-             (directory-files-recursively "~/org" "\\.org$"))))
+  (defun update-org-agenda-files-recursively ()
+    "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
+    (interactive)
+    (setq org-agenda-files
+          (seq-filter
+           (lambda (file)
+             (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
+           (directory-files-recursively "~/org" "\\.org$"))))
 
-    (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
+  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
 
-    (defun my/refresh-org-keywords ()
-      (save-excursion
-        (goto-char (point-min))
-        (when (re-search-forward "^#\\+SEQ_TODO:" nil t)
-          (org-ctrl-c-ctrl-c))))
+  ;; (use-package org-tidy
+  ;;   :hook
+  ;;   (org-mode . org-tidy-mode))
 
-    (add-hook 'org-mode-hook #'my/refresh-org-keywords)
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
 
-    ;; (use-package org-tidy
-    ;;   :hook
-    ;;   (org-mode . org-tidy-mode))
-
-    (use-package visual-fill-column
-      :custom
-      (visual-fill-column-center-text t)
-      (visual-fill-column-width 140)
-      :hook (org-mode . visual-fill-column-mode))
 #+end_src
 
 ** Org Tangle
@@ -325,39 +342,39 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
+
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
   (use-package org-roam
     :custom
-    (org-roam-directory (file-truename "~/org/roam"))
+    (org-roam-directory "~/org/roam")
     (org-roam-completion-everywhere t)
     (org-roam-capture-templates
-     '(("d" "default" plain
-        "%?"
-        :target
-        (file+head
-         "%<%Y%m%d%H%M%S>-${slug}.org"
-         "#+title: ${note-title}\n")
+     '(
+       ("d" "default" plain
+        "\nprojnote%?"
+        :if-new (file+head "default-${slug}.org" "#+TITLE: ${title}\n\n")
         :unnarrowed t)
-       ("r" "reference note" plain
-        (file "~/org/roam/templates/ReferenceNote.org") 
-        :if-new
-        (file+head "%(expand-file-name \"${slug}.org\" \"~/org/roam/reference/\")" 
-                   "")
+       ("r" "reference" plain
+        "\nrefnote%?"
+        :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
         :unnarrowed t)
-       ("p" "project note" plain
-        (file "~/org/roam/templates/ProjectNote.org") 
-        :if-new
-        (file+head "%(expand-file-name \"${slug}.org\" \"~/org/roam/project/\")" 
-                   "") 
-        :unnarrowed t)))
-    :bind (("C-c n l" . org-roam-buffer-toggle)
+       ("p" "project" plain
+        "\nprojnote%?"
+        :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ("m" "permanent" plain
+        "\npermnote%?"
+        :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ))
+   :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n i" . org-roam-node-insert)
            :map org-mode-map
            ("C-M-i" . completion-at-point))
     :config
-    (org-roam-setup))
+    (org-roam-db-autosync-mode))
 #+end_src
 
 ** Extra Org/Roam/Citar Packages
@@ -366,7 +383,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     ;; :after (org citar org-roam)
     :config
     (setq citar-org-roam-note-title-template "${author} - ${title}")
-    (setq citar-org-roam-subdir "reference")
+    (setq citar-org-roam-subdir ".")
     (setq citar-org-roam-capture-template-key "r")
     (citar-org-roam-mode))
 
@@ -383,20 +400,28 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
   (with-eval-after-load 'org-roam
     (cl-defmethod org-roam-node-type ((node org-roam-node))
-      "Return the TYPE of NODE."
-      (condition-case nil
-          (file-name-nondirectory
-           (directory-file-name
-            (file-name-directory
-             (file-relative-name (org-roam-node-file node) org-roam-directory))))
-        (error "")))
+      "Return the first word of the file name of NODE, delimited by '_'."
+      (let ((filename (file-name-nondirectory (org-roam-node-file node))))
+        (car (split-string filename "_" t))))
     (setq org-roam-node-display-template
           (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
 
-(use-package jinx
-  :hook (emacs-startup . global-jinx-mode)
-  :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages)))
+  ;; (with-eval-after-load 'org-roam
+  ;;   (cl-defmethod org-roam-node-type ((node org-roam-node))
+  ;;     "Return the TYPE of NODE."
+  ;;     (condition-case nil
+  ;;         (file-name-nondirectory
+  ;;          (directory-file-name
+  ;;           (file-name-directory
+  ;;            (file-relative-name (org-roam-node-file node) org-roam-directory))))
+  ;;       (error "")))
+  ;;   (setq org-roam-node-display-template
+  ;;         (concat "${type:15} ${title:*} " (propertize "${tags:10}" 'face 'org-tag))))
+
+  (use-package jinx
+    :hook (emacs-startup . global-jinx-mode)
+    :bind (("M-$" . jinx-correct)
+           ("C-M-$" . jinx-languages)))
 #+end_src
 ** Literate Programming
 #+BEGIN_SRC emacs-lisp 
@@ -749,19 +774,16 @@ For extending Emacs functionality
 #+BEGIN_SRC emacs-lisp 
   (use-package yasnippet
     :config
-    (setq yas-triggers-in-field t)
-    ;; (setq yas-next-field-or-maybe-expand nil)
-    (setq yas-snippet-dirs '("~/linux-setup/yasnippet" yas-installed-snippets-dir))
+    ;; Add your custom snippet directory to the list of snippet directories.
+    ;; Replace "~/my-snippets" with the path to your custom snippet directory.
+    (add-to-list 'yas-snippet-dirs "~/linux-setup/yasnippet")
+    
+    ;; Load the snippets from the directories.
+    (yas-reload-all)
 
-    :init 
-    (yas-global-mode 1)
-    )
+    ;; Enable YASnippet globally.
+    (yas-global-mode 1))
 
-  ;; (defun my-yas-try-expanding-auto-snippets ()
-  ;;   (when yas-minor-mode
-  ;;     (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
-  ;;       (yas-expand))))
-  ;; (add-hook 'post-command-hook #'my-yas-try-expanding-auto-snippets)
 #+END_SRC
 
 ** Browse Files
