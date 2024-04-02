@@ -1,10 +1,14 @@
 # -*- mode: snippet -*-
 # name: my-project-note
-# key: projnote
+# key: <projnote 
 # --
-* Goals
-  - ${1:Goal here}
-* Tasks
-  - ${2:Task here}
-* Notes
-  - ${3:Notes here}
+
+* SCOPE ${1:what is the outcome of this project}
+  :PROPERTIES:
+  :DRAFT:    TRUE
+  :END:
+
+${3:add details}
+
+* References
+${2:insert references}

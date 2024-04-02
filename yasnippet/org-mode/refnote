@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: my-reference-note
+# key: <refnote 
+# --
+
+* SCOPE ${1:what is the outcome of this project}
+${3:add details}

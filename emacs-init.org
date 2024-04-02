@@ -84,7 +84,7 @@ Using Straight.el for package management.
     (use-package exec-path-from-shell
       :init (exec-path-from-shell-initialize))
     (setq mac-command-modifier 'control)
-    (menu-bar-mode 1))
+    ) ;; (menu-bar-mode 1))
 #+end_src
 
 
@@ -204,15 +204,17 @@ Evil mode for keybinding and most of efficiency goodness
       "oc" '(org-capture                        :which-key "Org Todo")
       "ot" '(my/org-capture-todo                :which-key "Org Todo")
       "oa" '(org-agenda                         :which-key "Org Agenda")
-      "or" '(citar-create-note                  :which-key "Org Roam Reference Note")
-      "op" '(my/org-roam-capture-project-note   :which-key "Org Roam Project Note")
-      "om" '(my/org-roam-capture-permanent-note :which-key "Org Roam Permanent Note")
+      ;; "or" '(citar-create-note                  :which-key "Org Roam Reference Note")
+      ;; "op" '(my/org-roam-capture-project-note   :which-key "Org Roam Project Note")
+      ;; "om" '(my/org-roam-capture-permanent-note :which-key "Org Roam Permanent Note")
+      "of" '(org-roam-node-find                    :which-key "Org Roam Node Find")
+      "oi" '(org-roam-node-insert                  :which-key "Org Roam Node Insert")
       ))
 
   (defun my/org-roam-capture-project-note ()
     "Capture a new Org Roam project note using the designated project template."
     (interactive)
-    (org-roam-capture[[id:CB94DCA8-C002-453B-9E6A-79C1BD277566][trying]] :keys "p"))
+    (org-roam-capture :keys "p"))
 
   (defun my/org-roam-capture-permanent-note ()
     "Capture a new Org Roam project note using the designated project template."
@@ -345,36 +347,36 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
-  (use-package org-roam
-    :custom
-    (org-roam-directory "~/org/roam")
-    (org-roam-completion-everywhere t)
-    (org-roam-capture-templates
-     '(
-       ("d" "default" plain
-        "\nprojnote%?"
-        :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
-        :unnarrowed t)
-       ("r" "reference" plain
-        "\nrefnote%?"
-        :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
-        :unnarrowed t)
-       ("p" "project" plain
-        "\nprojnote%?"
-        :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
-        :unnarrowed t)
-       ("m" "permanent" plain
-        "\npermnote%?"
-        :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
-        :unnarrowed t)
-       ))
-   :bind (("C-c n l"  . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n i" . org-roam-node-insert)
-           :map org-mode-map
-           ("C-M-i" . completion-at-point))
-    :config
-    (org-roam-db-autosync-mode))
+    (use-package org-roam
+      :custom
+      (org-roam-directory "~/org/roam")
+      (org-roam-completion-everywhere t)
+      (org-roam-capture-templates
+       '(
+         ("d" "default" plain
+          "\n<projnote%?"
+          :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("r" "reference" plain
+          "\n<refnote%?\n* References\n[cite:@${citar-citekey}]"
+          :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("p" "project" plain
+          "\n<projnote%?"
+          :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ("m" "permanent" plain
+          "\n<permnote%?"
+          :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
+          :unnarrowed t)
+         ))
+     :bind (("C-c n l"  . org-roam-buffer-toggle)
+             ("C-c n f" . org-roam-node-find)
+             ("C-c n i" . org-roam-node-insert)
+             :map org-mode-map
+             ("C-M-i" . completion-at-point))
+      :config
+      (org-roam-db-autosync-mode))
 #+end_src
 
 ** Extra Org/Roam/Citar Packages
@@ -826,7 +828,7 @@ For extending Emacs functionality
 
 
 * Open and Annotate PDFs
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package pdf-tools
     :config
     (pdf-tools-install)
@@ -1174,7 +1176,7 @@ For extending Emacs functionality
           :defer t
           :straight (:host github :repo "rougier/nano-theme"))
         ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
 #+end_src
 
 ** Dealing with Parentheses
