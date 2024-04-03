@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: my-permanent-note
+# key: <permnote 
+# --
+
+* ${1:Main idea}
+  :PROPERTIES:
+  :SEED:   ${3:TRUE} 
+  :END:
+
+${2:add details}
+
+* Connections 
+${4:Add connections to other zettels}

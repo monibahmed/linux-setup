@@ -3,11 +3,10 @@
 # key: <refnote 
 # --
 
-* SCOPE ${1:what is the outcome of this project}
+* SCOPE ${1:How will you use this reference?}
   :PROPERTIES:
   :DRAFT:    TRUE
   :END:
 
-${3:add details}
-
+${2:add details}
 

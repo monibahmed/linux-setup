@@ -559,9 +559,14 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           )
     (setq org-directory "~/org")
     (setq org-agenda-custom-commands
-          '(("d" "Drafts" tags "DRAFT={TRUE}"
-             ((org-agenda-overriding-header "Drafts")
-              (org-agenda-prefix-format '((tags . "%-1t %b")))))))
+          '(
+            ("d" "Drafts" tags "DRAFT={TRUE}"
+             ((org-agenda-overriding-header "Draft Notes")
+              (org-agenda-prefix-format '((tags . "%-1t %b")))))
+            ("s" "Seeds" tags "SEED={TRUE}"
+             ((org-agenda-overriding-header "Seed Notes")
+              (org-agenda-prefix-format '((tags . "%-1t %b")))))
+            ))
     (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
@@ -782,13 +787,16 @@ Org and Org-roam will help you network your thoughts and reflect your understand
       (when keys
         (let ((key (car keys))) ; Assuming the first selected key for simplicity
           (when key
-            (let ((zotero-uri (format "zotero://select/items/@jkj%s" key)))
+            (let ((zotero-uri (format "zotero://select/items/@%s" key)))
               (browse-url zotero-uri)))))))
 
   (define-key org-mode-map (kbd "C-c C-z") #'my/citar-open-entry-in-zotero-ui)
 
 #+end_src
-
+** TODO Ebib to Replace Zotero
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package ebib)
+#+END_SRC
 ** TODO Org-Roam Project Tracking in GTD
 #+begin_src emacs-lisp :tangle no
   (defun my-org-sanitize-heading (heading-text)
@@ -871,6 +879,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
                 (set (make-local-variable 'blink-cursor-mode) nil)))
     (setq-default pdf-view-display-size 'fit-page)
     (setq pdf-annot-activate-created-annotations t)
+    (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
     :bind
     :custom
     (pdf-view-resize-factor 1.0))
@@ -919,7 +928,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+end_src 
 
 
-* Git Project Management
+* Project Management
 #+begin_src emacs-lisp 
   (use-package magit)
 #+end_src
@@ -1366,7 +1375,3 @@ Org and Org-roam will help you network your thoughts and reflect your understand
         (message "Path '%s' copied to the clipboard" path)))
     )  
 #+end_src
-
-
-
-* References

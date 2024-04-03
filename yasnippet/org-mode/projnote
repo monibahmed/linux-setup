@@ -3,12 +3,12 @@
 # key: <projnote 
 # --
 
-* SCOPE ${1:What is the outcome of this project?}
+* SCOPE ${1:What is the Goal of this project?}
   :PROPERTIES:
   :DRAFT:    TRUE
   :END:
 
-${3:add details}
+${3:Add Details}
 
 * References
 ${2:insert references}
