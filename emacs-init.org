@@ -2,7 +2,7 @@
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
 
-* Benchmarking Emacs Boot time
+* Bench-marking Emacs Boot time
 Benchmark Emacs startup time
 #+begin_src emacs-lisp
   ;; The default is 800 kilobytes.  Measured in bytes.
@@ -580,6 +580,14 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
   (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
 
+  ;; Configure Org mode to open PDFs with the system default PDF viewer
+  (with-eval-after-load 'org
+    (add-to-list 'org-file-apps 
+                 '("\\.pdf\\'" . "open %s")) ; For macOS
+    ;; For Linux, you might use '("\\.pdf\\'" . "xdg-open %s")
+    ;; For Windows, you might use '("\\.pdf\\'" . "start %s")
+    )
+
   ;; (use-package org-tidy
   ;;   :hook
   ;;   (org-mode . org-tidy-mode))
@@ -618,47 +626,47 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 ** Org-Roam
 #+BEGIN_SRC emacs-lisp 
-    (use-package org-roam
-      :custom
-      (org-roam-directory "~/org/roam")
-      (org-roam-completion-everywhere t)
-      (org-roam-capture-templates
-       '(
-         ("d" "default" plain
-          "\n<projnote%?"
-          :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("r" "reference" plain
-          "\n<refnote%?\n* References\n[cite:@${citar-citekey}]"
-          :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("p" "project" plain
-          "\n<projnote%?"
-          :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ("m" "permanent" plain
-          "\n<permnote%?"
-          :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
-          :unnarrowed t)
-         ))
-      :bind (("C-c n l" . org-roam-buffer-toggle)
-             ("C-c n f" . org-roam-node-find)
-             ("C-c n i" . org-roam-node-insert)
-             :map org-mode-map
-             ("C-M-i" . completion-at-point))
-      :config
-      (org-roam-db-autosync-mode))
+  (use-package org-roam
+    :custom
+    (org-roam-directory "~/org/roam")
+    (org-roam-completion-everywhere t)
+    (org-roam-capture-templates
+     '(
+       ("d" "default" plain
+        "\n<projnote%?"
+        :if-new (file+head "d-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ("r" "reference" plain
+        "\n<refnote%?\n* References\n[cite:@${citar-citekey}]"
+        :if-new (file+head "r-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ("p" "project" plain
+        "\n<projnote%?"
+        :if-new (file+head "p-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ("m" "permanent" plain
+        "\n<permnote%?"
+        :if-new (file+head "m-${slug}.org" "#+TITLE: ${title}\n\n")
+        :unnarrowed t)
+       ))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point))
+    :config
+    (org-roam-db-autosync-mode))
 
-    ;; (use-package org-ql)
+  ;; (use-package org-ql)
 
-    (use-package org-roam-ui
-      :after org-roam
-      ;; Assuming you want the UI available on Emacs startup
-      :config
-      (setq org-roam-ui-sync-theme t
-            org-roam-ui-follow t
-            org-roam-ui-update-on-save t
-            org-roam-ui-open-on-start t))
+  (use-package org-roam-ui
+    :after org-roam
+    ;; Assuming you want the UI available on Emacs startup
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 
   (with-eval-after-load 'org-roam
     (cl-defmethod org-roam-node-type ((node org-roam-node))
@@ -711,39 +719,71 @@ Org and Org-roam will help you network your thoughts and reflect your understand
        (scheme     . t)
        )))
 #+end_src
+** Citar and Zotero
+#+begin_src emacs-lisp 
+    (use-package citar
+      :custom
+      (citar-indicators
+       (list citar-indicator-files ; plain text
+             citar-indicator-notes-icons)) ; icon
+      (org-cite-global-bibliography (list "~/bibliography.bib"))
+      (org-cite-insert-processor   'citar)
+      (org-cite-follow-processor   'citar)
+      (org-cite-activate-processor 'citar)
+      (citar-bibliography org-cite-global-bibliography)
+      :bind
+      (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+      :hook
+      (LaTeX-mode    . citar-capf-setup)
+      (org-mode      . citar-capf-setup)
+      (org-roam-mode . citar-capf-setup)
+      )
 
-** TODO Citar and Zotero
-#+begin_src emacs-lisp :tangle no
-  (use-package citar
-    :custom
-    (citar-indicators
-     (list citar-indicator-files ; plain text
-           citar-indicator-notes-icons)) ; icon
-    (org-cite-global-bibliography (list "~/bibliography.bib"))
-    (org-cite-insert-processor   'citar)
-    (org-cite-follow-processor   'citar)
-    (org-cite-activate-processor 'citar)
-    (citar-bibliography org-cite-global-bibliography)
-    :bind
-    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
-    :hook
-    (LaTeX-mode    . citar-capf-setup)
-    (org-mode      . citar-capf-setup)
-    (org-roam-mode . citar-capf-setup)
-    )
+    (use-package citar-org-roam
+      ;; :after (org citar org-roam)
+      :config
+      (setq citar-org-roam-note-title-template "${author} - ${title}")
+      (setq citar-org-roam-subdir ".")
+      (setq citar-org-roam-capture-template-key "r")
+      (citar-org-roam-mode))
 
-  (use-package citar-org-roam
-    ;; :after (org citar org-roam)
-    :config
-    (setq citar-org-roam-note-title-template "${author} - ${title}")
-    (setq citar-org-roam-subdir ".")
-    (setq citar-org-roam-capture-template-key "r")
-    (citar-org-roam-mode))
+    (use-package citar-embark
+      :after citar embark
+      :config (citar-embark-mode)) 
 
-  (use-package citar-embark
-    :after citar embark
-    :config (citar-embark-mode)) 
+    (defun citar-open-entry-in-zotero (key)
+      "Open the Zotero entry corresponding to the citation KEY."
+      (interactive "sCitation Key: ")
+      (let ((zotero-uri (format "zotero://select/items/@%s" key)))
+        (browse-url zotero-uri)))
+
+    (defun my/org-cite-open-at-point-or-zotero ()
+      "Open citation at point in Zotero if on a citation, otherwise use `org-open-at-point`."
+      (interactive)
+      (if-let* ((element (org-element-context))
+                (type (org-element-type element))
+                (key (when (eq type 'citation-reference) (org-element-property :key element))))
+          (citar-open-entry-in-zotero key)
+        (org-open-at-point)))
+
+    (define-key org-mode-map (kbd "C-c z") #'my/org-cite-open-at-point-or-zotero)
+
+  (defun my/citar-open-entry-in-zotero-ui ()
+    "Open the Zotero entry corresponding to the selected citation key."
+    (interactive)
+    ;; Ensure selection returns a list, accommodating both single and multiple selections.
+    (let* ((selection (citar-select-refs))
+           (keys (if (listp selection) selection (list selection)))) ; Wrap in list if not already
+      (when keys
+        (let ((key (car keys))) ; Assuming the first selected key for simplicity
+          (when key
+            (let ((zotero-uri (format "zotero://select/items/@jkj%s" key)))
+              (browse-url zotero-uri)))))))
+
+    (define-key org-mode-map (kbd "C-c C-z") #'my/citar-open-entry-in-zotero-ui)
+
 #+end_src
+
 
 ** TODO Org-Roam Project Tracking in GTD
 #+begin_src emacs-lisp :tangle no
@@ -817,7 +857,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 
 * Open and Annotate PDFs
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package pdf-tools
     :config
     (pdf-tools-install)
@@ -1025,10 +1065,10 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     :bind (("M-/" . dabbrev-completion)
            ("C-M-/" . dabbrev-expand))
     :config
-    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
-    ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
-    (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-    (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
+    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` "))
+  ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+  ;; (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+  ;; (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
 
   (use-package eglot
     :config
@@ -1165,7 +1205,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           :defer t
           :straight (:host github :repo "rougier/nano-theme"))
         ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 #+end_src
 
 ** Dealing with Parentheses
