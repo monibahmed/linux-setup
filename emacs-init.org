@@ -291,6 +291,11 @@ For extending Emacs functionality
             compilation-mode))
     (popper-mode +1)
     (popper-echo-mode +1))                ; For echo area hints
+  (use-package no-littering
+    :config
+    ;; No additional config needed for no-littering,
+    ;; but you can customize the save file locations if desired.
+    )
 #+end_src
 ** Make the Minibuffer easier to follow
 #+begin_src emacs-lisp 
@@ -721,52 +726,52 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+end_src
 ** Citar and Zotero
 #+begin_src emacs-lisp 
-    (use-package citar
-      :custom
-      (citar-indicators
-       (list citar-indicator-files ; plain text
-             citar-indicator-notes-icons)) ; icon
-      (org-cite-global-bibliography (list "~/bibliography.bib"))
-      (org-cite-insert-processor   'citar)
-      (org-cite-follow-processor   'citar)
-      (org-cite-activate-processor 'citar)
-      (citar-bibliography org-cite-global-bibliography)
-      :bind
-      (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
-      :hook
-      (LaTeX-mode    . citar-capf-setup)
-      (org-mode      . citar-capf-setup)
-      (org-roam-mode . citar-capf-setup)
-      )
+  (use-package citar
+    :custom
+    (citar-indicators
+     (list citar-indicator-files ; plain text
+           citar-indicator-notes-icons)) ; icon
+    (org-cite-global-bibliography (list "~/bibliography.bib"))
+    (org-cite-insert-processor   'citar)
+    (org-cite-follow-processor   'citar)
+    (org-cite-activate-processor 'citar)
+    (citar-bibliography org-cite-global-bibliography)
+    :bind
+    (:map org-mode-map :package org ("C-c b" . #'org-cite-insert))
+    :hook
+    (LaTeX-mode    . citar-capf-setup)
+    (org-mode      . citar-capf-setup)
+    (org-roam-mode . citar-capf-setup)
+    )
 
-    (use-package citar-org-roam
-      ;; :after (org citar org-roam)
-      :config
-      (setq citar-org-roam-note-title-template "${author} - ${title}")
-      (setq citar-org-roam-subdir ".")
-      (setq citar-org-roam-capture-template-key "r")
-      (citar-org-roam-mode))
+  (use-package citar-org-roam
+    ;; :after (org citar org-roam)
+    :config
+    (setq citar-org-roam-note-title-template "${author} - ${title}")
+    (setq citar-org-roam-subdir ".")
+    (setq citar-org-roam-capture-template-key "r")
+    (citar-org-roam-mode))
 
-    (use-package citar-embark
-      :after citar embark
-      :config (citar-embark-mode)) 
+  (use-package citar-embark
+    :after citar embark
+    :config (citar-embark-mode)) 
 
-    (defun citar-open-entry-in-zotero (key)
-      "Open the Zotero entry corresponding to the citation KEY."
-      (interactive "sCitation Key: ")
-      (let ((zotero-uri (format "zotero://select/items/@%s" key)))
-        (browse-url zotero-uri)))
+  (defun citar-open-entry-in-zotero (key)
+    "Open the Zotero entry corresponding to the citation KEY."
+    (interactive "sCitation Key: ")
+    (let ((zotero-uri (format "zotero://select/items/@%s" key)))
+      (browse-url zotero-uri)))
 
-    (defun my/org-cite-open-at-point-or-zotero ()
-      "Open citation at point in Zotero if on a citation, otherwise use `org-open-at-point`."
-      (interactive)
-      (if-let* ((element (org-element-context))
-                (type (org-element-type element))
-                (key (when (eq type 'citation-reference) (org-element-property :key element))))
-          (citar-open-entry-in-zotero key)
-        (org-open-at-point)))
+  (defun my/org-cite-open-at-point-or-zotero ()
+    "Open citation at point in Zotero if on a citation, otherwise use `org-open-at-point`."
+    (interactive)
+    (if-let* ((element (org-element-context))
+              (type (org-element-type element))
+              (key (when (eq type 'citation-reference) (org-element-property :key element))))
+        (citar-open-entry-in-zotero key)
+      (org-open-at-point)))
 
-    (define-key org-mode-map (kbd "C-c z") #'my/org-cite-open-at-point-or-zotero)
+  (define-key org-mode-map (kbd "C-c z") #'my/org-cite-open-at-point-or-zotero)
 
   (defun my/citar-open-entry-in-zotero-ui ()
     "Open the Zotero entry corresponding to the selected citation key."
@@ -780,10 +785,9 @@ Org and Org-roam will help you network your thoughts and reflect your understand
             (let ((zotero-uri (format "zotero://select/items/@jkj%s" key)))
               (browse-url zotero-uri)))))))
 
-    (define-key org-mode-map (kbd "C-c C-z") #'my/citar-open-entry-in-zotero-ui)
+  (define-key org-mode-map (kbd "C-c C-z") #'my/citar-open-entry-in-zotero-ui)
 
 #+end_src
-
 
 ** TODO Org-Roam Project Tracking in GTD
 #+begin_src emacs-lisp :tangle no
