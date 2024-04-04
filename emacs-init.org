@@ -793,9 +793,59 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (define-key org-mode-map (kbd "C-c C-z") #'my/citar-open-entry-in-zotero-ui)
 
 #+end_src
-** TODO Ebib to Replace Zotero
+*** Convert Zotero Markdown to Org
 #+BEGIN_SRC emacs-lisp :tangle no
-  (use-package ebib)
+      (defun pandoc-convert-file (input-file output-file)
+        "Convert INPUT-FILE to OUTPUT-FILE using Pandoc."
+        (shell-command (format "pandoc %s -o %s --wrap=none"
+                               (shell-quote-argument input-file)
+                               (shell-quote-argument output-file))))
+
+      (defun generate-org-filename (markdown-file)
+        "Generate an Org mode filename from MARKDOWN-FILE."
+        (concat (file-name-sans-extension markdown-file) ".org"))
+
+      (defun pandoc-md-to-org (markdown-file)
+        "Convert MARKDOWN-FILE to an Org file using Pandoc."
+        (let ((org-file (generate-org-filename markdown-file)))
+          (pandoc-convert-file markdown-file org-file)
+          org-file))
+
+      (defun my-pandoc-convert-to-org ()
+        "Convert the current Markdown file buffer to Org format using Pandoc."
+        (interactive)
+        (if (not (buffer-file-name))
+            (message "Buffer is not visiting a file!")
+          (let ((org-file (pandoc-md-to-org (buffer-file-name))))
+            (if (file-exists-p org-file)
+                (find-file org-file)
+              (message "Conversion failed or Org file was not created.")))))
+
+  (defun convert-md-links-to-org ()
+    "Convert all Markdown links in the current buffer to Org-mode links."
+    (interactive)
+    (goto-char (point-min)) ;; Start from the beginning of the buffer.
+    (while (re-search-forward "\\[\\(.*?\\)\\](\\(zotero://select/library/items/[^)]+\\))" nil t)
+      (let ((link-text (match-string 1))
+            (url (match-string 2)))
+        ;; Replace the Markdown link with Org-mode format.
+        (replace-match (format "[[%s][%s]]" url link-text)))))
+
+#+END_SRC
+*** Open Org links in Zotero
+#+BEGIN_SRC emacs-lisp
+  (defun zotero-open (zotero-link)
+    (start-process "zotero_open" nil "open" (concat "zotero:" zotero-link)))
+
+  (org-link-set-parameters "zotero" :follow #'zotero-open)
+#+END_SRC
+*** Convert Line to Heading
+#+BEGIN_SRC emacs-lisp
+  (defun convert-line-to-heading (level)
+    "Convert the current line to an Org mode heading of specified LEVEL."
+    (interactive "nLevel of the heading: ")
+    (beginning-of-line) ;; Move to the beginning of the line.
+    (insert (make-string level ?*) " ")) ;; Insert asterisks and a space.
 #+END_SRC
 ** TODO Org-Roam Project Tracking in GTD
 #+begin_src emacs-lisp :tangle no
@@ -854,7 +904,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading-for-organize)
 #+end_src
 ** TODO Latex and Markup Support
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
   (use-package markdown-mode)
   (use-package auctex)
 #+end_src 
