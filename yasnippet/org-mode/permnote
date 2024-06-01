@@ -3,7 +3,7 @@
 # key: <permnote 
 # --
 
-* ${1:Main idea}
+* ${1:main idea}
   :PROPERTIES:
   :SEED:   ${3:TRUE} 
   :END:
@@ -11,4 +11,4 @@
 ${2:add details}
 
 * Connections 
-${4:Add connections to other zettels}
+${4:add connections to other zettels}

@@ -267,8 +267,8 @@ For extending Emacs functionality
 
   (use-package default-text-scale)
 
-  (use-package project
-    :straight nil)
+  ;; (use-package project
+  ;;   :straight nil)
   (use-package popper
     :bind (("C-`"   . popper-toggle)
            ("M-`"   . popper-cycle)
@@ -280,7 +280,7 @@ For extending Emacs functionality
     ;; (setq popper-echo-dispatch-actions t)
     ;; how to group popups
     ;; (setq popper-display-function #'popper-select-popup-at-bottom)
-    (setq popper-group-function #'popper-group-by-project)
+    ;; (setq popper-group-function #'popper-group-by-project)
     ;; which buffers should be considered popups
     (setq popper-window-height 0.33)
     (setq popper-reference-buffers
@@ -794,32 +794,32 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 #+end_src
 *** Convert Zotero Markdown to Org
-#+BEGIN_SRC emacs-lisp :tangle no
-      (defun pandoc-convert-file (input-file output-file)
-        "Convert INPUT-FILE to OUTPUT-FILE using Pandoc."
-        (shell-command (format "pandoc %s -o %s --wrap=none"
-                               (shell-quote-argument input-file)
-                               (shell-quote-argument output-file))))
+#+BEGIN_SRC emacs-lisp 
+  (defun pandoc-convert-file (input-file output-file)
+    "Convert INPUT-FILE to OUTPUT-FILE using Pandoc."
+    (shell-command (format "pandoc %s -o %s --wrap=none"
+                           (shell-quote-argument input-file)
+                           (shell-quote-argument output-file))))
 
-      (defun generate-org-filename (markdown-file)
-        "Generate an Org mode filename from MARKDOWN-FILE."
-        (concat (file-name-sans-extension markdown-file) ".org"))
+  (defun generate-org-filename (markdown-file)
+    "Generate an Org mode filename from MARKDOWN-FILE."
+    (concat (file-name-sans-extension markdown-file) ".org"))
 
-      (defun pandoc-md-to-org (markdown-file)
-        "Convert MARKDOWN-FILE to an Org file using Pandoc."
-        (let ((org-file (generate-org-filename markdown-file)))
-          (pandoc-convert-file markdown-file org-file)
-          org-file))
+  (defun pandoc-md-to-org (markdown-file)
+    "Convert MARKDOWN-FILE to an Org file using Pandoc."
+    (let ((org-file (generate-org-filename markdown-file)))
+      (pandoc-convert-file markdown-file org-file)
+      org-file))
 
-      (defun my-pandoc-convert-to-org ()
-        "Convert the current Markdown file buffer to Org format using Pandoc."
-        (interactive)
-        (if (not (buffer-file-name))
-            (message "Buffer is not visiting a file!")
-          (let ((org-file (pandoc-md-to-org (buffer-file-name))))
-            (if (file-exists-p org-file)
-                (find-file org-file)
-              (message "Conversion failed or Org file was not created.")))))
+  (defun my-pandoc-convert-to-org ()
+    "Convert the current Markdown file buffer to Org format using Pandoc."
+    (interactive)
+    (if (not (buffer-file-name))
+        (message "Buffer is not visiting a file!")
+      (let ((org-file (pandoc-md-to-org (buffer-file-name))))
+        (if (file-exists-p org-file)
+            (find-file org-file)
+          (message "Conversion failed or Org file was not created.")))))
 
   (defun convert-md-links-to-org ()
     "Convert all Markdown links in the current buffer to Org-mode links."
@@ -905,17 +905,66 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+end_src
 ** TODO Latex and Markup Support
 #+begin_src emacs-lisp 
-  (use-package markdown-mode)
-  (use-package auctex)
+      (use-package markdown-mode)
+      (use-package auctex)
+
+    (use-package org
+      :ensure t
+      :config
+
+  ;; Use utf-8 for HTML export
+  (setq org-html-coding-system 'utf-8)
+
+  ;; Function to export to HTML and open in browser
+  (defun my-org-export-to-html-and-open ()
+    "Export the current Org file to HTML and open it in the default browser."
+    (interactive)
+    (let ((output-file (org-html-export-to-html)))
+      (browse-url (concat "file://" output-file))))
+
+  ;; Bind the function to a key combination
+  ;; (global-set-key (kbd "C-e H") 'my-org-export-to-html-and-open)
+      
+  (require 'ox-latex)
+      (setq org-latex-listings 'minted) ;; Optional, for better code listings
+      (add-to-list 'org-latex-packages-alist '("" "minted")) ;; Optional, for better code listings
+      (add-to-list 'org-latex-packages-alist '("arabic" "arabtex"))
+      (add-to-list 'org-latex-packages-alist '("" "fontspec"))
+      
+      ;; Use xelatex for better Unicode support
+      (setq org-latex-compiler "xelatex")
+      (setq org-latex-pdf-process
+            '("xelatex -interaction nonstopmode -output-directory %o %f"
+              "xelatex -interaction nonstopmode -output-directory %o %f"))
+
+      ;; Define a new latex class with Arabic support
+      (add-to-list 'org-latex-classes
+                   '("article"
+                     "\\documentclass{article}
+    \\usepackage{arabtex}
+    \\usepackage{utf8}
+    \\setcode{utf8}
+    \\usepackage{fontspec}
+    \\newfontfamily\\arabicfont[Script=Arabic]{Amiri}"
+                     ("\\section{%s}" . "\\section*{%s}")
+                     ("\\subsection{%s}" . "\\subsection*{%s}")
+                     ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                     ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                     ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
+
+  (require 'ox-latex)
+  (setq org-latex-pdf-process '("xelatex -interaction nonstopmode -output-directory %o %f"
+                                "xelatex -interaction nonstopmode -output-directory %o %f"))
 #+end_src 
+
 
 ** TODO Publishing
 #+begin_src emacs-lisp :tangle no
-  ;; (use-package ox-publish
-  ;;   :straight nil)
-  ;; Set the path to the PlantUML jar file
+  (use-package ox-publish
+    :straight nil)
+  (use-package simple-httpd)
+  (use-package htmlize)
 #+END_SRC
-
 
 
 * Open and Annotate PDFs
@@ -1066,7 +1115,9 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (use-package flycheck
     :ensure t
     :config
-    (add-hook 'after-init-hook #'global-flycheck-mode))
+    ;; Don't enable automatically
+    ;; (add-hook 'after-init-hook #'global-flycheck-mode))
+    )
 #+end_src
 ** Corfu
 #+begin_src emacs-lisp 
@@ -1133,10 +1184,10 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   ;; (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
   ;; (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
 
-  (use-package eglot
-    :config
-    (setq eglot-autoshutdown t)
-    (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
+  ;; (use-package eglot
+  ;;   :config
+  ;;   (setq eglot-autoshutdown t)
+  ;;   (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
 
   (use-package nix-mode
     :mode "\\.nix\\'")
@@ -1186,28 +1237,6 @@ Org and Org-roam will help you network your thoughts and reflect your understand
     ;;(add-to-list 'completion-at-point-functions #'cape-line)
     )
 #+end_src
-
-
-* TODO Publish Website with notes
-#+begin_src emacs-lisp :tangle no
-  (setq org-publish-project-alist
-        `(("pages"
-           :base-directory "~/taingram.org/org/"
-           :base-extension "org"
-           :recursive t
-           :publishing-directory "~/taingram.or/html/"
-           :publishing-function org-html-publish-to-html)
-
-          ("static"
-           :base-directory "~/taingram.org/org/"
-           :base-extension "css\\|txt\\|jpg\\|gif\\|png"
-           :recursive t
-           :publishing-directory  "~/taingram.org/html/"
-           :publishing-function org-publish-attachment)
-
-          ("taingram.org" :components ("pages" "static"))))
-#+end_src
-
 
 
 * Look and Visuals
@@ -1290,6 +1319,11 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 
 * Scratch Area
 
+#+BEGIN_SRC emacs-lisp :tangle no
+  (use-package pandoc-mode
+    :hook
+    (markdown-mode . pandoc-mode))
+#+END_SRC
 
 #+BEGIN_SRC emacs-lisp :tangle no
   (defun my-org-sanitize-heading (heading-text)
@@ -1424,7 +1458,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
   (use-package zotxt)
   (add-hook 'org-mode-hook (lambda () (org-zotxt-mode 1)))
 
-    ;; Org-noter
+  ;; Org-noter
   (use-package org-noter)
   (setq org-noter-notes-search-path '("~/org/roam"))
 
