@@ -543,75 +543,75 @@ For extending Emacs functionality
 Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
 ** Org-Mode
 #+begin_src emacs-lisp 
-  (use-package org 
-    :config
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "WAITING(w)" "DONE(d)")
-            (sequence "SCOPE(s)" "|"  "CANCELED(c)")))
-    (setq org-use-fast-todo-selection t)
-    (setq org-file-apps 
-          '((auto-mode . emacs)
-            ("\\.pdf\\'" . system)))
-    (setq org-capture-templates
-          '(
-            ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
-             "* TODO %?\n"))
-          )
-    (setq org-directory "~/org")
-    (setq org-agenda-custom-commands
-          '(
-            ("d" "Drafts" tags "DRAFT={TRUE}"
-             ((org-agenda-overriding-header "Draft Notes")
-              (org-agenda-prefix-format '((tags . "%-1t %b")))))
-            ("s" "Seeds" tags "SEED={TRUE}"
-             ((org-agenda-overriding-header "Seed Notes")
-              (org-agenda-prefix-format '((tags . "%-1t %b")))))
-            ))
-    (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
-    (setq org-confirm-babel-evaluate nil)
-    (setq org-startup-indented  t)
-    (setq org-startup-numerated t)
-    (setq org-startup-with-inline-images t)
-    (setq org-blank-before-new-entry nil)
-    (setq org-hide-emphasis-markers nil)
-    (setq org-ellipsis " ▼")
-    :hook
-    (org-mode . visual-line-mode)
-    (org-babel-after-execute . org-redisplay-inline-images))
+    (use-package org 
+      :config
+      (setq org-todo-keywords
+            '((sequence "TODO(t)" "WAITING(w)" "DONE(d)")
+              (sequence "SCOPE(s)" "|"  "CANCELED(c)")))
+      (setq org-use-fast-todo-selection t)
+      (setq org-file-apps 
+            '((auto-mode . emacs)
+              ("\\.pdf\\'" . system)))
+      (setq org-capture-templates
+            '(
+              ("t" "Todo" entry (file+headline "~/org/gtd.org" "Capture Tasks")
+               "* TODO %?\n"))
+            )
+      (setq org-directory "~/org")
+      (setq org-agenda-custom-commands
+            '(
+              ("d" "Drafts" tags "DRAFT={TRUE}"
+               ((org-agenda-overriding-header "Draft Notes")
+                (org-agenda-prefix-format '((tags . "%-1t %b")))))
+              ("s" "Seeds" tags "SEED={TRUE}"
+               ((org-agenda-overriding-header "Seed Notes")
+                (org-agenda-prefix-format '((tags . "%-1t %b")))))
+              ))
+      (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+      (setq org-confirm-babel-evaluate nil)
+      (setq org-startup-indented  t)
+      (setq org-startup-numerated t)
+      (setq org-startup-with-inline-images t)
+      (setq org-blank-before-new-entry nil)
+      (setq org-hide-emphasis-markers nil)
+      (setq org-ellipsis " ▼ ")
+      :hook
+      (org-mode . visual-line-mode)
+      (org-babel-after-execute . org-redisplay-inline-images))
 
-  (defun update-org-agenda-files-recursively ()
-    "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
-    (interactive)
-    (setq org-agenda-files
-          (seq-filter
-           (lambda (file)
-             (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
-           (directory-files-recursively "~/org" "\\.org$"))))
+    (defun update-org-agenda-files-recursively ()
+      "Update `org-agenda-files` to include all .org files under ~/org directory, excluding ~/org/roam/templates."
+      (interactive)
+      (setq org-agenda-files
+            (seq-filter
+             (lambda (file)
+               (not (string-match-p (regexp-quote "~/org/roam/templates/") file)))
+             (directory-files-recursively "~/org" "\\.org$"))))
 
-  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
+    (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
 
-  ;; Configure Org mode to open PDFs with the system default PDF viewer
-  (with-eval-after-load 'org
-    (add-to-list 'org-file-apps 
-                 '("\\.pdf\\'" . "open %s")) ; For macOS
-    ;; For Linux, you might use '("\\.pdf\\'" . "xdg-open %s")
-    ;; For Windows, you might use '("\\.pdf\\'" . "start %s")
-    )
+    ;; Configure Org mode to open PDFs with the system default PDF viewer
+    (with-eval-after-load 'org
+      (add-to-list 'org-file-apps 
+                   '("\\.pdf\\'" . "open %s")) ; For macOS
+      ;; For Linux, you might use '("\\.pdf\\'" . "xdg-open %s")
+      ;; For Windows, you might use '("\\.pdf\\'" . "start %s")
+      )
 
-  ;; (use-package org-tidy
-  ;;   :hook
-  ;;   (org-mode . org-tidy-mode))
+    ;; (use-package org-tidy
+    ;;   :hook
+    ;;   (org-mode . org-tidy-mode))
 
-  (use-package visual-fill-column
-    :custom
-    (visual-fill-column-center-text t)
-    (visual-fill-column-width 140)
-    :hook (org-mode . visual-fill-column-mode))
+    (use-package visual-fill-column
+      :custom
+      (visual-fill-column-center-text t)
+      (visual-fill-column-width 140)
+      :hook (org-mode . visual-fill-column-mode))
 
-  (use-package jinx
-    :hook (emacs-startup . global-jinx-mode)
-    :bind (("M-$" . jinx-correct)
-           ("C-M-$" . jinx-languages)))
+    (use-package jinx
+      :hook (emacs-startup . global-jinx-mode)
+      :bind (("M-$" . jinx-correct)
+             ("C-M-$" . jinx-languages)))
 #+end_src
 
 ** Org Tangle
@@ -1290,7 +1290,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           :defer t
           :straight (:host github :repo "rougier/nano-theme"))
         ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
 #+end_src
 
 ** Dealing with Parentheses
