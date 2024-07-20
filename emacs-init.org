@@ -74,17 +74,20 @@ Using Straight.el for package management.
   (let ((local-config "~/emacs-local-config.el"))
     (when (file-exists-p local-config)
       (load-file local-config)))
+;; Set default encoding to UTF-8
+(prefer-coding-system 'utf-8)
 
 #+end_src
 
 
 * Mac OS X Specifics
 #+begin_src emacs-lisp
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control)
-    ) ;; (menu-bar-mode 1))
+    (when (memq window-system '(mac ns x))
+      (use-package exec-path-from-shell
+        :init (exec-path-from-shell-initialize))
+      (setq mac-command-modifier 'control)
+      ;; (menu-bar-mode 1)
+      )
 #+end_src
 
 
@@ -574,7 +577,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
       (setq org-startup-with-inline-images t)
       (setq org-blank-before-new-entry nil)
       (setq org-hide-emphasis-markers nil)
-      (setq org-ellipsis " ▼ ")
+      ;; (setq org-ellipsis " ▼ ")
       :hook
       (org-mode . visual-line-mode)
       (org-babel-after-execute . org-redisplay-inline-images))
@@ -1108,6 +1111,15 @@ Org and Org-roam will help you network your thoughts and reflect your understand
               "llama:latest"))          ;List of models
 #+end_src
 
+;; Let's create a hello_world python script
+;; using org mode, lets print to #+Results:
+#+begin_src python :tangle no
+  print("Hello, World!")
+#+end_src
+
+#+RESULTS:
+: None
+
 
 * Programming
 ** Flycheck
@@ -1452,6 +1464,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
         (message "Path '%s' copied to the clipboard" path)))
     )  
 #+end_src
+
 * Test
 #+BEGIN_SRC emacs-lisp :tangle no
   ;; Zotxt
