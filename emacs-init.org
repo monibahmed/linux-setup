@@ -1302,7 +1302,7 @@ Org and Org-roam will help you network your thoughts and reflect your understand
           :defer t
           :straight (:host github :repo "rougier/nano-theme"))
         ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100)
+  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
 #+end_src
 
 ** Dealing with Parentheses
