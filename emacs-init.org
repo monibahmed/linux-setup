@@ -610,61 +610,86 @@ Org and Org-roam will help you network your thoughts and reflect your understand
 #+end_src
 ** Org Readwise
 #+BEGIN_SRC emacs-lisp
-  ;; Install org-readwise from GitHub
-  (use-package org-readwise
-    :straight (org-readwise :type git :host github :repo "CountGreven/org-readwise")
-    :config
-    ;; Ensure auth-source is configured to find your Readwise token
-    (setq auth-sources '("~/.authinfo"))
-    
-    ;; Set the output location for your highlights (buffer or file)
-    (setq org-readwise-output-location "~/org/readwise-highlights.org")
-    (setq org-readwise-sync-highlights t)
-    (setq org-readwise-sync-reader t)
-    ;; (setq org-readwise-last-sync-time-file “~/.emacs.d/org-readwise-last-sync”)
-    ;; Optionally set the debug level (0 = no debug, 1 = basic debug, 2 = detailed debug)
-    (setq org-readwise-debug-level 3))
-  (defun org-download-readwise-images ()
-    "Download all Markdown-style external images in the current Org file and replace links with local file paths."
+      ;; Install org-readwise from GitHub
+      (use-package org-readwise
+        :straight (org-readwise :type git :host github :repo "CountGreven/org-readwise")
+        :config
+        ;; Ensure auth-source is configured to find your Readwise token
+        (setq auth-sources '("~/.authinfo"))
+        
+        ;; Set the output location for your highlights (buffer or file)
+        (setq org-readwise-output-location "~/org/readwise-highlights.org")
+        (setq org-readwise-sync-highlights t)
+        (setq org-readwise-sync-reader t)
+        (setq org-readwise-note-format "- %text%")            ;; Highlights as bullet points
+        (setq org-readwise-entry-format "- %title%")          ;; Each entry as a bullet point
+        (setq org-readwise-property-format "")                ;; Removes additional properties
+        (setq org-readwise-insert-sections nil)               ;; Disables sectioning
+
+        ;; (setq org-readwise-note-format "- %text%")  ;; Each highlight as a bullet point
+        ;; (setq org-readwise-last-sync-time-file “~/.emacs.d/org-readwise-last-sync”)
+        ;; Optionally set the debug level (0 = no debug, 1 = basic debug, 2 = detailed debug)
+        (setq org-readwise-debug-level 3))
+
+      (defun org-download-readwise-images ()
+        "Download all Markdown-style external images in the current Org file and replace links with local file paths."
+        (interactive)
+        (save-excursion
+          (goto-char (point-min))
+          ;; Look for Markdown-style image links: ![](https://...)
+          (while (re-search-forward "!\\[.*?\\](\\(https://[^ ]+\\))" nil t)
+            (let ((url (match-string 1)))
+              ;; Use org-download to download the image and replace the link
+              (org-download-image url)))))
+  
+  (defun convert-md-links-to-org-links ()
+    "Convert Markdown-style image links (![](https://...)) to Org mode links ([[https://...]])."
     (interactive)
     (save-excursion
       (goto-char (point-min))
-      ;; Look for Markdown-style image links: ![](https://...)
-      (while (re-search-forward "!\\[.*?\\](\\(https://[^ ]+\\))" nil t)
-        (let ((url (match-string 1)))
-          ;; Use org-download to download the image and replace the link
-          (org-download-image url)))))
+      (while (re-search-forward "\\[.*?\\](\\(https://[^ ]+\\))" nil t)
+        (replace-match "[[\\1]]"))))
+(defun download-org-image-links ()
+  "Download only image links (e.g., .png, .jpg) in Org mode format."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "\\[\\[\\(https://[^ ]+\\(\\.png\\|\\.jpg\\|\\.jpeg\\|\\.gif\\)\\)\\]\\]" nil t)
+      (let ((url (match-string 1)))
+        (org-download-image url)))))
 
-  (defun org-readwise-sync-and-download-images ()
-    "Run `org-readwise-sync` followed by `org-download-readwise-images`."
-    (interactive)
-    (org-readwise-sync)
-    (org-download-readwise-images))
 
-  (defun org-remove-markdown-image-links ()
-    "Remove all Markdown-style image links (![](https://...)) from the current Org file."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      ;; Search for Markdown-style image links and replace them with an empty string
-      (while (re-search-forward "!\\[.*?\\](https://[^ ]+)" nil t)
-        (replace-match ""))))
+      (defun org-download-images ()
+        "Run `org-readwise-sync` followed by `org-download-readwise-images`."
+        (interactive)
+        (convert-md-links-to-org-links)
+        (download-org-image-links))
 
-  (defun org-readwise-sync-download-and-clean ()
-    "Run `org-readwise-sync`, download images, and remove Markdown image links."
-    (interactive)
-    (org-readwise-sync-and-download-images)
-    (org-remove-markdown-image-links))
-  (defun org-remove-all-properties-drawers ()
-    "Remove all PROPERTIES drawers in the current Org buffer."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "^[ \t]*:PROPERTIES:[ \t]*\n\\([^\0]*?\\)[ \t]*:END:[ \t]*\n?" nil t)
-        (replace-match ""))))
+      (defun org-remove-markdown-image-links ()
+        "Remove all Markdown-style image links (![](https://...)) from the current Org file."
+        (interactive)
+        (save-excursion
+          (goto-char (point-min))
+          ;; Search for Markdown-style image links and replace them with an empty string
+          (while (re-search-forward "!\\[.*?\\](https://[^ ]+)" nil t)
+            (replace-match ""))))
 
-  ;; Set up advice to run `org-download-readwise-images` automatically after `org-readwise-sync`
-  (advice-add 'org-readwise-sync :after #'org-readwise-sync-download-and-clean)
+      (defun org-readwise-sync-download-and-clean ()
+        "Run `org-readwise-sync`, download images, and remove Markdown image links."
+        (interactive)
+        (org-readwise-sync-and-download-images)
+        (org-remove-markdown-image-links))
+
+      (defun org-remove-all-properties-drawers ()
+        "Remove all PROPERTIES drawers in the current Org buffer."
+        (interactive)
+        (save-excursion
+          (goto-char (point-min))
+          (while (re-search-forward "^[ \t]*:PROPERTIES:[ \t]*\n\\([^\0]*?\\)[ \t]*:END:[ \t]*\n?" nil t)
+            (replace-match ""))))
+
+      ;; Set up advice to run `org-download-readwise-images` automatically after `org-readwise-sync`
+      (advice-add 'org-readwise-sync :after #'org-readwise-sync-download-and-clean)
 
 #+END_SRC
 
