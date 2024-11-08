@@ -2,1196 +2,213 @@
 #+STARTUP: content inlineimages
 #+PROPERTY: header-args:emacs-lisp :results output silent :tangle ~/.emacs
 
-* Bench-marking Emacs Boot time
-Benchmark Emacs startup time
-#+begin_src emacs-lisp
-  ;; The default is 800 kilobytes.  Measured in bytes.
-  (setq gc-cons-threshold (* 50 1000 1000))
+* Basic Setup 
+#+BEGIN_SRC emacs-lisp
+  ;; Initialize straight.el package manager
+  (setq straight-use-package-by-default t)
 
-  ;; Profile emacs startup
-  (add-hook
-   'emacs-startup-hook
-   (lambda ()
-     (message "*** Emacs loaded in %s seconds with %d garbage collections."
-              (emacs-init-time "%.2f")
-              gcs-done)))
-#+end_src
-
-
-* Package Manager
-Using Straight.el for package management.
-#+begin_src emacs-lisp 
+  ;; Bootstrap straight.el
   (defvar bootstrap-version)
   (let ((bootstrap-file
-         (expand-file-name
-          "straight/repos/straight.el/bootstrap.el"
-          (or (bound-and-true-p straight-base-dir)
-              user-emacs-directory)))
-        (bootstrap-version 7))
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 6))
     (unless (file-exists-p bootstrap-file)
       (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
+  	(url-retrieve-synchronously
+  	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+  	 'silent 'inhibit-cookies)
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
+
+  ;; Install use-package via straight.el
   (straight-use-package 'use-package)
-  (setq straight-vc-git-default-clone-depth 1)
-  (setq straight-use-package-by-default t)
 
-#+end_src
+  ;; Optional: Basic UI tweaks
+  (menu-bar-mode -1)       ;; Disable menu bar
+  (tool-bar-mode -1)       ;; Disable toolbar
+  (scroll-bar-mode -1)     ;; Disable scrollbar
+  (setq inhibit-startup-screen t) ;; Disable startup screen
 
-
-* Basic Emacs Settings
-#+begin_src emacs-lisp 
-  (setq-default inhibit-splash-screen t)
-  ;; (add-to-list 'default-frame-alist '(fullscreen . fullboth))
-  (setq make-backup-files nil)
-  (toggle-scroll-bar -1)
-  (tool-bar-mode     -1)
-  (menu-bar-mode     -1)
-  (global-auto-revert-mode 1)
-  (tooltip-mode      -1)
-  (setq make-backup-files nil) 
-  (setq auto-save-default nil)
-  (setq package-enable-at-startup nil)
-  (setq vc-follow-symlinks nil)
-  (setq jit-lock-stealth-time nil)
-  (setq jit-lock-defer-time nil)
-  (setq jit-lock-defer-time 0.05)
-  (setq jit-lock-stealth-load 200)
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 2)
-  (setq custom-file (concat user-emacs-directory "custom.el"))
-  (setq switch-to-buffer-obey-display-actions t)
-  (customize-set-variable 'scroll-bar-mode nil)
-  (customize-set-variable 'horizontal-scroll-bar-mode nil)
-  (setq browse-url-browser-function 'browse-url-default-browser)
+  ;; Optional: Basic editor settings
+  (setq make-backup-files nil) ;; Disable backup files
+  (setq auto-save-default nil) ;; Disable auto-save
+  (setq ring-bell-function 'ignore) ;; Silence bell
   (defalias 'yes-or-no-p 'y-or-n-p)
 
-  ;; Check if the local-config.el file exists, and load it if it does
-  (let ((local-config "~/emacs-local-config.el"))
-    (when (file-exists-p local-config)
-      (load-file local-config)))
-  ;; Set default encoding to UTF-8
-  (prefer-coding-system 'utf-8)
-  (setq browse-url-browser-function 'browse-url-firefox)
-  (setq browse-url-firefox-program "C:/Program Files/Mozilla Firefox/firefox.exe")
-
-#+end_src
-
-
-* Mac OS X Specifics
-#+begin_src emacs-lisp
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control)
-    ;; (menu-bar-mode 1)
-    )
-#+end_src
-
-
-* Interacting with Emacs
-** Evil Mode
-Evil mode for keybinding and most of efficiency goodness
-#+begin_src emacs-lisp 
+  ;; Add more packages here using (use-package ...)
+#+END_SRC
+* Evil Mode
+#+BEGIN_SRC emacs-lisp
+  ;; Install and configure evil-mode
   (use-package evil
     :init
-    (setq evil-want-integration t)
+    (setq evil-want-integration t) ;; This is optional since it's enabled by default
     (setq evil-want-keybinding nil)
-    (setq evil-want-C-u-scroll t)
-    (setq evil-want-C-d-scroll t)
-    (setq evil-want-C-i-jump nil)
-    ;; (setq evil-undo-system 'undo-tree)
-    (setq evil-insert-state-cursor '(bar))
-    (setq evil-normal-state-cursor '(box))
-    ;;(setq evil-motion-state-modes (append evil-emacs-state-modes evil-motion-state-modes))
-    ;;(setq evil-emacs-state-modes nil)
+    (setq evil-want-C-u-scroll t) ;; Enables Vim-like scrolling with Ctrl+u and Ctrl+d
+    (setq evil-want-C-i-jump nil) ;; Avoids conflicts with TAB behavior in Emacs
     :config
-    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-    ;;(evil-set-initial-state 'messages-buffer-mode 'normal)
-    ;;(evil-set-initial-state 'dashboard-mode 'normal)
+    (evil-define-key 'normal 'global
+      (kbd "C-c p s") 'persp-switch    ;; Switch to another perspective (workspace)
+      (kbd "C-c p k") 'persp-kill      ;; Kill a perspective
+      (kbd "C-c p n") 'persp-next      ;; Move to the next perspective
+      (kbd "C-c p p") 'persp-prev)     ;; Move to the previous perspective
     (evil-mode 1))
-#+end_src
 
-** Evil Bindings 
-#+begin_src emacs-lisp 
+  ;; Optionally, you might want to add evil-collection for better integration with Emacs' built-in packages
   (use-package evil-collection
-    ;; :custom (evil-collection-setup-minibuffer t)
     :after evil
     :config
-    (evil-collection-init)
-    (with-eval-after-load 'org-agenda
-      (define-key org-agenda-mode-map "j" 'org-agenda-next-line)
-      (define-key org-agenda-mode-map "k" 'org-agenda-previous-line)))
+    (evil-collection-init))
 
+  ;; Install evil-org for Vim keybindings in org-mode
   (use-package evil-org
-    :ensure t
-    :after org
-    :hook (org-mode . (lambda () evil-org-mode))
+    :after (org evil)
     :config
+    (add-hook 'org-mode-hook 'evil-org-mode)
+    (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
     (require 'evil-org-agenda)
     (evil-org-agenda-set-keys))
 
-  (use-package evil-nerd-commenter
-    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
-
-  (use-package evil-surround
+  ;; Optional: Use evil-collection to enhance evil bindings across Emacs packages
+  (use-package evil-collection
     :after evil
     :config
-    (global-evil-surround-mode 1))
+    (evil-collection-init))
 
-  (use-package evil-snipe
-    :init (evil-snipe-mode 1))
-
-  (use-package evil-matchit
-    :after evil
-    :init
-    (setq evilmi-shortcut "M-m")
-    (global-evil-matchit-mode 1))
-
-  (use-package evil-lion
-    :after evil
+  ;; Enable evil-mode in all buffers by default
+  (setq evil-default-state 'normal)
+#+END_SRC
+* Buffer Management
+#+BEGIN_SRC emacs-lisp
+  ;; Install and configure Consult for enhanced buffer switching
+  (use-package consult
+    :bind (("C-x b" . consult-buffer)   ;; Replaces the default buffer list
+  	 ("C-x C-b" . consult-buffer) ;; Also remap C-x C-b
+  	 ("M-y" . consult-yank-pop)   ;; Enhanced yank (paste) menu
+  	 ("C-s" . consult-line)       ;; Search within current buffer
+  	 ("C-M-l" . consult-imenu)    ;; Jump to headings or sections
+  	 ("M-g M-g" . consult-goto-line)) ;; Go to line with preview
     :config
-    (evil-lion-mode))
+    ;; Customize consult-buffer to put the previous buffer first
+    (setq consult-buffer-sources
+  	'(consult--source-hidden-buffer  ;; Hidden buffers (optional)
+  	  consult--source-buffer         ;; Buffers
+  	  consult--source-recent-file    ;; Recent files
+  	  consult--source-bookmark)))    ;; Bookmarks
 
-  (use-package evil-numbers
-    :after evil)
+  ;; Add an advice to prioritize the last used buffer
+  (advice-add 'consult--source-buffer :filter-return
+  	    (lambda (buffers)
+  	      (let ((previous-buffer (other-buffer (current-buffer) t)))
+  		(if (memq previous-buffer buffers)
+  		    (cons previous-buffer (remove previous-buffer buffers))
+  		  buffers))))
 
-  (use-package vimish-fold
-    :after evil)
-
-  (use-package evil-vimish-fold
-    :after vimish-fold
-    :hook ((prog-mode conf-mode text-mode) . evil-vimish-fold-mode))
-#+end_src
-
-** Customize Keyboard Shortcuts
-#+begin_src emacs-lisp 
-  ;; Customize your keyboard shortcuts
-  ;; (use-package hydra)
-  ;; (defhydra hydra-text-scale (:timeout 4)
-  ;;           "scale text"
-  ;;           ("j" text-scale-increase "in")
-  ;;           ("k" text-scale-decrease "out")
-  ;;           ("f" nil "finished" :exit t))
-
-  (global-set-key
-   (kbd "C-x o")
-   (lambda () (interactive)
-     (switch-to-buffer
-      (other-buffer (current-buffer) 1))))
-
-  (use-package general
-    :config
-    (general-create-definer rune/leader-keys
-      :keymaps '(normal insert visual emacs)
-      :prefix "SPC"
-      :global-prefix "C-SPC")
-    (rune/leader-keys
-      "t"  '(:ignore t                                                        :which-key "Toggles")
-      "gc" '(copilot-mode                                                     :which-key "Copilot Mode")
-      "gp" '(gptel                                                            :which-key "Gptel")
-      "gP" '(gptel-send                                                       :which-key "Gptel-Send")
-      "xv" '(my-project-vterm                                                 :which-key "Vterm") 
-      "gt" '(lambda() (interactive)(find-file "~/org/gtd.org")                :which-key "gtd.org")
-      "ok" '(lambda() (interactive)(find-file "~/org/okr.org")                :which-key "okr.org")
-      "fe" '(lambda() (interactive)(find-file "~/linux-setup/emacs-init.org") :which-key "emacs-init.org")
-      "fz" '(lambda() (interactive)(find-file "~/linux-setup/zsh-init.org")   :which-key "zsh-init.org")
-      "yn" '(yas-new-snippet                                                  :which-key "New Yasnippet")
-      "yr" '(yas-reload-all                                                   :which-key "Yasnippet Reload")
-      "yt" '(yas-describe-tables                                              :which-key "Yasnippet Describe")
-      "yv" '(lambda() (interactive) yas-snippet-visit-file                    :which-key "Visit Yasnippet File")
-      ;; Org Mode Bindings
-      "oc" '(org-capture                        :which-key "Org Todo")
-      "ot" '(my/org-capture-todo                :which-key "Org Todo")
-      "oa" '(org-agenda                         :which-key "Org Agenda")
-      ;; "or" '(citar-create-note                  :which-key "Org Roam Reference Note")
-      ;; "op" '(my/org-roam-capture-project-note   :which-key "Org Roam Project Note")
-      ;; "om" '(my/org-roam-capture-permanent-note :which-key "Org Roam Permanent Note")
-      "of" '(org-roam-node-find                    :which-key "Org Roam Node Find")
-      "oi" '(org-roam-node-insert                  :which-key "Org Roam Node Insert")
-      ))
-
-  (defun my/org-roam-capture-project-note ()
-    "Capture a new Org Roam project note using the designated project template."
-    (interactive)
-    (org-roam-capture :keys "p"))
-
-  (defun my/org-roam-capture-permanent-note ()
-    "Capture a new Org Roam project note using the designated project template."
-    (interactive)
-    (org-roam-capture :keys "m"))
-
-  (defun my/org-capture-todo ()
-    "Capture a new Org Roam project note using the designated project template."
-    (interactive)
-    (org-capture :keys "t"))
-
-  (defun beginning-of-file-and-line ()
-    (interactive)
-    (goto-char (point-min))
-    (beginning-of-line))
-
-  (defun end-of-file-and-line ()
-    (interactive)
-    (goto-char (point-max))
-    (end-of-line))
-
-  (define-key evil-normal-state-map (kbd "gg") 'beginning-of-file-and-line)
-  (define-key evil-normal-state-map (kbd "G") 'end-of-file-and-line)
-#+end_src
-
-
-* Useful packages
-For using getting around and understanding Emacs
-** Helper Packages
-For extending Emacs functionality
-#+begin_src emacs-lisp 
-  ;;notified if the definition of a function you are customizing change
-  (use-package el-patch)
-
-  ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist
-    :init (savehist-mode))
-
-  ;; a better window manager?
-  (use-package ace-window
-    :bind ("C-c o" . 'ace-window)
-    :init
-    (setq aw-dispatch-always t)
-    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
-
-  ;; what key should you push next? not needed embark
-  (use-package which-key
-    :init (which-key-mode))
-  (use-package restart-emacs)
-
-  (use-package default-text-scale)
-
-  ;; (use-package project
-  ;;   :straight nil)
-  (use-package popper
-    :bind (("C-`"   . popper-toggle)
-           ("M-`"   . popper-cycle)
-           ("C-M-`" . popper-toggle-type))
-    :init
-    ;; have popper respect display-buffer-alist rules
-    ;; (setq popper-display-control nil)
-    ;; enable actions in echo area (k to kill buffer)
-    ;; (setq popper-echo-dispatch-actions t)
-    ;; how to group popups
-    ;; (setq popper-display-function #'popper-select-popup-at-bottom)
-    ;; (setq popper-group-function #'popper-group-by-project)
-    ;; which buffers should be considered popups
-    (setq popper-window-height 0.33)
-    (setq popper-reference-buffers
-          '("\\*ChatGPT\\*"
-            "\\*scratch\\*"
-            "\\*?vterm"
-            help-mode
-            compilation-mode))
-    (popper-mode +1)
-    (popper-echo-mode +1))                ; For echo area hints
-  (use-package no-littering
-    :config
-    ;; No additional config needed for no-littering,
-    ;; but you can customize the save file locations if desired.
-    )
-#+end_src
-
-** Make the Minibuffer easier to follow
-#+begin_src emacs-lisp 
-  ;; Completion frameworks and doing stuff
+  ;; Enable consult for buffer switching with Vertico
   (use-package vertico
     :bind (:map
-           vertico-map
-           ("C-j" . vertico-next)
-           ("C-k" . vertico-previous)
-           :map minibuffer-local-map
-           ("M-h" . backward-kill-word))
+  	 vertico-map
+  	 ("C-j" . vertico-next)
+  	 ("C-k" . vertico-previous)
+  	 :map minibuffer-local-map
+  	 ("M-h" . backward-kill-word))
     :custom (vertico-cycle t)
     :init (vertico-mode))
 
-  (use-package vertico-posframe
-    :after vertico
-    :custom
-    (vertico-posframe-parameters '((left-fringe . 8)
-                                   (right-fringe . 8)))
-    :config
-    (add-hook 'vertico-mode-hook #'vertico-posframe-mode)
-    (vertico-multiform-mode 1)
-    
-    ;; Configuring multiform for specific commands
-    (setq vertico-multiform-commands
-          '((consult-line
-             posframe
-             (vertico-posframe-poshandler . posframe-poshandler-frame-top-center)
-             (vertico-posframe-border-width . 10)
-             (vertico-posframe-fallback-mode . vertico-buffer-mode))
-            (t posframe)))
-    )
-
-  (use-package marginalia
-    :bind (:map minibuffer-local-map
-                ("M-A" . marginalia-cycle))
-    :init
-    (marginalia-mode))
-
-#+end_src
-** Consult
-#+begin_src emacs-lisp 
-  ;; Example configuration for Consult
-  (use-package consult
-    ;; Replace bindings. Lazily loaded due by `use-package'.
-    :bind (;; C-c bindings in `mode-specific-map'
-           ("C-c M-x"           . consult-mode-command)
-           ("C-c h"             . consult-history)
-           ("C-c k"             . consult-kmacro)
-           ("C-c m"             . consult-man)
-           ("C-c i"             . consult-info)
-           ([remap Info-search] . consult-info)
-           ;; C-x bindings in `ctl-x-map'
-           ("C-x M-:"           . consult-complex-command)     ;; orig    . repeat-complex-command
-           ("C-x b"             . consult-buffer)              ;; orig  . switch-to-buffer
-           ("C-x 4 b"           . consult-buffer-other-window) ;; orig    . switch-to-buffer-other-window
-           ("C-x 5 b"           . consult-buffer-other-frame)  ;; orig    . switch-to-buffer-other-frame
-           ("C-x t b"           . consult-buffer-other-tab)    ;; orig    . switch-to-buffer-other-tab
-           ("C-x r b"           . consult-bookmark)            ;; orig    . bookmark-jump
-           ("C-x p b"           . consult-project-buffer)      ;; orig    . project-switch-to-buffer
-           ;; Custom M-# bindings for fast register access
-           ("M-#"               . consult-register-load)
-           ("M-'"               . consult-register-store)      ;; orig. abbrev-prefix-mark (unrelated)
-           ("C-M-#"             . consult-register)
-           ;; Other custom bindings
-           ("M-y"               . consult-yank-pop)            ;; orig. yank-pop
-           ;; M-g bindings in `goto-map'
-           ("M-g e"             . consult-compile-error)
-           ("M-g f"             . consult-flymake)             ;; Alternative: consult-flycheck
-           ("M-g g"             . consult-goto-line)           ;; orig  . goto-line
-           ("M-g M-g"           . consult-goto-line)           ;; orig    . goto-line
-           ("M-g o"             . consult-outline)             ;; Alternative: consult-org-heading
-           ("M-g m"             . consult-mark)
-           ("M-g k"             . consult-global-mark)
-           ("M-g i"             . consult-imenu)
-           ("M-g I"             . consult-imenu-multi)
-           ;; M-s bindings in `search-map'
-           ("M-s d"             . consult-find)                ;; Alternative: consult-fd
-           ("M-s c"             . consult-locate)
-           ("M-s g"             . consult-grep)
-           ("M-s G"             . consult-git-grep)
-           ("M-s r"             . consult-ripgrep)
-           ("M-s l"             . consult-line)
-           ("M-s L"             . consult-line-multi)
-           ("M-s k"             . consult-keep-lines)
-           ("M-s u"             . consult-focus-lines)
-           ;; Isearch integration
-           ("M-s e"             . consult-isearch-history)
-           :map isearch-mode-map
-           ("M-e"               . consult-isearch-history)     ;; orig. isearch-edit-string
-           ("M-s e"             . consult-isearch-history)     ;; orig  . isearch-edit-string
-           ("M-s l"             . consult-line)                ;; needed by consult-line to detect isearch
-           ("M-s L"             . consult-line-multi)          ;; needed by consult-line to detect isearch
-           ;; Minibuffer history
-           :map minibuffer-local-map
-           ("M-s"               . consult-history)             ;; orig. next-matching-history-element
-           ("M-r"               . consult-history))            ;; orig. previous-matching-history-element
-
-    ;; Enable automatic preview at point in the *Completions* buffer. This is
-    ;; relevant when you use the default completion UI.
-    :hook (completion-list-mode . consult-preview-at-point-mode)
-
-    ;; The :init configuration is always executed (Not lazy)
-    :init
-
-    ;; Optionally configure the register formatting. This improves the register
-    ;; preview for `consult-register', `consult-register-load',
-    ;; `consult-register-store' and the Emacs built-ins.
-    (setq register-preview-delay 0.5
-          register-preview-function #'consult-register-format)
-
-    ;; Optionally tweak the register preview window.
-    ;; This adds thin lines, sorting and hides the mode line of the window.
-    (advice-add #'register-preview :override #'consult-register-window)
-
-    ;; Use Consult to select xref locations with preview
-    (setq xref-show-xrefs-function #'consult-xref
-          xref-show-definitions-function #'consult-xref)
-
-    ;; Configure other variables and modes in the :config section,
-    ;; after lazily loading the package.
-    :config
-
-    ;; Optionally configure preview. The default value
-    ;; is 'any, such that any key triggers the preview.
-    ;; (setq consult-preview-key 'any)
-    ;; (setq consult-preview-key "M-.")
-    ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
-    ;; For some commands and buffer sources it is useful to configure the
-    ;; :preview-key on a per-command basis using the `consult-customize' macro.
-    (consult-customize
-     consult-theme :preview-key '(:debounce 0.2 any)
-     consult-ripgrep consult-git-grep consult-grep
-     consult-bookmark consult-recent-file consult-xref
-     consult--source-bookmark consult--source-file-register
-     consult--source-recent-file consult--source-project-recent-file
-     ;; :preview-key "M-."
-     :preview-key '(:debounce 0.4 any))
-
-    ;; Optionally configure the narrowing key.
-    ;; Both < and C-+ work reasonably well.
-    (setq consult-narrow-key "<") ;; "C-+"
-
-    ;; Optionally make narrowing help available in the minibuffer.
-    ;; You may want to use `embark-prefix-help-command' or which-key instead.
-    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-    ;; By default `consult-project-function' uses `project-root' from project.el.
-    ;; Optionally configure a different project root function.
-    ;;;; 1. project.el (the default)
-    ;; (setq consult-project-function #'consult--default-project--function)
-    ;;;; 2. vc.el (vc-root-dir)
-    ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
-    ;;;; 3. locate-dominating-file
-    ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
-    ;;;; 4. projectile.el (projectile-project-root)
-    ;; (autoload 'projectile-project-root "projectile")
-    ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
-    ;;;; 5. No project support
-    ;; (setq consult-project-function nil)
-    )
-#+end_src
-
-** Orderless
-#+begin_src emacs-lisp 
-  ;; Optionally use the `orderless' completion style.
+  ;; Install and configure Orderless for flexible completion
   (use-package orderless
+    :straight t
     :init
-    ;; Configure a custom style dispatcher (see the Consult wiki)
-    ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
-    ;;       orderless-component-separator #'orderless-escapable-split-on-space)
-    (setq completion-styles '(orderless basic)
-          orderless-regexp t
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles partial-completion)))))
+    ;; Set Orderless as the default completion style
+    (setq completion-styles '(orderless)
+  	completion-category-defaults nil
+  	completion-category-overrides '((file (styles partial-completion))))) ;; Partial completion for file paths
 
-  ;;Do commands and operatioms on buffers or synbols
+  ;; Install and configure Embark for context-aware actions
   (use-package embark
-    :bind (("C-c e" . embark-act)
-           ("M-." . embark-dwim)
-           ("C-h B" . embark-bindings))
-    :init (setq prefix-help-command #'embark-prefix-help-command))
+    :bind
+    (("C-." . embark-act)         ;; Press C-. to trigger actions on the selected item
+     ("C-;" . embark-dwim)        ;; C-; for "Do What I Mean" smart context menu
+     ("C-h B" . embark-bindings)) ;; Show all keybindings available for the current context
+    :init
+    ;; Set embark-act as the prefix-help-command to show Embark's help when pressing the prefix
+    (setq prefix-help-command #'embark-prefix-help-command))
 
+  ;; Integrate Embark with Consult for a smoother experience
   (use-package embark-consult
     :after (embark consult)
-    :hook (embark-collect-mode . consult-preview-at-point-mode))
-#+end_src
-** You Snip It
-#+BEGIN_SRC emacs-lisp 
-  (use-package yasnippet
-    :config
-    ;; Add your custom snippet directory to the list of snippet directories.
-    ;; Replace "~/my-snippets" with the path to your custom snippet directory.
-    (add-to-list 'yas-snippet-dirs "~/linux-setup/yasnippet")
-    
-    ;; Load the snippets from the directories.
-    (yas-reload-all)
-
-    ;; Enable YASnippet globally.
-    (yas-global-mode 1))
-
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode)) ;; Show previews for consult commands in embark collect
 #+END_SRC
-
-** Browse Files
-#+begin_src emacs-lisp 
-  (use-package dired
-    :straight nil)
-
-  (use-package dired-sidebar
-    :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-    :ensure t
-    :commands (dired-sidebar-toggle-sidebar)
-    :init
-    (add-hook 'dired-sidebar-mode-hook
-              (lambda ()
-                (unless (file-remote-p default-directory)
-                  (auto-revert-mode))))
+* Project Management
+#+BEGIN_SRC emacs-lisp
+  ;; Install and configure perspective.el with persistence
+  (use-package perspective
+    :bind
+    ("C-x C-b" . persp-list-buffers)         ; or use a nicer switcher, see below
+    :straight t
+    :custom
+    (persp-mode-prefix-key (kbd "C-c p")) ;; Change prefix if needed
+    (persp-state-default-file "~/.emacs.d/persp-state") ;; File to save workspace state
+    (persp-mode t)
+    (persp-mode-save-state-on-exit t) ;; Auto-save when exiting Emacs
     :config
-    (push 'toggle-window-split dired-sidebar-toggle-hidden-commands)
-    (push 'rotate-windows dired-sidebar-toggle-hidden-commands)
+    (persp-mode))
 
-    (setq dired-sidebar-subtree-line-prefix "__")
-    (setq dired-sidebar-theme 'vscode)
-    (setq dired-sidebar-use-term-integration t)
-    (setq dired-sidebar-use-custom-font t))
-  (use-package all-the-icons-dired
-    :after dired-sidebar
-    :hook (dired-mode . all-the-icons-dired-mode))
+  ;; Automatically save and load perspectives on startup and exit
+  (defun my/load-perspectives ()
+    "Load perspectives from the last saved state."
+    (when (file-exists-p persp-state-default-file)
+      (persp-state-load persp-state-default-file)))
 
-#+end_src
+  (add-hook 'emacs-startup-hook 'my/load-perspectives)
+  (add-hook 'kill-emacs-hook (lambda () (persp-state-save persp-state-default-file)))
 
-#+begin_src emacs-lisp :tangle no 
-#+end_src
-** Lorem Ipsum
-#+BEGIN_SRC emacs-lisp 
-  (use-package lorem-ipsum
-    :ensure t
+  (use-package magit
+    :commands magit-status
     :config
-    (lorem-ipsum-use-default-bindings))
+    (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 #+END_SRC
-
-
-
-* Org Mode Setup
-Org and Org-roam will help you network your thoughts and reflect your understanding. Read "How to take smart notes"
-** Org-Mode
-#+begin_src emacs-lisp 
-  (use-package org 
+* Org-Mode
+#+BEGIN_SRC emacs-lisp
+  ;; Install org-mode (comes built-in but ensuring latest version is used)
+  (use-package org
+    :straight t ;; Ensures that straight.el will install it if not available
     :config
-    ;; (setq org-agenda-files (directory-files-recursively "~/org" "\\.org$"))
+    ;; Org-mode settings (customize as needed)
+    (setq org-startup-indented t) ;; Enable indentation by default
+    (setq org-hide-leading-stars t)
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
-    (setq org-startup-with-inline-images t)
-    (setq org-blank-before-new-entry nil)
-    (setq org-hide-emphasis-markers nil)
-    ;; (setq org-ellipsis " ▼ ")
-    :hook
-    (org-mode . visual-line-mode)
-    (org-babel-after-execute . org-redisplay-inline-images))
-  (advice-add 'org-agenda :before #'update-org-agenda-files-recursively)
-
-  ;; (use-package org-tidy
-  ;;   :hook
-  ;;   (org-mode . org-tidy-mode))
-
-  (use-package visual-fill-column
-    :custom
-    (visual-fill-column-center-text t)
-    (visual-fill-column-width 140)
-    :hook (org-mode . visual-fill-column-mode))
-
-
-  (use-package org-download
-    :ensure t
-    :config
-    (setq org-download-image-dir "./images") ;; Optional: set a default directory for images
-    (setq org-download-annotate-function (lambda (_link) ""))
-    :hook (org-mode . org-download-enable))
-
-
-  ;; (use-package jinx
-  ;;   :hook (emacs-startup . global-jinx-mode)
-  ;;   :bind (("M-$" . jinx-correct)
-  ;;          ("C-M-$" . jinx-languages)))
-#+end_src
-
-** Org Tangle
-#+begin_src emacs-lisp 
-  ;; Automatically tangle our Emacs.org config file when we save it
-  (defun efs/org-babel-tangle-config ()
-    (when (string-equal (buffer-file-name)
-                        (expand-file-name "~/linux-setup/emacs-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .emacs")
-        (org-babel-tangle)))
-    (when (string-equal (buffer-file-name)
-                        (expand-file-name "~/linux-setup/zsh-init.org"))
-      ;; Dynamic scoping to the rescue
-      (let ((org-confirm-babel-evaluate nil))
-        (message "Tangling new .zsh")
-        (org-babel-tangle))))
-
-  (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-#+end_src
-** Org Readwise
-#+BEGIN_SRC emacs-lisp
-      ;; Install org-readwise from GitHub
-      (use-package org-readwise
-        :straight (org-readwise :type git :host github :repo "CountGreven/org-readwise")
-        :config
-        ;; Ensure auth-source is configured to find your Readwise token
-        (setq auth-sources '("~/.authinfo"))
-        
-        ;; Set the output location for your highlights (buffer or file)
-        (setq org-readwise-output-location "~/org/readwise-highlights.org")
-        (setq org-readwise-sync-highlights t)
-        (setq org-readwise-sync-reader t)
-        (setq org-readwise-note-format "- %text%")            ;; Highlights as bullet points
-        (setq org-readwise-entry-format "- %title%")          ;; Each entry as a bullet point
-        (setq org-readwise-property-format "")                ;; Removes additional properties
-        (setq org-readwise-insert-sections nil)               ;; Disables sectioning
-
-        ;; (setq org-readwise-note-format "- %text%")  ;; Each highlight as a bullet point
-        ;; (setq org-readwise-last-sync-time-file “~/.emacs.d/org-readwise-last-sync”)
-        ;; Optionally set the debug level (0 = no debug, 1 = basic debug, 2 = detailed debug)
-        (setq org-readwise-debug-level 3))
-
-      (defun org-download-readwise-images ()
-        "Download all Markdown-style external images in the current Org file and replace links with local file paths."
-        (interactive)
-        (save-excursion
-          (goto-char (point-min))
-          ;; Look for Markdown-style image links: ![](https://...)
-          (while (re-search-forward "!\\[.*?\\](\\(https://[^ ]+\\))" nil t)
-            (let ((url (match-string 1)))
-              ;; Use org-download to download the image and replace the link
-              (org-download-image url)))))
-  
-  (defun convert-md-links-to-org-links ()
-    "Convert Markdown-style image links (![](https://...)) to Org mode links ([[https://...]])."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "\\[.*?\\](\\(https://[^ ]+\\))" nil t)
-        (replace-match "[[\\1]]"))))
-(defun download-org-image-links ()
-  "Download only image links (e.g., .png, .jpg) in Org mode format."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "\\[\\[\\(https://[^ ]+\\(\\.png\\|\\.jpg\\|\\.jpeg\\|\\.gif\\)\\)\\]\\]" nil t)
-      (let ((url (match-string 1)))
-        (org-download-image url)))))
-
-
-      (defun org-download-images ()
-        "Run `org-readwise-sync` followed by `org-download-readwise-images`."
-        (interactive)
-        (convert-md-links-to-org-links)
-        (download-org-image-links))
-
-      (defun org-remove-markdown-image-links ()
-        "Remove all Markdown-style image links (![](https://...)) from the current Org file."
-        (interactive)
-        (save-excursion
-          (goto-char (point-min))
-          ;; Search for Markdown-style image links and replace them with an empty string
-          (while (re-search-forward "!\\[.*?\\](https://[^ ]+)" nil t)
-            (replace-match ""))))
-
-      (defun org-readwise-sync-download-and-clean ()
-        "Run `org-readwise-sync`, download images, and remove Markdown image links."
-        (interactive)
-        (org-readwise-sync-and-download-images)
-        (org-remove-markdown-image-links))
-
-      (defun org-remove-all-properties-drawers ()
-        "Remove all PROPERTIES drawers in the current Org buffer."
-        (interactive)
-        (save-excursion
-          (goto-char (point-min))
-          (while (re-search-forward "^[ \t]*:PROPERTIES:[ \t]*\n\\([^\0]*?\\)[ \t]*:END:[ \t]*\n?" nil t)
-            (replace-match ""))))
-
-      ;; Set up advice to run `org-download-readwise-images` automatically after `org-readwise-sync`
-      (advice-add 'org-readwise-sync :after #'org-readwise-sync-download-and-clean)
+    ;; Customize specific keybindings in org-mode if desired
+    (with-eval-after-load 'evil-org
+      (evil-define-key 'normal evil-org-mode-map
+        (kbd "TAB") 'org-cycle ;; Make TAB cycle through content in normal mode
+        (kbd "M-h") 'org-metaleft ;; Example: promote heading
+        (kbd "M-l") 'org-metaright ;; Example: demote heading
+        (kbd "M-j") 'org-metadown ;; Move item down
+        (kbd "M-k") 'org-metaup))) ;; Move item up
 
 #+END_SRC
-
-** Org Zotero
+* Themes and Colors
 #+BEGIN_SRC emacs-lisp
-  (use-package zotero
-    :ensure t
-    :commands (zotero-browser)
-    :init
-    (require 'zotero-browser))
-#+END_SRC
-** Org Roam
-
-
-* Buffer Management
-** Ibuffer
-#+begin_src emacs-lisp 
-  (use-package ibuffer
-    :straight nil)
-
-  (use-package ibuf-ext
-    :straight nil)
-
-  (add-to-list 'ibuffer-never-show-predicates "^/dired")
-  (add-to-list 'ibuffer-never-show-predicates "magit") ; hide Magit buffers
-
-  (setq ibuffer-saved-filter-groups
-        (quote (("default"
-                 ("Dotfiles" (filename . "^\\."))
-                 ("Messages"  (name . "^\\/"))
-                 ("Org"       (mode . org-mode))
-                 ("Planner"   (or
-                               (name . "^\\/Calendar\\*$")
-                               (name . "^\\/Org Agenda\\*$")))
-                 ("Emacs"     (or
-                               (name . "^\\/scratch\\*$")
-                               (name . "^\\/Messages\\*$")))))))
-
-  (add-hook 'ibuffer-mode-hook
-            (lambda ()
-              (ibuffer-switch-to-saved-filter-groups "default")))
-#+end_src
-** Perspective
-#+begin_src emacs-lisp 
-  (use-package perspective
-    :bind (
-           ("C-x C-b" . persp-ibuffer)
-           ("C-x k" . persp-kill-buffer* ))
-    :custom
-    (persp-mode-prefix-key (kbd "C-x C-x"))
-    :init
-    (setq persp-initial-frame-name "Main")
-    (persp-mode))
-#+end_src 
-
-
-* Project Management
-#+begin_src emacs-lisp 
-  (use-package magit)
-#+end_src
-
-
-* Shell Support
-#+begin_src emacs-lisp 
-
-  (if (not (eq system-type 'windows-nt))
-      (progn
-        (use-package vterm
-          :config (setq vterm-max-scrollback 10000))
-        (use-package multi-vterm)
-
-        ;; Some fancy project/perspective stuff.
-        (defun my-project-vterm ()
-          "Open a `vterm` in the current project's root directory."
-          (interactive)
-          (let ((project-root (project-root (project-current t))))
-            (if project-root
-                (let ((default-directory project-root))
-                  (vterm (format "vterm: %s" project-root)))
-              (message "Not in a project!"))))
-        ;; (global-set-key (kbd "C-c p v") #'my-project-vterm)
-        (defun project-switch-to-perspective ()
-          "Switch to a perspective with the name of the current project."
-          (interactive)
-          (let ((project-name (file-name-nondirectory (directory-file-name (project-root (project-current t))))))
-            (if (not (persp-switch project-name))
-                (progn
-                  (persp-switch project-name)
-                  (dired (project-root (project-current t)))))))
-        (global-set-key (kbd "C-x p p") 'project-switch-to-perspective)
-        (advice-add 'project-switch-project :after #'project-switch-to-perspective)
-
-        ))
-
-#+end_src
-
-
-* AI Integration 
-** Copilot 
-#+begin_src emacs-lisp :tangle no
-  (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-    :init (setq copilot-indent-offset-warning-disable t)
-    :bind (:map copilot-completion-map
-                ("M-<tab>" . 'copilot-accept-completion)
-                ("M-TAB" . 'copilot-accept-completion)
-                ("TAB" . 'copilot-accept-completion-by-word)
-                ("<tab>" . 'copilot-accept-completion-by-word)))
-
-#+end_src
-
-** GPTEL 
-#+begin_src emacs-lisp :tangle no 
-  (use-package gptel
-    :custom
-    (gptel-model "gpt-3.5-turbo")
-    (gptel-default-mode 'org-mode)
-    (gptel-prompt-prefix-alist
-     '((markdown-mode . "# ")
-       (org-mode . "* ")
-       (text-mode . "# ")))
-    :config
-    (add-hook 'gptel-post-stream-hook 'gptel-auto-scroll)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response))
-
-#+end_src
-
-** Ollama
-#+begin_src emacs-lisp :tangle no
-  ;; to serve llama: OLLAMA_HOST=192.168.4.47:11434 ollama serve
-  (gptel-make-ollama "Ollama"             ;Any name of your choosing
-                     :host "192.168.4.47:11434"               ;Where it's running
-                     :stream t                             ;Stream responses
-                     :models '("mistral:latest"
-                               "llama:latest"))          ;List of models
-#+end_src
-
-;; Let's create a hello_world python script
-;; using org mode, lets print to #+Results:
-#+begin_src python :tangle no
-  print("Hello, World!")
-#+end_src
-
-#+RESULTS:
-: None
-
-
-* Programming
-** Flycheck
-#+begin_src emacs-lisp 
-  (use-package flycheck
-    :ensure t
-    :config
-    ;; Don't enable automatically
-    ;; (add-hook 'after-init-hook #'global-flycheck-mode))
-    )
-#+end_src
-** Corfu
-#+begin_src emacs-lisp 
-  (use-package corfu
-    ;; Optional customizations
-    :custom
-    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto t)                 ;; Enable auto completion
-    (corfu-separator ?\s)          ;; Orderless field separator
-    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-    :hook (prog-mode . corfu-mode)
-    ;; Enable Corfu only for certain modes.
-    ;; :hook ((prog-mode . corfu-mode)
-    ;;        (shell-mode . corfu-mode)
-    ;;        (eshell-mode . corfu-mode))
-
-    ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
-    ;; be used globally (M-/).  See also the customization variable
-    ;; `global-corfu-modes' to exclude certain modes.
-    :init
-    (global-corfu-mode))
-  (with-eval-after-load 'corfu
-    ;; Navigate completion list
-    (define-key corfu-map (kbd "C-j") #'corfu-next)
-    (define-key corfu-map (kbd "C-k") #'corfu-previous))
-
-  ;; A few more useful configurations...
-  (use-package emacs
-    :init
-    ;; TAB cycle if there are only few candidates
-    (setq completion-cycle-threshold 3)
-
-    ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-    ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-    ;; (setq read-extended-command-predicate
-    ;;       #'command-completion-default-include-p)
-
-    ;; Enable indentation+completion using the TAB key.
-    ;; `completion-at-point' is often bound to M-TAB.
-    (setq tab-always-indent 'complete))      (use-package corfu
+  (use-package modus-themes
     :straight t
     :config
-    ;; Optionally use TAB for cycling, default is `corfu-complete'.
-    (setq corfu-cycle t)
-    ;; Optionally enable `corfu-mode' in all buffers.
-    (global-set-key (kbd "M-RET") #'corfu-complete)
-    (setq corfu-quit-at-boundary nil)
-    (setq corfu-quit-no-match t))
-
-  ;; Use Dabbrev with Corfu!
-  (use-package dabbrev
-    ;; Swap M-/ and C-M-/
-    :bind (("M-/" . dabbrev-completion)
-           ("C-M-/" . dabbrev-expand))
-    :config
-    (add-to-list 'dabbrev-ignored-buffer-regexps "\\` "))
-  ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
-  ;; (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
-  ;; (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode))
-
-  ;; (use-package eglot
-  ;;   :config
-  ;;   (setq eglot-autoshutdown t)
-  ;;   (add-to-list 'eglot-server-programs '(haskell-mode . ("ghcide" "--lsp"))))
-
-  (use-package nix-mode
-    :mode "\\.nix\\'")
-  (use-package haskell-mode
-    :mode "\\.hs\\'")
-  (use-package rust-mode
-    :mode "\\.rs\\'")
-#+end_src
-** TODO Cape
-#+begin_src emacs-lisp :tangle no
-  ;; Add extensions
-  (use-package cape
-    ;; Bind dedicated completion commands
-    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-    :bind (("C-c p p" . completion-at-point) ;; capf
-           ("C-c p t" . complete-tag)        ;; etags
-           ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-           ("C-c p h" . cape-history)
-           ("C-c p f" . cape-file)
-           ("C-c p k" . cape-keyword)
-           ("C-c p s" . cape-elisp-symbol)
-           ("C-c p e" . cape-elisp-block)
-           ("C-c p a" . cape-abbrev)
-           ("C-c p l" . cape-line)
-           ("C-c p w" . cape-dict)
-           ("C-c p :" . cape-emoji)
-           ("C-c p \\" . cape-tex)
-           ("C-c p _" . cape-tex)
-           ("C-c p ^" . cape-tex)
-           ("C-c p &" . cape-sgml)
-           ("C-c p r" . cape-rfc1345))
-    :init
-    ;; Add to the global default value of `completion-at-point-functions' which is
-    ;; used by `completion-at-point'.  The order of the functions matters, the
-    ;; first function returning a result wins.  Note that the list of buffer-local
-    ;; completion functions takes precedence over the global list.
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    (add-to-list 'completion-at-point-functions #'cape-elisp-block)
-    ;;(add-to-list 'completion-at-point-functions #'cape-history)
-    ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
-    ;;(add-to-list 'completion-at-point-functions #'cape-tex)
-    ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-    ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-    ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-    ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-    ;;(add-to-list 'completion-at-point-functions #'cape-elisp-symbol)
-    ;;(add-to-list 'completion-at-point-functions #'cape-line)
+    ;; Set the default theme if you prefer a Modus theme
+    (load-theme 'modus-operandi t) ;; Light theme
+    ;; (load-theme 'modus-vivendi t)   ;; Dark theme
     )
-#+end_src
-
-
-* Look and Visuals
-
-** Themes
-#+begin_src emacs-lisp
-  (if (display-graphic-p)
-      (progn
-
-        (use-package solaire-mode
-          :config
-          (solaire-global-mode +1))
-
-        (use-package telephone-line
-          :init
-          (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-                telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-                telephone-line-primary-right-separator 'telephone-line-cubed-right
-                telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
-          (setq telephone-line-height 24
-                telephone-line-evil-use-short-tag t)
-          (telephone-line-mode t))
-
-        ;; Some icons and theme
-        (use-package ef-themes)
-        (use-package modus-themes)
-        (use-package all-the-icons)
-        (use-package nerd-icons-completion
-          :config
-          (nerd-icons-completion-mode))
-
-        (use-package doom-themes
-          :ensure t
-          :config
-          ;; Global settings (defaults)
-          (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-                doom-themes-enable-italic t) ; if nil, italics is universally disabled
-          (load-theme 'doom-one t)           
-
-          ;; Enable flashing mode-line on errors
-          (doom-themes-visual-bell-config)
-          ;; Enable custom neotree theme (all-the-icons must be installed!)
-                                          ;(doom-themes-neotree-config)
-          ;; or for treemacs users
-                                          ;(setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-                                          ;(doom-themes-treemacs-config)
-          ;; Corrects (and improves) org-mode's native fontification.
-          (doom-themes-org-config))
-        (use-package nano-theme
-          :ensure nil
-          :defer t
-          :straight (:host github :repo "rougier/nano-theme"))
-        ))
-  (set-face-attribute 'default nil :font "JetBrains Mono" :height 120)
-#+end_src
-
-** Dealing with Parentheses
-
-#+begin_src emacs-lisp 
-  (use-package rainbow-delimiters
-    :hook (prog-mode . rainbow-delimiters-mode))
-
-  (use-package smartparens
-    :straight t
-    :config
-    (require 'smartparens-config)
-    (smartparens-global-mode 1))
-
-  (use-package highlight-parentheses
-    :config
-    (define-globalized-minor-mode global-highlight-parentheses-mode
-      highlight-parentheses-mode
-      (lambda () (highlight-parentheses-mode t)))
-    (global-highlight-parentheses-mode t))
-
-  (setq blink-matching-paren t)
-#+end_src
-
-
-
-* Scratch Area
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (use-package pandoc-mode
-    :hook
-    (markdown-mode . pandoc-mode))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp :tangle no
-  (defun my-org-sanitize-heading (heading-text)
-    "Sanitize HEADING-TEXT to be file-system friendly."
-    (replace-regexp-in-string "[^[:alnum:]-]" "" (downcase heading-text)))
-
-  (defun my-org-create-and-link-file (heading-text)
-    "Create a file from HEADING-TEXT and insert a link to it below the heading."
-    (let* ((sanitized-heading (my-org-sanitize-heading heading-text))
-           (file-name (concat org-directory "/" sanitized-heading ".org")))
-      (unless (file-exists-p file-name)
-        (with-temp-buffer
-          (insert (concat "#+title: " heading-text "\n"))
-          (write-file file-name))
-        (message "Created file: %s" file-name)
-        ;; Insert link
-        (save-excursion
-          (org-back-to-heading t)
-          (end-of-line)
-          (insert (concat "\n[[file:" file-name "][Link to detailed note]]\n"))))))
-
-  (defun my-org-move-heading-to-category ()
-    "Prompt user to move the current heading to a specific category."
-    (let* ((category (completing-read "Category: " '("Projects" "Research")))
-           (target-heading (concat "* " category)))
-      (org-cut-subtree)
-      (goto-char (point-min))
-      (if (re-search-forward (regexp-quote target-heading) nil t)
-          (progn
-            ;; Ensure we're at the end of the target category heading line.
-            (end-of-line)
-            ;; Look for the next heading to determine where to paste the subtree.
-            (if (re-search-forward "^\\*" nil t)
-                (progn
-                  ;; Move back to the beginning of the next heading.
-                  (beginning-of-line)
-                  ;; Paste the subtree here, making it a subheading of the target category.
-                  (org-paste-subtree 2))  ; The argument '2' increases the heading level by one.
-              ;; If no next heading is found, just paste at the end of the buffer.
-              (goto-char (point-max))
-              (org-paste-subtree 2)))
-        ;; If the target category does not exist, create it at the end of the document.
-        (goto-char (point-max))
-        (unless (looking-back "\n\n" nil)
-          (insert "\n\n"))  ; Ensure proper spacing before adding a new category.
-        (insert target-heading "\n")
-        (org-paste-subtree 2)  ; Paste the heading as a subheading under the newly created category.
-        (message "Created new '%s' section." category))))
-
-  (defun my-org-process-heading-for-organize ()
-    "Process current heading if its state is changed to 'ORGANIZE'."
-    (when (string= org-state "ORGANIZE")
-      (let ((heading-text (nth 4 (org-heading-components))))
-        (my-org-create-and-link-file heading-text)
-        (my-org-move-heading-to-category))))
-
-  (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading-for-organize)
+  (use-package telephone-line
+    :init
+    (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
+          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+          telephone-line-primary-right-separator 'telephone-line-cubed-right
+          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+    (setq telephone-line-height 24
+          telephone-line-evil-use-short-tag t)
+    (telephone-line-mode t))
 
 #+END_SRC
-
-#+begin_src emacs-lisp  :tangle no 
-  (defun my-org-get-sanitized-file-name (heading-text)
-    "Return a sanitized, title-cased file name from HEADING-TEXT."
-    (let* ((title-case-heading (s-titleize heading-text))
-           (sanitized-heading (replace-regexp-in-string "[^[:alnum:]]" "" title-case-heading)))
-      (concat org-directory "/" sanitized-heading ".org")))
-
-  (defun my-org-create-file (file-name heading-text)
-    "Create an Org file named FILE-NAME with initial content from HEADING-TEXT."
-    (when (not (file-exists-p file-name))
-      (with-temp-buffer
-        (insert (concat "* " heading-text "\n\n"))
-        (write-file file-name))
-      (message "Created file: %s" file-name)))
-
-  (defun my-org-add-link-property (file-name)
-    "Add a property to the current heading with a link to FILE-NAME."
-    (let ((file-link (format "file:%s" file-name)))
-      ;; (org-set-property "FILE_LINK" file-link)
-      ;; Optionally, insert a clickable link below the heading
-      (let ((link-text (format "[[%s][%s file]]\n" file-link "View")))
-        (org-back-to-heading t)
-        (forward-line 1)
-        (insert link-text))))
-
-  (defun my-org-move-heading-to-status ()
-    "Prompt user to move the current heading to a 'Project Status' or 'Research Status' section."
-    (let ((choice (completing-read "Move to: " '("Projects" "Research"))))
-      (org-cut-subtree)
-      (save-excursion
-        (goto-char (point-min))
-        (if (search-forward-regexp (concat "^\\** " choice) nil t)
-            (progn
-              (goto-char (match-end 0))
-              (org-paste-subtree))
-          (message "Projects section not found.")))))
-
-  (defun my-org-process-heading ()
-    "Process the current heading based on its TODO state."
-    (when (equal org-state "ORGANIZE")
-      (let* ((heading-text (nth 4 (org-heading-components)))
-             (file-name (my-org-get-sanitized-file-name heading-text)))
-        (my-org-create-file file-name heading-text)
-        (my-org-add-link-property file-name)
-        (my-org-move-heading-to-status))))
-
-  (add-hook 'org-after-todo-state-change-hook 'my-org-process-heading)
-#+end_src
-
-#+BEGIN_SRC emacs-lisp :tangle no 
-  (use-package s)
-  (defun my-org-open-at-point-same-window (orig-fun &rest args)
-    "Advise `org-open-at-point' to open links in the same window."
-    (let ((org-link-frame-setup (cons '(file . find-file) org-link-frame-setup)))
-      (apply orig-fun args)))
-  (advice-add 'org-open-at-point :around #'my-org-open-at-point-same-window)
-#+END_SRC
-
-#+begin_src emacs-lisp :tangle no
-  (defun get-buffer-path ()
-    "Get the path of the current buffer and copy it to the clipboard"
-    (interactive)
-    (let ((path (buffer-file-name)))
-      (when path
-        (kill-new path)
-        (message "Path '%s' copied to the clipboard" path)))
-    )  
-#+end_src
-
-
-* Test
-#+BEGIN_SRC emacs-lisp :tangle no
-  ;; Zotxt
-  (use-package zotxt)
-  (add-hook 'org-mode-hook (lambda () (org-zotxt-mode 1)))
-
-  ;; Org-noter
-  (use-package org-noter)
-  (setq org-noter-notes-search-path '("~/org/roam"))
-
-#+END_SRC
-
