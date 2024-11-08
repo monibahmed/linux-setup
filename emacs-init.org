@@ -28,6 +28,8 @@
   (menu-bar-mode -1)       ;; Disable menu bar
   (tool-bar-mode -1)       ;; Disable toolbar
   (scroll-bar-mode -1)     ;; Disable scrollbar
+  (horizontal-scroll-bar-mode -1)
+
   (setq inhibit-startup-screen t) ;; Disable startup screen
 
   ;; Optional: Basic editor settings
@@ -37,6 +39,11 @@
   (defalias 'yes-or-no-p 'y-or-n-p)
 
   ;; Add more packages here using (use-package ...)
+  (use-package disable-mouse
+    :straight t
+    :config
+    (global-disable-mouse-mode)) ;; Disable mouse globally
+
 #+END_SRC
 * Evil Mode
 #+BEGIN_SRC emacs-lisp
@@ -78,52 +85,77 @@
 
   ;; Enable evil-mode in all buffers by default
   (setq evil-default-state 'normal)
+
+  (use-package which-key
+    :ensure t
+    :config
+    (which-key-mode))
+
+  (use-package helpful
+    :ensure t
+    :bind
+    (("C-h f" . helpful-callable)
+     ("C-h v" . helpful-variable)
+     ("C-h k" . helpful-key)
+     ("C-h x" . helpful-command)
+     ("C-c C-d" . helpful-at-point)))
+
 #+END_SRC
 * Buffer Management
 #+BEGIN_SRC emacs-lisp
   ;; Install and configure Consult for enhanced buffer switching
   (use-package consult
     :bind (("C-x b" . consult-buffer)   ;; Replaces the default buffer list
-  	 ("C-x C-b" . consult-buffer) ;; Also remap C-x C-b
-  	 ("M-y" . consult-yank-pop)   ;; Enhanced yank (paste) menu
-  	 ("C-s" . consult-line)       ;; Search within current buffer
-  	 ("C-M-l" . consult-imenu)    ;; Jump to headings or sections
-  	 ("M-g M-g" . consult-goto-line)) ;; Go to line with preview
+    	 ("C-x C-b" . consult-buffer) ;; Also remap C-x C-b
+    	 ("M-y" . consult-yank-pop)   ;; Enhanced yank (paste) menu
+    	 ("C-s" . consult-line)       ;; Search within current buffer
+    	 ("C-M-l" . consult-imenu)    ;; Jump to headings or sections
+    	 ("M-g M-g" . consult-goto-line)) ;; Go to line with preview
     :config
     ;; Customize consult-buffer to put the previous buffer first
     (setq consult-buffer-sources
-  	'(consult--source-hidden-buffer  ;; Hidden buffers (optional)
-  	  consult--source-buffer         ;; Buffers
-  	  consult--source-recent-file    ;; Recent files
-  	  consult--source-bookmark)))    ;; Bookmarks
+    	'(consult--source-hidden-buffer  ;; Hidden buffers (optional)
+    	  consult--source-buffer         ;; Buffers
+    	  consult--source-recent-file    ;; Recent files
+    	  consult--source-bookmark)))    ;; Bookmarks
 
   ;; Add an advice to prioritize the last used buffer
   (advice-add 'consult--source-buffer :filter-return
-  	    (lambda (buffers)
-  	      (let ((previous-buffer (other-buffer (current-buffer) t)))
-  		(if (memq previous-buffer buffers)
-  		    (cons previous-buffer (remove previous-buffer buffers))
-  		  buffers))))
+    	    (lambda (buffers)
+    	      (let ((previous-buffer (other-buffer (current-buffer) t)))
+    		(if (memq previous-buffer buffers)
+    		    (cons previous-buffer (remove previous-buffer buffers))
+    		  buffers))))
 
   ;; Enable consult for buffer switching with Vertico
   (use-package vertico
-    :bind (:map
-  	 vertico-map
-  	 ("C-j" . vertico-next)
-  	 ("C-k" . vertico-previous)
-  	 :map minibuffer-local-map
-  	 ("M-h" . backward-kill-word))
+    :bind (:map vertico-map
+    	      ;; Bind C-j and C-k to move up and down in Vertico's minibuffer
+                ("C-j" . vertico-next)
+                ("C-k" . vertico-previous)
+    	      :map minibuffer-local-map
+    	      ("M-h" . backward-kill-word))
     :custom (vertico-cycle t)
     :init (vertico-mode))
 
+  ;; Install and configure Marginalia for annotated completions
+  (use-package marginalia
+    :straight t
+    :after vertico
+    :init
+    (marginalia-mode))
+
+  ;; Optional: Customize Marginalia annotations if desired
+  (setq marginalia-annotators
+        '(marginalia-annotators-heavy marginalia-annotators-light nil))
+
   ;; Install and configure Orderless for flexible completion
   (use-package orderless
-    :straight t
     :init
     ;; Set Orderless as the default completion style
     (setq completion-styles '(orderless)
-  	completion-category-defaults nil
-  	completion-category-overrides '((file (styles partial-completion))))) ;; Partial completion for file paths
+    	completion-category-defaults nil
+    	completion-category-overrides '((file (styles partial-completion))))) ;; Partial completion for file paths
 
   ;; Install and configure Embark for context-aware actions
   (use-package embark
@@ -140,21 +172,65 @@
     :after (embark consult)
     :hook
     (embark-collect-mode . consult-preview-at-point-mode)) ;; Show previews for consult commands in embark collect
+
+  (use-package ace-window
+    :bind ("C-c o" . 'ace-window)
+    :init
+    (setq aw-dispatch-always t)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
+
+  (use-package avy
+    :bind
+    ("M-g g" . avy-goto-line)       ;; Quickly jump to a line within the current window
+    ("M-g w" . avy-goto-word-1)     ;; Quickly jump to a word within the current window
+    ("M-g c" . avy-goto-char)       ;; Jump to a specific character in view
+    ("M-o" . avy-goto-char-timer))  ;; Bind to M-o for quick character jumping
+  (use-package savehist
+    :init
+    (savehist-mode))
+
+  (use-package consult-dir
+    :bind (("C-x C-d" . consult-dir)))
 #+END_SRC
 * Project Management
 #+BEGIN_SRC emacs-lisp
   ;; Install and configure perspective.el with persistence
   (use-package perspective
-    :bind
-    ("C-x C-b" . persp-list-buffers)         ; or use a nicer switcher, see below
-    :straight t
     :custom
     (persp-mode-prefix-key (kbd "C-c p")) ;; Change prefix if needed
     (persp-state-default-file "~/.emacs.d/persp-state") ;; File to save workspace state
+    ;; Enable saving and restoring of perspectives
+    (setq persp-state-default-file (expand-file-name "perspectives" user-emacs-directory))
+    (persp-state-save) ;; Automatically save on exit
+    (persp-state-load) ;; Automatically load on startup
+
     (persp-mode t)
     (persp-mode-save-state-on-exit t) ;; Auto-save when exiting Emacs
     :config
     (persp-mode))
+
+  ;; Install Projectile
+  (use-package projectile
+    :straight t
+    :config
+    (projectile-mode +1)
+    ;; Set the main project directory or directories
+    (setq projectile-project-search-path '("~/projects"))  ;; Customize to your project path
+    ;; Use Vertico (or default completion) for Projectile
+    (setq projectile-completion-system 'default)
+    :bind-keymap
+    ("C-c p" . projectile-command-map)) ;; Prefix for Projectile commands
+
+  ;; Automatically create or switch to a perspective when switching projects
+  (defun my-projectile-perspective-switch (project)
+    "Switch to a perspective based on PROJECT name."
+    (let ((project-name (file-name-nondirectory (directory-file-name project))))
+      (persp-switch project-name)
+      (projectile-switch-project-by-name project)))
+
+  ;; Bind this function to the Projectile project switch command
+  ;;  (global-set-key (kbd "C-c p p") 'my-projectile-perspective-switch)
+
 
   ;; Automatically save and load perspectives on startup and exit
   (defun my/load-perspectives ()
@@ -174,41 +250,113 @@
 #+BEGIN_SRC emacs-lisp
   ;; Install org-mode (comes built-in but ensuring latest version is used)
   (use-package org
-    :straight t ;; Ensures that straight.el will install it if not available
     :config
-    ;; Org-mode settings (customize as needed)
     (setq org-startup-indented t) ;; Enable indentation by default
     (setq org-hide-leading-stars t)
     (setq org-confirm-babel-evaluate nil)
     (setq org-startup-indented  t)
     (setq org-startup-numerated t)
-    ;; Customize specific keybindings in org-mode if desired
-    (with-eval-after-load 'evil-org
-      (evil-define-key 'normal evil-org-mode-map
-        (kbd "TAB") 'org-cycle ;; Make TAB cycle through content in normal mode
-        (kbd "M-h") 'org-metaleft ;; Example: promote heading
-        (kbd "M-l") 'org-metaright ;; Example: demote heading
-        (kbd "M-j") 'org-metadown ;; Move item down
-        (kbd "M-k") 'org-metaup))) ;; Move item up
+    (setq org-ellipsis "...")
+    (setq org-directory "~/org/"  ;; Directory for Org files
+        	org-default-notes-file (concat org-directory "notes.org")
+        	org-hide-leading-stars t)
+    :bind
+    ("C-c c" . org-capture))            ;; Hide leading stars in headings
 
+  ;; Customize specific keybindings in org-mode if desired
+  (with-eval-after-load 'evil-org
+    (evil-define-key 'normal evil-org-mode-map
+      (kbd "TAB") 'org-cycle     ;; Make TAB cycle through content in normal mode
+      (kbd "M-h") 'org-metaleft  ;; Example: promote heading
+      (kbd "M-l") 'org-metaright ;; Example: demote heading
+      (kbd "M-j") 'org-metadown  ;; Move item down
+      (kbd "M-k") 'org-metaup))  ;; Move item up
+
+  ;; Install and configure Org-roam
+  (use-package org-roam
+    :custom
+    (org-capture-templates
+     '(("l" "Literature Note" plain
+        (file (lambda ()
+        	      (let ((title (read-string "Title: ")))
+                  (expand-file-name (format "l-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
+        "#+title: ${title}\n#+filetags: :literature:\n\n* Summary\n\n%?"
+        :unnarrowed t)
+
+       ("z" "Permanent Note" plain
+        (file (lambda ()
+        	      (let ((title (read-string "Title: ")))
+                  (expand-file-name (format "z-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
+        "#+title: ${title}\n#+filetags: :permanent:\n\n* Content\n\n%?"
+        :unnarrowed t)
+
+       ("p" "Project Note" plain
+        (file (lambda ()
+        	      (let ((title (read-string "Title: ")))
+                  (expand-file-name (format "p-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
+        "#+title: ${title}\n#+filetags: :project:\n\n* Details\n\n%?"
+        :unnarrowed t)))
+    (org-roam-directory (file-truename "~/org/roam")) ;; Set your Org-roam directory
+    :bind (("C-c n l" . org-roam-buffer-toggle)         ;; Toggle the Org-roam buffer
+        	 ("C-c n f" . org-roam-node-find)             ;; Find an Org-roam node
+        	 ("C-c n i" . org-roam-node-insert)           ;; Insert a node link
+        	 ("C-c n c" . org-roam-capture))              ;; Capture a new Org-roam note
+    :config
+    (org-roam-db-autosync-mode))
+
+  (use-package org-roam-ui
+    :straight t
+    :after org-roam
+    :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t          ;; Sync with the current Emacs theme
+        	org-roam-ui-follow t              ;; Follow the cursor
+        	org-roam-ui-update-on-save t      ;; Update graph when saving a file
+        	org-roam-ui-open-on-start t))     ;; Open Org-roam UI on start
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)))
+
+#+END_SRC
+* Useful Packages
+#+BEGIN_SRC emacs-lisp
+  (use-package ialign
+    :ensure t)
 #+END_SRC
 * Themes and Colors
 #+BEGIN_SRC emacs-lisp
   (use-package modus-themes
-    :straight t
     :config
-    ;; Set the default theme if you prefer a Modus theme
-    (load-theme 'modus-operandi t) ;; Light theme
-    ;; (load-theme 'modus-vivendi t)   ;; Dark theme
-    )
+    ;; (load-theme 'modus-operandi t) ;; Light theme
+    (load-theme 'modus-vivendi t))  ;; Dark theme
+  (use-package ef-themes)
+  (use-package modus-themes)
+  (use-package nano-theme
+    :ensure nil
+    :defer t
+    :straight (:host github :repo "rougier/nano-theme"))
   (use-package telephone-line
     :init
     (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-          telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-          telephone-line-primary-right-separator 'telephone-line-cubed-right
-          telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+  	telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+  	telephone-line-primary-right-separator 'telephone-line-cubed-right
+  	telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
     (setq telephone-line-height 24
-          telephone-line-evil-use-short-tag t)
+  	telephone-line-evil-use-short-tag t)
     (telephone-line-mode t))
+
+  (use-package all-the-icons)
+  (use-package nerd-icons-completion
+    :config
+    (nerd-icons-completion-mode))
+
+  ;;  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100) ;
+  (set-face-attribute 'default nil :font "Fira Code-12")
+
+  (use-package all-the-icons-completion
+    :straight t
+    :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+    :init
+    (all-the-icons-completion-mode))
 
 #+END_SRC
