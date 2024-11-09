@@ -6,7 +6,6 @@
 #+BEGIN_SRC emacs-lisp
   ;; Initialize straight.el package manager
   (setq straight-use-package-by-default t)
-
   ;; Bootstrap straight.el
   (defvar bootstrap-version)
   (let ((bootstrap-file
@@ -14,9 +13,9 @@
         (bootstrap-version 6))
     (unless (file-exists-p bootstrap-file)
       (with-current-buffer
-  	(url-retrieve-synchronously
-  	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-  	 'silent 'inhibit-cookies)
+    	(url-retrieve-synchronously
+    	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+    	 'silent 'inhibit-cookies)
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
@@ -28,14 +27,15 @@
   (menu-bar-mode -1)       ;; Disable menu bar
   (tool-bar-mode -1)       ;; Disable toolbar
   (scroll-bar-mode -1)     ;; Disable scrollbar
+  (global-auto-revert-mode 1)
   (horizontal-scroll-bar-mode -1)
-
   (setq inhibit-startup-screen t) ;; Disable startup screen
 
   ;; Optional: Basic editor settings
   (setq make-backup-files nil) ;; Disable backup files
   (setq auto-save-default nil) ;; Disable auto-save
   (setq ring-bell-function 'ignore) ;; Silence bell
+  (setq enable-recursive-minibuffers t)
   (defalias 'yes-or-no-p 'y-or-n-p)
 
   ;; Add more packages here using (use-package ...)
@@ -105,36 +105,41 @@
 #+BEGIN_SRC emacs-lisp
   ;; Install and configure Consult for enhanced buffer switching
   (use-package consult
-    :bind (("C-x b" . consult-buffer)   ;; Replaces the default buffer list
-    	 ("C-x C-b" . consult-buffer) ;; Also remap C-x C-b
-    	 ("M-y" . consult-yank-pop)   ;; Enhanced yank (paste) menu
-    	 ("C-s" . consult-line)       ;; Search within current buffer
-    	 ("C-M-l" . consult-imenu)    ;; Jump to headings or sections
-    	 ("M-g M-g" . consult-goto-line)) ;; Go to line with preview
+    :bind
+    (("C-x b" . my/consult-perspective-buffer) ;; Replaces the default buffer list
+     ("C-x C-b" . consult-bookmark) ;; Also remap C-x C-b
+     ("M-y" . consult-yank-pop)     ;; Enhanced yank (paste) menu
+     ("C-s" . consult-line)         ;; Search within current buffer
+     ("C-M-l" . consult-imenu)      ;; Jump to headings or sections
+     ("M-g M-g" . consult-goto-line)) ;; Go to line with preview
     :config
+    (defun my/consult-perspective-buffer ()
+      "Use `consult-buffer` to list buffers in the current Perspective."
+      (interactive)
+      (let ((persp-buffers (persp-current-buffers)))
+        (consult--buffer-action (consult--read
+                                 (mapcar #'buffer-name persp-buffers)
+                                 :prompt "Switch to perspective buffer: "
+                                 :sort nil
+                                 :require-match t
+                                 :category 'buffer))))
+
     ;; Customize consult-buffer to put the previous buffer first
     (setq consult-buffer-sources
-    	'(consult--source-hidden-buffer  ;; Hidden buffers (optional)
-    	  consult--source-buffer         ;; Buffers
-    	  consult--source-recent-file    ;; Recent files
-    	  consult--source-bookmark)))    ;; Bookmarks
+      	'(consult--source-hidden-buffer  ;; Hidden buffers (optional)
+      	  consult--source-buffer         ;; Buffers
+      	  consult--source-recent-file    ;; Recent files
+      	  consult--source-bookmark)))    ;; Bookmarks
 
-  ;; Add an advice to prioritize the last used buffer
-  (advice-add 'consult--source-buffer :filter-return
-    	    (lambda (buffers)
-    	      (let ((previous-buffer (other-buffer (current-buffer) t)))
-    		(if (memq previous-buffer buffers)
-    		    (cons previous-buffer (remove previous-buffer buffers))
-    		  buffers))))
 
   ;; Enable consult for buffer switching with Vertico
   (use-package vertico
     :bind (:map vertico-map
-    	      ;; Bind C-j and C-k to move up and down in Vertico's minibuffer
+      	      ;; Bind C-j and C-k to move up and down in Vertico's minibuffer
                 ("C-j" . vertico-next)
                 ("C-k" . vertico-previous)
-    	      :map minibuffer-local-map
-    	      ("M-h" . backward-kill-word))
+      	      :map minibuffer-local-map
+      	      ("M-h" . backward-kill-word))
     :custom (vertico-cycle t)
     :init (vertico-mode))
 
@@ -154,8 +159,8 @@
     :init
     ;; Set Orderless as the default completion style
     (setq completion-styles '(orderless)
-    	completion-category-defaults nil
-    	completion-category-overrides '((file (styles partial-completion))))) ;; Partial completion for file paths
+      	completion-category-defaults nil
+      	completion-category-overrides '((file (styles partial-completion))))) ;; Partial completion for file paths
 
   ;; Install and configure Embark for context-aware actions
   (use-package embark
@@ -185,6 +190,7 @@
     ("M-g w" . avy-goto-word-1)     ;; Quickly jump to a word within the current window
     ("M-g c" . avy-goto-char)       ;; Jump to a specific character in view
     ("M-o" . avy-goto-char-timer))  ;; Bind to M-o for quick character jumping
+
   (use-package savehist
     :init
     (savehist-mode))
@@ -203,8 +209,6 @@
     (setq persp-state-default-file (expand-file-name "perspectives" user-emacs-directory))
     (persp-state-save) ;; Automatically save on exit
     (persp-state-load) ;; Automatically load on startup
-
-    (persp-mode t)
     (persp-mode-save-state-on-exit t) ;; Auto-save when exiting Emacs
     :config
     (persp-mode))
@@ -228,10 +232,6 @@
       (persp-switch project-name)
       (projectile-switch-project-by-name project)))
 
-  ;; Bind this function to the Projectile project switch command
-  ;;  (global-set-key (kbd "C-c p p") 'my-projectile-perspective-switch)
-
-
   ;; Automatically save and load perspectives on startup and exit
   (defun my/load-perspectives ()
     "Load perspectives from the last saved state."
@@ -245,6 +245,7 @@
     :commands magit-status
     :config
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
+
 #+END_SRC
 * Org-Mode
 #+BEGIN_SRC emacs-lisp
@@ -272,77 +273,244 @@
       (kbd "M-j") 'org-metadown  ;; Move item down
       (kbd "M-k") 'org-metaup))  ;; Move item up
 
-  ;; Install and configure Org-roam
-  (use-package org-roam
-    :custom
-    (org-capture-templates
-     '(("l" "Literature Note" plain
-        (file (lambda ()
-        	      (let ((title (read-string "Title: ")))
-                  (expand-file-name (format "l-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
-        "#+title: ${title}\n#+filetags: :literature:\n\n* Summary\n\n%?"
-        :unnarrowed t)
-
-       ("z" "Permanent Note" plain
-        (file (lambda ()
-        	      (let ((title (read-string "Title: ")))
-                  (expand-file-name (format "z-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
-        "#+title: ${title}\n#+filetags: :permanent:\n\n* Content\n\n%?"
-        :unnarrowed t)
-
-       ("p" "Project Note" plain
-        (file (lambda ()
-        	      (let ((title (read-string "Title: ")))
-                  (expand-file-name (format "p-%s.org" (replace-regexp-in-string " " "_" title)) org-roam-directory))))
-        "#+title: ${title}\n#+filetags: :project:\n\n* Details\n\n%?"
-        :unnarrowed t)))
-    (org-roam-directory (file-truename "~/org/roam")) ;; Set your Org-roam directory
-    :bind (("C-c n l" . org-roam-buffer-toggle)         ;; Toggle the Org-roam buffer
-        	 ("C-c n f" . org-roam-node-find)             ;; Find an Org-roam node
-        	 ("C-c n i" . org-roam-node-insert)           ;; Insert a node link
-        	 ("C-c n c" . org-roam-capture))              ;; Capture a new Org-roam note
-    :config
-    (org-roam-db-autosync-mode))
-
-  (use-package org-roam-ui
-    :straight t
-    :after org-roam
-    :hook (after-init . org-roam-ui-mode)
-    :config
-    (setq org-roam-ui-sync-theme t          ;; Sync with the current Emacs theme
-        	org-roam-ui-follow t              ;; Follow the cursor
-        	org-roam-ui-update-on-save t      ;; Update graph when saving a file
-        	org-roam-ui-open-on-start t))     ;; Open Org-roam UI on start
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)))
+#+END_SRC
+** Org-Roam
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam
+    :straight t
+    :init
+    ;; Set org-roam directory
+    (setq org-roam-directory (file-truename "~/org/roam"))
+    (setq org-roam-v2-ack t)
+    ;; Define org-roam capture templates
+    (setq org-roam-capture-templates
+          '(("l" "Literature Notes" plain
+             "%?"
+             :if-new (file+head "l-${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)
+            ("z" "Zettels" plain
+             "%?"
+             :if-new (file+head "z-${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)
+            ("p" "Project Notes" plain
+             "%?"
+             :if-new (file+head "p-${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)))
+    :config
+    ;; Enable org-roam's autosync mode
+    (org-roam-db-autosync-mode)
+    :config
+    (cl-defmethod org-roam-node-type ((node org-roam-node))
+      "Return the TYPE of NODE."
+      (condition-case nil
+  	(file-name-nondirectory
+  	 (directory-file-name
+            (file-name-directory
+             (file-relative-name (org-roam-node-file node) org-roam-directory))))
+        (error "")))
+    (setq org-roam-node-display-template
+  	(concat "${type:15} ${title:*} ${tags:10}"))
+    (org-roam-db-autosync-mode)
+    :bind
+    ;; Bind keys to commonly used org-roam commands
+    (("C-c r f" . org-roam-node-find)        ;; Find or create a node
+     ("C-c r i" . org-roam-node-insert)      ;; Insert a link to a node
+     ("C-c r c" . org-roam-capture)          ;; Capture a new note
+     ("C-c r b" . org-roam-buffer-toggle)    ;; Toggle backlinks buffer
+     ("C-c r g" . org-roam-graph)            ;; Generate a graph of notes
+     ("C-c r d" . org-roam-dailies-capture-today))) ;; Open today's daily note
+  
+  
+(with-eval-after-load 'org-roam
+  (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the type of the NODE based on the first letter of the file name."
+    (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
+           (first-letter (substring filename 0 1)))
+      (cond ((string-equal first-letter "z") "zettel")
+            ((string-equal first-letter "p") "project")
+            ((string-equal first-letter "l") "literature")
+            (t "unknown")))) ; default type if it doesn't match any of the cases
+  (setq org-roam-node-display-template
+        (concat "${type:15} ${title:75} " (propertize "${tags:75}" 'face 'org-tag))))
+
+
+  ;; Org-roam-ui configuration
+  (use-package org-roam-ui
+    :after org-roam
+    :config
+    ;; Synchronize theme with Emacs
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t))
 
 #+END_SRC
+** Org-Capture
+** Org-Babel
+#+BEGIN_SRC emacs-lisp
+  ;; Org Babel for code blocks
+  (use-package ob
+    :straight nil
+    :after (:all org)
+    :init
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("el"  . "src emacs-lisp"))
+    (add-to-list 'org-structure-template-alist '("hs"  . "src haskell"))
+    (add-to-list 'org-structure-template-alist '("sh"  . "src shell"))
+    (add-to-list 'org-structure-template-alist '("py"  . "src python"))
+    (add-to-list 'org-structure-template-alist '("uml" . "src plantuml"))
+    (setq org-confirm-babel-evaluate nil)
+    :config
+
+    ;; load more languages for org-babel
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((shell      . t)
+       (emacs-lisp . t)
+       (plantuml   . t)
+       (dot        . t)
+       (python     . t)
+       (haskell    . t)
+       (scheme     . t)
+       )))
+#+END_SRC 
+** TODO Org-Readwise
+#+begin_src emacs-lisp :tangle no
+;; Install org-readwise from GitHub
+(use-package org-readwise
+  :straight (org-readwise :type git :host github :repo "CountGreven/org-readwise")
+  :config
+  ;; Ensure auth-source is configured to find your Readwise token
+  (setq auth-sources '("~/.authinfo"))
+  ;; Set the output location for your highlights (buffer or file)
+  (setq org-readwise-output-location "~/org/readwise-highlights.org")
+  ;; Optionally set the debug level (0 = no debug, 1 = basic debug, 2 = detailed debug)
+  (setq org-readwise-debug-level 2))
+#+end_src
+
+#+begin_src emacs-lisp
+(require 'json)
+
+(defun fetch-readwise-highlights-json ()
+  "Fetch Readwise highlights and save the raw JSON data to a file."
+  (interactive)
+  (let* ((url-request-method "GET")
+         (url-request-extra-headers
+          `(("Authorization" . ,(concat "Token " (auth-source-pick-first-password :host "readwise.io")))))
+         (url "https://readwise.io/api/v2/highlights/")
+         (response-buffer (url-retrieve-synchronously url)))
+    (with-current-buffer response-buffer
+      (goto-char url-http-end-of-headers)
+      (let ((json-data (buffer-substring-no-properties (point) (point-max))))
+        ;; Save JSON to a file
+        (with-temp-file "~/readwise-highlights.json"
+          (insert json-data))
+        (message "Raw JSON data saved to ~/readwise-highlights.json")))))
+
+
+(require 'json)
+
+(defun parse-readwise-highlights-by-title ()
+  "Parse Readwise JSON data and create an Org file with a grouped structure by date and title."
+  (interactive)
+  (let ((json-file "~/readwise-highlights.json")
+        (org-file "~/readwise-highlights.org"))
+    (with-temp-buffer
+      ;; Read and parse JSON data
+      (insert-file-contents json-file)
+      (let* ((json-object-type 'alist)
+             (json-array-type 'list)
+             (json-key-type 'symbol)
+             (data (json-read-from-string (buffer-string)))
+             ;; Get the last sync date in Org dailies format
+             (last-sync-date (format-time-string "[[%Y-%m-%d]]" (current-time))))
+        ;; Create Org structure
+        (with-temp-file org-file
+          ;; Top-level heading with sync date
+          (insert (format "* Highlights %s\n\n" last-sync-date))
+          ;; Organize highlights by title
+          (let ((titles (make-hash-table :test 'equal)))
+            ;; Collect highlights under each title
+            (dolist (highlight (alist-get 'results data))
+              (let ((title (or (alist-get 'title highlight) "Untitled"))
+                    (author (or (alist-get 'author highlight) "Unknown Author"))
+                    (text (alist-get 'text highlight))
+                    (note (alist-get 'note highlight)))
+                (puthash title
+                         (cons (list :author author :text text :note note)
+                               (gethash title titles))
+                         titles)))
+            ;; Insert each title with associated notes and highlights in Org format
+            (maphash (lambda (title highlights)
+                       (let ((author (plist-get (car highlights) :author)))
+                         ;; Insert title heading
+                         (insert (format "** %s - %s\n" author title))
+                         ;; Insert each note and associated highlight under the title
+                         (dolist (highlight highlights)
+                           (let ((note (plist-get highlight :note))
+                                 (text (plist-get highlight :text)))
+                             ;; Insert note if it exists
+                             (when note
+                               (insert (format "   - %s\n" note)))
+                             ;; Insert the main highlight text
+                             (insert (format "     - %s\n" text))))
+                         (insert "\n")))
+                     titles))))
+        (message "Highlights exported to %s" org-file))))
+ 
+#+end_src
+** TODO Org-Read-ot-Later
 * Useful Packages
 #+BEGIN_SRC emacs-lisp
   (use-package ialign
     :ensure t)
+  (use-package evil-nerd-commenter
+    :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
+  (use-package wgrep
+    :straight t)
+
 #+END_SRC
+* Popper
+#+begin_src emacs-lisp
+  (use-package popper
+    :straight t
+    :init
+    ;; Define buffers to treat as popups
+    (setq popper-reference-buffers
+          '("\\*Messages\\*"
+            "\\*Embark*"
+            "Output\\*$"
+            "\\*Async Shell Command\\*"
+            help-mode
+            compilation-mode
+            "^\\*projectile-scratch-buffer\\*"))
+    ;; Group popups by Projectile projects
+    (setq popper-group-function #'popper-group-by-project)
+    :bind (("C-`"   . popper-toggle)
+           ("M-`"   . popper-cycle)
+           ("C-M-`" . popper-toggle-type))
+    :config
+    (popper-mode +1)
+    (popper-echo-mode +1))
+
+#+end_src
 * Themes and Colors
 #+BEGIN_SRC emacs-lisp
-  (use-package modus-themes
-    :config
-    ;; (load-theme 'modus-operandi t) ;; Light theme
-    (load-theme 'modus-vivendi t))  ;; Dark theme
+  (use-package modus-themes)
   (use-package ef-themes)
   (use-package modus-themes)
   (use-package nano-theme
-    :ensure nil
-    :defer t
     :straight (:host github :repo "rougier/nano-theme"))
   (use-package telephone-line
     :init
     (setq telephone-line-primary-left-separator 'telephone-line-cubed-left
-  	telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
-  	telephone-line-primary-right-separator 'telephone-line-cubed-right
-  	telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
+        	telephone-line-secondary-left-separator 'telephone-line-cubed-hollow-left
+        	telephone-line-primary-right-separator 'telephone-line-cubed-right
+        	telephone-line-secondary-right-separator 'telephone-line-cubed-hollow-right)
     (setq telephone-line-height 24
-  	telephone-line-evil-use-short-tag t)
+        	telephone-line-evil-use-short-tag t)
     (telephone-line-mode t))
 
   (use-package all-the-icons)
@@ -351,7 +519,7 @@
     (nerd-icons-completion-mode))
 
   ;;  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100) ;
-  (set-face-attribute 'default nil :font "Fira Code-12")
+  (set-face-attribute 'default nil :font "Fira Code-10")
 
   (use-package all-the-icons-completion
     :straight t
@@ -360,3 +528,16 @@
     (all-the-icons-completion-mode))
 
 #+END_SRC
+
+
+* File Navigating, Editing and Querying
+* Grabbing articles from Internet
+* Git tracking
+* Readwise Integration
+* Local Nodes
+* Copy/Download images and highlights
+* Other Evil packages
+* Dired
+* Bookmarks
+* Enable AI within Emacs
+Save conversations 
