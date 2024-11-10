@@ -40,7 +40,6 @@
 
   ;; Add more packages here using (use-package ...)
   (use-package disable-mouse
-    :straight t
     :config
     (global-disable-mouse-mode)) ;; Disable mouse globally
 
@@ -247,107 +246,49 @@
     (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
 #+END_SRC
-* Org-Mode
-#+BEGIN_SRC emacs-lisp
-  ;; Install org-mode (comes built-in but ensuring latest version is used)
+
+* Org
+** Org-Mode
+#+begin_src emacs-lisp
+  ;; Org-mode configuration
   (use-package org
+    :init
+    (visual-line-mode)
     :config
     (setq org-startup-indented t) ;; Enable indentation by default
     (setq org-hide-leading-stars t)
     (setq org-confirm-babel-evaluate nil)
-    (setq org-startup-indented  t)
+    (setq org-startup-with-inline-images t)
     (setq org-startup-numerated t)
     (setq org-ellipsis "...")
     (setq org-directory "~/org/"  ;; Directory for Org files
-        	org-default-notes-file (concat org-directory "notes.org")
-        	org-hide-leading-stars t)
+          org-default-notes-file (concat org-directory "notes.org"))
+    (setq scroll-margin 2
+  	scroll-conservatively 101
+  	scroll-step 1)
+    
     :bind
-    ("C-c c" . org-capture))            ;; Hide leading stars in headings
+    ("C-c c" . org-capture))  ;; Keybinding for org-capture
+
+  (use-package visual-fill-column
+    :custom
+    (visual-fill-column-center-text t)
+    (visual-fill-column-width 140)
+    :hook (org-mode . visual-fill-column-mode))
 
   ;; Customize specific keybindings in org-mode if desired
   (with-eval-after-load 'evil-org
     (evil-define-key 'normal evil-org-mode-map
       (kbd "TAB") 'org-cycle     ;; Make TAB cycle through content in normal mode
-      (kbd "M-h") 'org-metaleft  ;; Example: promote heading
-      (kbd "M-l") 'org-metaright ;; Example: demote heading
+      (kbd "M-h") 'org-metaleft  ;; Promote heading
+      (kbd "M-l") 'org-metaright ;; Demote heading
       (kbd "M-j") 'org-metadown  ;; Move item down
       (kbd "M-k") 'org-metaup))  ;; Move item up
 
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)))
-#+END_SRC
-** Org-Roam
-#+BEGIN_SRC emacs-lisp
-  (use-package org-roam
-    :straight t
-    :init
-    ;; Set org-roam directory
-    (setq org-roam-directory (file-truename "~/org/roam"))
-    (setq org-roam-v2-ack t)
-    ;; Define org-roam capture templates
-    (setq org-roam-capture-templates
-          '(("l" "Literature Notes" plain
-             "%?"
-             :if-new (file+head "l-${slug}.org" "#+title: ${title}\n")
-             :unnarrowed t)
-            ("z" "Zettels" plain
-             "%?"
-             :if-new (file+head "z-${slug}.org" "#+title: ${title}\n")
-             :unnarrowed t)
-            ("p" "Project Notes" plain
-             "%?"
-             :if-new (file+head "p-${slug}.org" "#+title: ${title}\n")
-             :unnarrowed t)))
-    :config
-    ;; Enable org-roam's autosync mode
-    (org-roam-db-autosync-mode)
-    :config
-    (cl-defmethod org-roam-node-type ((node org-roam-node))
-      "Return the TYPE of NODE."
-      (condition-case nil
-  	(file-name-nondirectory
-  	 (directory-file-name
-            (file-name-directory
-             (file-relative-name (org-roam-node-file node) org-roam-directory))))
-        (error "")))
-    (setq org-roam-node-display-template
-  	(concat "${type:15} ${title:*} ${tags:10}"))
-    (org-roam-db-autosync-mode)
-    :bind
-    ;; Bind keys to commonly used org-roam commands
-    (("C-c r f" . org-roam-node-find)        ;; Find or create a node
-     ("C-c r i" . org-roam-node-insert)      ;; Insert a link to a node
-     ("C-c r c" . org-roam-capture)          ;; Capture a new note
-     ("C-c r b" . org-roam-buffer-toggle)    ;; Toggle backlinks buffer
-     ("C-c r g" . org-roam-graph)            ;; Generate a graph of notes
-     ("C-c r d" . org-roam-dailies-capture-today))) ;; Open today's daily note
-  
-  
-(with-eval-after-load 'org-roam
-  (cl-defmethod org-roam-node-type ((node org-roam-node))
-    "Return the type of the NODE based on the first letter of the file name."
-    (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
-           (first-letter (substring filename 0 1)))
-      (cond ((string-equal first-letter "z") "zettel")
-            ((string-equal first-letter "p") "project")
-            ((string-equal first-letter "l") "literature")
-            (t "unknown")))) ; default type if it doesn't match any of the cases
-  (setq org-roam-node-display-template
-        (concat "${type:15} ${title:75} " (propertize "${tags:75}" 'face 'org-tag))))
-
-
-  ;; Org-roam-ui configuration
-  (use-package org-roam-ui
-    :after org-roam
-    :config
-    ;; Synchronize theme with Emacs
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t))
-
-#+END_SRC
-** Org-Capture
+#+end_src 
 ** Org-Babel
 #+BEGIN_SRC emacs-lisp
   ;; Org Babel for code blocks
@@ -376,92 +317,259 @@
        (scheme     . t)
        )))
 #+END_SRC 
-** TODO Org-Readwise
-#+begin_src emacs-lisp :tangle no
-;; Install org-readwise from GitHub
-(use-package org-readwise
-  :straight (org-readwise :type git :host github :repo "CountGreven/org-readwise")
-  :config
-  ;; Ensure auth-source is configured to find your Readwise token
-  (setq auth-sources '("~/.authinfo"))
-  ;; Set the output location for your highlights (buffer or file)
-  (setq org-readwise-output-location "~/org/readwise-highlights.org")
-  ;; Optionally set the debug level (0 = no debug, 1 = basic debug, 2 = detailed debug)
-  (setq org-readwise-debug-level 2))
-#+end_src
-
+** Org-Roam
 #+begin_src emacs-lisp
-(require 'json)
+   ;; Org-roam configuration
+     (use-package org-roam
+       :init
+       (setq org-roam-directory (file-truename "~/org/roam"))
+       (setq org-roam-capture-templates
+             '(("l" "Literature Notes" plain
+                "%?"
+                :if-new (file+head "l-${slug}.org" "#+title: ${title}\n")
+                :unnarrowed t)
+               ("z" "Zettels" plain
+                "%?"
+                :if-new (file+head "z-${slug}.org" "#+title: ${title}\n")
+                :unnarrowed t)
+               ("p" "Project Notes" plain
+                "%?"
+                :if-new (file+head "p-${slug}.org" "#+title: ${title}\n")
+                :unnarrowed t)))
+       :config
+       ;; Enable Org-roam DB autosync
+       (org-roam-db-autosync-mode)
 
-(defun fetch-readwise-highlights-json ()
-  "Fetch Readwise highlights and save the raw JSON data to a file."
-  (interactive)
-  (let* ((url-request-method "GET")
-         (url-request-extra-headers
-          `(("Authorization" . ,(concat "Token " (auth-source-pick-first-password :host "readwise.io")))))
-         (url "https://readwise.io/api/v2/highlights/")
-         (response-buffer (url-retrieve-synchronously url)))
-    (with-current-buffer response-buffer
-      (goto-char url-http-end-of-headers)
-      (let ((json-data (buffer-substring-no-properties (point) (point-max))))
-        ;; Save JSON to a file
-        (with-temp-file "~/readwise-highlights.json"
-          (insert json-data))
-        (message "Raw JSON data saved to ~/readwise-highlights.json")))))
+       ;; Require org-id for handling IDs
+       (require 'org-id)
+       ;; Ensure that Org uses IDs for internal links
+       (setq org-id-link-to-org-use-id t)
+       ;; Track IDs globally across all Org files
+       ;; (setq org-id-track-globally t)
+       ;; Set the file where Org stores the IDs
+       (setq org-id-locations-file (expand-file-name ".org-id-locations" user-emacs-directory))
+
+       ;; Automatically assign IDs to new headings when they are created
+       ;; (add-hook 'org-insert-heading-hook 'org-id-get-create)
+
+       ;; Optionally, provide a function to assign IDs to all headings in the current buffer
+       (defun my/org-add-ids-to-headings-in-file ()
+         "Add ID properties to all Org headings in the current file."
+         (interactive)
+         (org-map-entries 'org-id-get-create))
+
+       ;; Optionally, bind a key to assign IDs to the current heading
+       (define-key org-mode-map (kbd "C-c n a") 'org-id-get-create)
+
+       ;; Optionally, bind a key to assign IDs to all headings in the current file
+       (define-key org-mode-map (kbd "C-c n A") 'my/org-add-ids-to-headings-in-file)
+
+       :bind
+       ;; Bind keys to commonly used Org-roam commands
+       (("C-c n f" . org-roam-node-find)        ;; Find or create a node
+        ("C-c n i" . org-roam-node-insert)      ;; Insert a link to a node
+        ("C-c n c" . org-roam-capture)          ;; Capture a new note
+        ("C-c n b" . org-roam-buffer-toggle)    ;; Toggle backlinks buffer
+        ("C-c n g" . org-roam-graph)            ;; Generate a graph of notes
+        ("C-c n a" . org-id-get-create)
+        ("C-c n d" . org-roam-dailies-capture-today))) ;; Open today's daily note
+     (with-eval-after-load 'org-roam
+       (cl-defmethod org-roam-node-type ((node org-roam-node))
+         "Return the type of the NODE based on the first letter of the file name."
+         (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
+                (first-letter (substring filename 0 1)))
+           (cond ((string-equal first-letter "z") "zettel")
+                 ((string-equal first-letter "p") "project")
+                 ((string-equal first-letter "l") "literature")
+                 (t "unknown")))) ; default type if it doesn't match any of the cases
+       (setq org-roam-node-display-template
+             (concat "${type:15} ${title:75} " (propertize "${tags:75}" 'face 'org-tag))))
 
 
-(require 'json)
-
-(defun parse-readwise-highlights-by-title ()
-  "Parse Readwise JSON data and create an Org file with a grouped structure by date and title."
-  (interactive)
-  (let ((json-file "~/readwise-highlights.json")
-        (org-file "~/readwise-highlights.org"))
-    (with-temp-buffer
-      ;; Read and parse JSON data
-      (insert-file-contents json-file)
-      (let* ((json-object-type 'alist)
-             (json-array-type 'list)
-             (json-key-type 'symbol)
-             (data (json-read-from-string (buffer-string)))
-             ;; Get the last sync date in Org dailies format
-             (last-sync-date (format-time-string "[[%Y-%m-%d]]" (current-time))))
-        ;; Create Org structure
-        (with-temp-file org-file
-          ;; Top-level heading with sync date
-          (insert (format "* Highlights %s\n\n" last-sync-date))
-          ;; Organize highlights by title
-          (let ((titles (make-hash-table :test 'equal)))
-            ;; Collect highlights under each title
-            (dolist (highlight (alist-get 'results data))
-              (let ((title (or (alist-get 'title highlight) "Untitled"))
-                    (author (or (alist-get 'author highlight) "Unknown Author"))
-                    (text (alist-get 'text highlight))
-                    (note (alist-get 'note highlight)))
-                (puthash title
-                         (cons (list :author author :text text :note note)
-                               (gethash title titles))
-                         titles)))
-            ;; Insert each title with associated notes and highlights in Org format
-            (maphash (lambda (title highlights)
-                       (let ((author (plist-get (car highlights) :author)))
-                         ;; Insert title heading
-                         (insert (format "** %s - %s\n" author title))
-                         ;; Insert each note and associated highlight under the title
-                         (dolist (highlight highlights)
-                           (let ((note (plist-get highlight :note))
-                                 (text (plist-get highlight :text)))
-                             ;; Insert note if it exists
-                             (when note
-                               (insert (format "   - %s\n" note)))
-                             ;; Insert the main highlight text
-                             (insert (format "     - %s\n" text))))
-                         (insert "\n")))
-                     titles))))
-        (message "Highlights exported to %s" org-file))))
- 
+     (use-package org-tidy
+       :hook
+       (org-mode . org-tidy-mode)) 
 #+end_src
+
+** Org-Roam UI
+:PROPERTIES:
+:ID:       F1769EFA-A318-49F7-ADBB-C394F16DBA30
+:END:
+#+begin_src emacs-lisp
+  ;; Org-roam-ui configuration
+  (use-package org-roam-ui
+    :after org-roam
+    :config
+    ;; Synchronize theme with Emacs
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t))
+#+end_src
+** TODO Org-Readwise
+Pulls the JSON from readwise
+#+begin_src emacs-lisp :tangle no 
+  (require 'auth-source)
+  (require 'json)
+  (use-package request)
+
+  (defun get-readwise-token ()
+    "Retrieve the Readwise API token from ~/.authinfo."
+    (let ((secret (auth-source-search :host "readwise.io" :user "apikey" :require '(:secret))))
+      (if secret
+          (funcall (plist-get (car secret) :secret))
+        (error "No Readwise API token found in ~/.authinfo"))))
+
+  (defun format-iso8601-date (time)
+    "Format TIME as an ISO 8601 string."
+    (format-time-string "%Y-%m-%dT%H:%M:%SZ" time t))
+
+  (defun fetch-from-export-api (&optional updated-after)
+    "Fetch all of a user's highlights from Readwise's export API.
+    If UPDATED-AFTER is provided, format it to ISO 8601 for the query.
+    The results are saved to ~/org/readwise-highlights.json."
+    (let ((full-data '())
+          (next-page-cursor nil)
+          (token (get-readwise-token))
+          (formatted-date (when updated-after (format-iso8601-date updated-after))))
+      (cl-loop
+       do
+       (let ((params (append
+                      (when next-page-cursor `(("pageCursor" . ,next-page-cursor)))
+                      (when formatted-date `(("updatedAfter" . ,formatted-date))))))
+         (message "Making export API request with params %S..." params)
+         (request
+          "https://readwise.io/api/v2/export/"
+          :type "GET"
+          :params params
+          :headers `(("Authorization" . ,(concat "Token " token)))
+          :parser 'json-read
+          :sync t  ;; synchronous for simplicity; can change to async if needed
+          :success (cl-function
+                    (lambda (&key data &allow-other-keys)
+                      (setq full-data (append full-data (alist-get 'results data)))
+                      (setq next-page-cursor (alist-get 'nextPageCursor data))))
+          :error (cl-function
+                  (lambda (&key error-thrown response &allow-other-keys)
+                    (message "Error: %S" error-thrown)
+                    (message "Response: %s" (request-response-data response))))))
+       until (not next-page-cursor))
+      ;; Save the accumulated data to a JSON file
+      (let ((json-file "~/org/readwise-highlights.json"))
+        (with-temp-file json-file
+          (insert (json-encode `(("results" . ,full-data)))))
+        (message "Highlights saved to %s" json-file))
+      full-data))
+
+  ;; Example usage:
+  ;; Fetch all highlights from all time and save to JSON
+  ;; (fetch-from-export-api)
+
+  ;; Fetch highlights updated after a specific date and save to JSON
+  ;; (fetch-from-export-api (format-iso8601-date (current-time)))
+
+#+end_src
+
+V2- save in order of location, not time
+#+begin_src emacs-lisp :tangle no 
+  (require 'json)
+
+  (defun parse-readwise-json (file-path)
+    "Parse Readwise highlights from a local JSON file at FILE-PATH.
+   Returns a list of highlights in an Emacs Lisp structure."
+    (with-temp-buffer
+      (insert-file-contents file-path)
+      (let ((json-object-type 'alist)       ;; JSON objects as alists
+            (json-array-type 'list))        ;; JSON arrays as lists
+        (json-read))))
+
+  (defun format-readwise-highlights-to-org (json-data output-file-path)
+    "Convert JSON-DATA from Readwise highlights to Org format and save it to OUTPUT-FILE-PATH."
+    (let ((org-content '()))
+      (dolist (entry (alist-get 'results json-data))
+        ;; Book/Article Title and Metadata
+        (let ((title (or (alist-get 'title entry) "Untitled"))
+              (author (or (alist-get 'author entry) "Unknown"))
+              (source-url (or (alist-get 'source_url entry) "No URL"))
+              (summary (alist-get 'summary entry))
+              (highlights (alist-get 'highlights entry)))
+  	(push (format "* %s\n  :PROPERTIES:\n  :AUTHOR: %s\n  :URL: %s" title author source-url) org-content)
+  	(when summary
+            (push (format "  :SUMMARY: %s" summary) org-content))
+  	(push "  :END:\n" org-content)
+  	
+  	;; Notes Section
+  	(push "** Notes" org-content)
+  	
+  	;; Sort the highlights by location
+  	(setq highlights (sort highlights (lambda (a b)
+                                              (< (or (alist-get 'location a) 0)
+                                                 (or (alist-get 'location b) 0)))))
+  	
+  	(dolist (highlight highlights)
+            (let ((note (string-trim (or (alist-get 'note highlight) "")))
+  		(highlight-text (string-trim (or (alist-get 'text highlight) "")))
+  		(highlight-url (alist-get 'url highlight)))
+              ;; Add note and supporting text
+              (if (not (string-empty-p note))
+  		(progn
+                    (push (format "  - %s" note) org-content)
+                    (push (format "    - %s" highlight-text) org-content))
+                (push (format "    - %s" highlight-text) org-content))
+              
+              ;; Format image links correctly
+              (when (and highlight-url (string-match-p (regexp-opt '(".jpg" ".png")) highlight-url))
+                (push (format "  - [[%s]]" highlight-url) org-content))))
+  	
+  	;; Links Section
+  	(push "** Links\n" org-content)))
+      
+      ;; Save content to Org file
+      (with-temp-file output-file-path
+        (insert (mapconcat 'identity (nreverse org-content) "\n")))
+      (message "Highlights saved to %s" output-file-path)))
+
+  ;; Example usage:
+  ;; Load the JSON data from the file and convert it to Org format
+  (let ((json-data (parse-readwise-json "~/org/readwise-highlights.json"))
+        (output-file-path "~/org/readwise-highlights.org"))
+    (format-readwise-highlights-to-org json-data output-file-path))
+#+end_src
+
+Convert MD links to Org
+#+begin_src emacs-lisp :tangle no
+  (defun convert-markdown-images-to-org (&optional org-file)
+    "Convert Markdown-style image links ![](URL) to Org-mode [[URL]] format.
+  If ORG-FILE is provided, modify that file; otherwise, modify the current buffer."
+    (interactive "fOrg file (optional): ")
+    (if org-file
+        (with-temp-buffer
+          (insert-file-contents org-file)
+          (goto-char (point-min))
+          (while (re-search-forward "!\\[.*?\\](\\(https?://[^)]+\\))" nil t)
+            (replace-match "[[\\1]]"))
+          (write-region (point-min) (point-max) org-file)
+          (message "Converted Markdown images in %s" org-file))
+      ;; If no file is provided, run on the current buffer
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward "!\\[.*?\\](\\(https?://[^)]+\\))" nil t)
+          (replace-match "[[\\1]]"))
+        (message "Converted Markdown images in the current buffer"))))
+#+end_src
+
+Fully integrated solution
+#+begin_src emacs-lisp :tangle no
+  (fetch-from-export-api)
+  ;; Example usage:
+  ;; Load the JSON data from the file and convert it to Org format
+  (let ((json-data (parse-readwise-json "~/org/readwise-highlights.json"))
+        (output-file-path "~/org/readwise-highlights.org"))
+    (format-readwise-highlights-to-org json-data output-file-path))
+  (convert-markdown-images-to-org "~/org/readwise-highlights.org")
+#+end_src
+** TODO Org-Download
 ** TODO Org-Read-ot-Later
+
 * Useful Packages
 #+BEGIN_SRC emacs-lisp
   (use-package ialign
@@ -482,6 +590,7 @@
           '("\\*Messages\\*"
             "\\*Embark*"
             "Output\\*$"
+  	  "eshell"
             "\\*Async Shell Command\\*"
             help-mode
             compilation-mode
@@ -518,7 +627,6 @@
     :config
     (nerd-icons-completion-mode))
 
-  ;;  (set-face-attribute 'default nil :font "JetBrains Mono" :height 100) ;
   (set-face-attribute 'default nil :font "Fira Code-10")
 
   (use-package all-the-icons-completion
@@ -528,6 +636,14 @@
     (all-the-icons-completion-mode))
 
 #+END_SRC
+* Mac OS X Specifics
+#+begin_src emacs-lisp
+  (when (memq window-system '(mac ns x))
+    (use-package exec-path-from-shell
+      :init (exec-path-from-shell-initialize))
+    (setq mac-command-modifier 'control))
+  (set-face-attribute 'default nil :font "JetBrains Mono-14") 
+#+end_src
 
 
 * File Navigating, Editing and Querying
