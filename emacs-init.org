@@ -577,7 +577,8 @@ Fully integrated solution
   (use-package evil-nerd-commenter
     :bind ("M-;" . 'evilnc-comment-or-uncomment-lines))
   (use-package wgrep
-    :straight t)
+    :straight t
+    )
 
 #+END_SRC
 * Popper
@@ -647,13 +648,10 @@ Fully integrated solution
 
 
 * File Navigating, Editing and Querying
-* Grabbing articles from Internet
-* Git tracking
-* Readwise Integration
-* Local Nodes
-* Copy/Download images and highlights
-* Other Evil packages
-* Dired
-* Bookmarks
 * Enable AI within Emacs
 Save conversations 
+* Grabbing articles from Internet
+* Other Evil packages
+* Copy/Download images and highlights
+* Git tracking
+* Dired
