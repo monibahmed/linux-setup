@@ -318,83 +318,80 @@
        )))
 #+END_SRC 
 ** Org-Roam
+:PROPERTIES:
+:ID:       c9aa473e-b77e-4fcb-8d95-d5247cbb2f5d
+:END:
 #+begin_src emacs-lisp
-   ;; Org-roam configuration
-     (use-package org-roam
-       :init
-       (setq org-roam-directory (file-truename "~/org/roam"))
-       (setq org-roam-capture-templates
-             '(("l" "Literature Notes" plain
-                "%?"
-                :if-new (file+head "l-${slug}.org" "#+title: ${title}\n")
-                :unnarrowed t)
-               ("z" "Zettels" plain
-                "%?"
-                :if-new (file+head "z-${slug}.org" "#+title: ${title}\n")
-                :unnarrowed t)
-               ("p" "Project Notes" plain
-                "%?"
-                :if-new (file+head "p-${slug}.org" "#+title: ${title}\n")
-                :unnarrowed t)))
-       :config
-       ;; Enable Org-roam DB autosync
-       (org-roam-db-autosync-mode)
+  ;; Org-roam configuration
+    (use-package org-roam
+      :init
+      (setq org-roam-directory (file-truename "~/org/roam"))
+      (setq org-roam-capture-templates
+            '(("l" "Literature Notes" plain
+               "%?"
+               :if-new (file+head "l-%<%Y%m%d%H%M%S>.org" "#+TITLE: ${title}\n")
+               :unnarrowed t)
+              ("z" "Zettels" plain
+               "%?"
+               :if-new (file+head "z-%<%Y%m%d%H%M%S>.org" "#+TITLE: ${title}\n")
+               :unnarrowed t)
+              ("s" "Structure Notes" plain
+               "%?"
+               :if-new (file+head "s-%<%Y%m%d%H%M%S>.org" "#+TITLE: ${title}\n")
+               :unnarrowed t)
+              ("p" "Project Notes" plain
+               "%?"
+               :if-new (file+head "p-%<%Y%m%d%H%M%S>.org" "#+TITLE: ${title}\n")
+               :unnarrowed t)))
+      :config
+      ;; Enable Org-roam DB autosync
+      (org-roam-db-autosync-mode)
 
-       ;; Require org-id for handling IDs
-       (require 'org-id)
-       ;; Ensure that Org uses IDs for internal links
-       (setq org-id-link-to-org-use-id t)
-       ;; Track IDs globally across all Org files
-       ;; (setq org-id-track-globally t)
-       ;; Set the file where Org stores the IDs
-       (setq org-id-locations-file (expand-file-name ".org-id-locations" user-emacs-directory))
+      ;; Require org-id for handling IDs
+      (require 'org-id)
+      ;; Ensure that Org uses IDs for internal links
+      (setq org-id-link-to-org-use-id t)
+      ;; Track IDs globally across all Org files
+      ;; (setq org-id-track-globally t)
+      ;; Set the file where Org stores the IDs
+      (setq org-id-locations-file (expand-file-name ".org-id-locations" user-emacs-directory))
 
-       ;; Automatically assign IDs to new headings when they are created
-       ;; (add-hook 'org-insert-heading-hook 'org-id-get-create)
+      ;; Automatically assign IDs to new headings when they are created
+      ;; (add-hook 'org-insert-heading-hook 'org-id-get-create)
 
-       ;; Optionally, provide a function to assign IDs to all headings in the current buffer
-       (defun my/org-add-ids-to-headings-in-file ()
-         "Add ID properties to all Org headings in the current file."
-         (interactive)
-         (org-map-entries 'org-id-get-create))
+      ;; Optionally, provide a function to assign IDs to all headings in the current buffer
+      (defun my/org-add-ids-to-headings-in-file ()
+        "Add ID properties to all Org headings in the current file."
+        (interactive)
+        (org-map-entries 'org-id-get-create))
+      
+      ;; Bind a key to assign IDs to the current heading
+      (define-key org-mode-map (kbd "C-c n a") 'org-id-get-create)
 
-       ;; Optionally, bind a key to assign IDs to the current heading
-       (define-key org-mode-map (kbd "C-c n a") 'org-id-get-create)
+      :bind
+      ;; Bind keys to commonly used Org-roam commands
+      (("C-c n f" . org-roam-node-find)        ;; Find or create a node
+       ("C-c n i" . org-roam-node-insert)      ;; Insert a link to a node
+       ("C-c n c" . org-roam-capture)          ;; Capture a new note
+       ("C-c n b" . org-roam-buffer-toggle)    ;; Toggle backlinks buffer
+       ("C-c n g" . org-roam-graph)            ;; Generate a graph of notes
+       ("C-c n a" . org-id-get-create)
+       ("C-c n d" . org-roam-dailies-capture-today))) ;; Open today's daily note
 
-       ;; Optionally, bind a key to assign IDs to all headings in the current file
-       (define-key org-mode-map (kbd "C-c n A") 'my/org-add-ids-to-headings-in-file)
-
-       :bind
-       ;; Bind keys to commonly used Org-roam commands
-       (("C-c n f" . org-roam-node-find)        ;; Find or create a node
-        ("C-c n i" . org-roam-node-insert)      ;; Insert a link to a node
-        ("C-c n c" . org-roam-capture)          ;; Capture a new note
-        ("C-c n b" . org-roam-buffer-toggle)    ;; Toggle backlinks buffer
-        ("C-c n g" . org-roam-graph)            ;; Generate a graph of notes
-        ("C-c n a" . org-id-get-create)
-        ("C-c n d" . org-roam-dailies-capture-today))) ;; Open today's daily note
-     (with-eval-after-load 'org-roam
-       (cl-defmethod org-roam-node-type ((node org-roam-node))
-         "Return the type of the NODE based on the first letter of the file name."
-         (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
-                (first-letter (substring filename 0 1)))
-           (cond ((string-equal first-letter "z") "zettel")
-                 ((string-equal first-letter "p") "project")
-                 ((string-equal first-letter "l") "literature")
-                 (t "unknown")))) ; default type if it doesn't match any of the cases
-       (setq org-roam-node-display-template
-             (concat "${type:15} ${title:75} " (propertize "${tags:75}" 'face 'org-tag))))
-
-
-     (use-package org-tidy
-       :hook
-       (org-mode . org-tidy-mode)) 
+    (with-eval-after-load 'org-roam
+      (cl-defmethod org-roam-node-type ((node org-roam-node))
+        "Return the type of the NODE based on the first letter of the file name."
+        (let* ((filename (file-name-nondirectory (org-roam-node-file node)))
+               (first-letter (substring filename 0 1)))
+          (cond ((string-equal first-letter "z") "zettel")
+                ((string-equal first-letter "p") "project")
+                ((string-equal first-letter "l") "literature")
+                (t "unknown")))) ; default type if it doesn't match any of the cases
+      (setq org-roam-node-display-template
+            (concat "${type:15} ${title:75} " (propertize "${tags:75}" 'face 'org-tag))))
 #+end_src
 
 ** Org-Roam UI
-:PROPERTIES:
-:ID:       F1769EFA-A318-49F7-ADBB-C394F16DBA30
-:END:
 #+begin_src emacs-lisp
   ;; Org-roam-ui configuration
   (use-package org-roam-ui
@@ -607,6 +604,9 @@ Fully integrated solution
 
 #+end_src
 * Themes and Colors
+:PROPERTIES:
+:ID:       36fcf286-ad79-4104-9183-dc3c076e3514
+:END:
 #+BEGIN_SRC emacs-lisp
   (use-package modus-themes)
   (use-package ef-themes)
@@ -637,15 +637,6 @@ Fully integrated solution
     (all-the-icons-completion-mode))
 
 #+END_SRC
-* Mac OS X Specifics
-#+begin_src emacs-lisp
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :init (exec-path-from-shell-initialize))
-    (setq mac-command-modifier 'control))
-  (set-face-attribute 'default nil :font "JetBrains Mono-14") 
-#+end_src
-
 
 * File Navigating, Editing and Querying
 * Enable AI within Emacs
